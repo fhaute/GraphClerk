@@ -29,3 +29,20 @@ class SemanticIndexResponse(BaseModel):
 class SemanticIndexEntryPointsResponse(BaseModel):
     entry_node_ids: list[str]
 
+
+class SemanticIndexSearchResult(BaseModel):
+    id: str
+    meaning: str
+    summary: str | None
+    embedding_text: str | None
+    entry_node_ids: list[str]
+    vector_status: str
+    metadata: dict[str, Any] | None
+    created_at: datetime
+    updated_at: datetime
+    score: float
+
+
+class SemanticIndexSearchResponse(BaseModel):
+    results: list[SemanticIndexSearchResult]
+

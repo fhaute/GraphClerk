@@ -88,3 +88,7 @@ class VectorIndexDimensionMismatchError(GraphClerkError):
 class VectorIndexOperationError(GraphClerkError):
     """Raised when a Qdrant operation fails unexpectedly."""
 
+
+class SemanticIndexSearchInconsistentIndexError(GraphClerkError):
+    """Raised when Qdrant results cannot be reconciled with Postgres source of truth."""
+

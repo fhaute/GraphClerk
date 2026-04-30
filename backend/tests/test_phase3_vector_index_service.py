@@ -41,17 +41,22 @@ class _StubQdrantClient:
         self.created.append((collection_name, vectors_config.size, str(vectors_config.distance)))
         return True
 
-    def upsert(self, collection_name: str, points):
+    def upsert(self, collection_name: str, points, wait: bool | None = None):
+        _ = wait
         if self.fail_upsert:
             raise RuntimeError("upsert failed")
         p = points[0]
         self.upserts.append((collection_name, p.id, p.vector, p.payload))
         return True
 
-    def search(self, collection_name: str, query_vector: list[float], limit: int):
+    def query_points(self, collection_name: str, query, limit: int, with_payload=None):
         if self.fail_search:
             raise RuntimeError("search failed")
-        return self.search_results[:limit]
+        class _Resp:
+            def __init__(self, points):
+                self.points = points
+
+        return _Resp(self.search_results[:limit])
 
 
 def test_ensure_collection_creates_when_missing() -> None:

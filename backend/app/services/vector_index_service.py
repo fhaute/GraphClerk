@@ -47,7 +47,7 @@ class _QdrantClientLike(Protocol):
 
     def upsert(self, collection_name: str, points: Any) -> Any: ...
 
-    def search(self, collection_name: str, query_vector: list[float], limit: int) -> Any: ...
+    def query_points(self, collection_name: str, query: Any, limit: int, with_payload: Any = ...) -> Any: ...
 
 
 class VectorIndexService:
@@ -117,7 +117,12 @@ class VectorIndexService:
                     vector=vector,
                     payload={"semantic_index_id": str(semantic_index_id), **(payload or {})},
                 )
-            self._client.upsert(collection_name=self.collection_name, points=[point])
+            try:
+                # Real Qdrant: ensure the point is available for immediate search.
+                self._client.upsert(collection_name=self.collection_name, points=[point], wait=True)
+            except TypeError:
+                # Stub clients may not support `wait`.
+                self._client.upsert(collection_name=self.collection_name, points=[point])
         except VectorIndexDimensionMismatchError:
             raise
         except Exception as e:
@@ -128,12 +133,21 @@ class VectorIndexService:
 
         self._validate_vector(query_vector)
         try:
-            results = self._client.search(
+            # qdrant-client>=1.17 uses query_points(); it accepts the raw vector as `query`.
+            results = self._client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_vector,
+                query=query_vector,
                 limit=limit,
+                with_payload=True,
             )
+            # query_points returns a response object with `.points`.
+            points = getattr(results, "points", None)
+            if points is None:
+                raise VectorIndexOperationError("malformed_query_points_response")
+            results = points
         except VectorIndexDimensionMismatchError:
+            raise
+        except VectorIndexOperationError:
             raise
         except Exception as e:
             raise VectorIndexUnavailableError(str(e)) from e

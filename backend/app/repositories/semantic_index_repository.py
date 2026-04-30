@@ -48,3 +48,11 @@ class SemanticIndexRepository:
         )
         return list(self._session.execute(stmt).scalars().all())
 
+    def list_by_ids(self, semantic_index_ids: list[uuid.UUID]) -> list[SemanticIndex]:
+        """Fetch semantic indexes by id set (ordering not guaranteed)."""
+
+        if not semantic_index_ids:
+            return []
+        stmt = select(SemanticIndex).where(SemanticIndex.id.in_(semantic_index_ids))
+        return list(self._session.execute(stmt).scalars().all())
+

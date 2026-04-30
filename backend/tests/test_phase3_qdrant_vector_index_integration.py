@@ -33,12 +33,18 @@ def test_qdrant_vector_index_roundtrip(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = config_module.get_settings()
 
     client = QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key)
-    svc = VectorIndexService(qdrant_client=client, expected_dimension=3)
+
+    # Use a unique collection name to avoid coupling to any persistent local state.
+    class _TestVectorIndexService(VectorIndexService):
+        collection_name = f"semantic_indexes_test_{uuid.uuid4().hex}"
+
+    svc = _TestVectorIndexService(qdrant_client=client, expected_dimension=8)
 
     svc.ensure_semantic_indexes_collection()
 
     sid = uuid.uuid4()
-    svc.upsert_semantic_index_vector(semantic_index_id=sid, vector=[0.0, 0.0, 1.0], payload={"meaning": "m"})
-    hits = svc.search_semantic_indexes(query_vector=[0.0, 0.0, 1.0], limit=5)
+    v = [0.0] * 7 + [1.0]
+    svc.upsert_semantic_index_vector(semantic_index_id=sid, vector=v, payload={"meaning": "m"})
+    hits = svc.search_semantic_indexes(query_vector=v, limit=5)
     assert any(h.semantic_index_id == sid for h in hits)
 
