@@ -116,3 +116,11 @@ class ContextBudgetError(GraphClerkError):
 class RetrievalPacketBuildError(GraphClerkError):
     """Raised when a RetrievalPacket cannot be assembled or validated."""
 
+
+class InvalidSourceFidelityError(GraphClerkError):
+    """Raised when source_fidelity is not a permitted SourceFidelity value."""
+
+
+class InvalidEvidenceUnitCandidateError(GraphClerkError):
+    """Raised when an EvidenceUnitCandidate fails structural validation (e.g. empty text)."""
+

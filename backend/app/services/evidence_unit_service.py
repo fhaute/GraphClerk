@@ -24,6 +24,7 @@ class EvidenceUnitService:
 
         created: list[EvidenceUnit] = []
         for c in candidates:
+            meta = c.metadata
             ev = EvidenceUnit(
                 artifact_id=artifact_id,
                 modality=c.modality,
@@ -32,7 +33,7 @@ class EvidenceUnitService:
                 location=c.location,
                 source_fidelity=c.source_fidelity,
                 confidence=c.confidence,
-                metadata_json=None,
+                metadata_json=meta,
             )
             self._repo.add(ev)
             created.append(ev)
