@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+"""Infrastructure health endpoint.
+
+This module is intentionally minimal and must not pretend to check dependencies
+that are not truly wired (see governance: "must never be faked").
+"""
+
 from fastapi import APIRouter
 
 from app.schemas.health import HealthResponse

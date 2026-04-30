@@ -21,6 +21,26 @@ GraphClerk should be understandable from its documents, not only from its code.
 6. Documentation must distinguish current behavior from planned behavior.
 7. Documentation must not claim functionality that is not implemented and tested.
 
+## In-code documentation standard (module docstrings)
+When a module is a "code page" that developers read to understand system
+behavior (especially API routes, services, and adapters), it MUST include a
+module-level docstring that answers:
+- purpose and phase scope
+- key invariants/constraints (e.g., transaction ownership, ordering guarantees)
+- boundary conventions (e.g., UUIDs as strings at HTTP boundary)
+- error semantics (what becomes 400 vs 404; what remains framework-level 422)
+
+Minimum required content for API route modules (`backend/app/api/routes/*.py`):
+- endpoints provided by the module (high level)
+- pagination conventions (`limit`/`offset`) when applicable
+- which layer owns transaction boundaries (route vs service)
+- explicit error mapping (400/404) and what remains a 422 from invalid inputs
+
+Minimum required content for service/repository modules:
+- phase scope
+- side effects and ownership (commit/rollback responsibility, disk/network IO)
+  when relevant
+
 ## Architecture decision records (ADRs)
 Folder: `docs/adr/`
 

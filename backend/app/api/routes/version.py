@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+"""Infrastructure version/phase metadata endpoint.
+
+This endpoint is a lightweight introspection surface for clients/tests and
+should reflect real phase state (not aspirational roadmap claims).
+"""
+
 from fastapi import APIRouter
 
 from app.schemas.version import VersionResponse

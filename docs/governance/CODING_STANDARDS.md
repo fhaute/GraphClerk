@@ -34,6 +34,19 @@ Every public class/function/method should explain:
 - important errors or failure modes
 - architectural constraints if relevant
 
+### Module docstring standard (required for "code pages")
+Any module that serves as a primary entry point for developers MUST include a
+module-level docstring. This is required at minimum for:
+- API route modules (`backend/app/api/routes/*.py`)
+- services (`backend/app/services/*.py`)
+- external adapters/integration points (e.g., vector stores, OCR, LLM clients)
+
+The module docstring MUST cover:
+- purpose and phase scope
+- invariants and ownership boundaries (e.g. "service does not commit")
+- boundary conventions (UUIDs at HTTP boundary, pagination approach)
+- error semantics (what becomes 400 vs 404; what remains a 422)
+
 Example:
 ```python
 async def create_evidence_unit(command: CreateEvidenceUnitCommand) -> EvidenceUnit:

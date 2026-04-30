@@ -24,3 +24,15 @@ class ArtifactNotFoundError(GraphClerkError):
 class EvidenceUnitNotFoundError(GraphClerkError):
     """Raised when an evidence unit is not found."""
 
+
+class GraphNodeNotFoundError(GraphClerkError):
+    """Raised when a graph node is not found."""
+
+
+class GraphEdgeNotFoundError(GraphClerkError):
+    """Raised when a graph edge is not found."""
+
+
+class InvalidRelationTypeError(GraphClerkError):
+    """Raised when a graph edge relation_type is invalid."""
+
