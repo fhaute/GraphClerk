@@ -11,7 +11,7 @@ from app.services.raw_source_store import RawSourceStore
 
 
 class ArtifactService:
-    """Create and retrieve Artifacts for Phase 2 (text/markdown only)."""
+    """Create and retrieve Artifacts (Phase 2 text/markdown + Phase 5 multimodal shell)."""
 
     def __init__(self, *, session: Session, raw_source_store: RawSourceStore) -> None:
         self._session = session
@@ -34,7 +34,8 @@ class ArtifactService:
             (artifact, disk_path_str_or_none)
         """
 
-        if artifact_type not in {"text", "markdown"}:
+        _allowed = {"text", "markdown", "pdf", "pptx", "image", "audio"}
+        if artifact_type not in _allowed:
             raise UnsupportedArtifactTypeError(f"Unsupported artifact_type: {artifact_type!r}")
 
         try:

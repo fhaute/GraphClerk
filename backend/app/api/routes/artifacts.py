@@ -1,21 +1,19 @@
 from __future__ import annotations
 
-"""Artifact ingestion and inspection APIs (Phase 2).
+"""Artifact ingestion and inspection APIs (Phase 2 + Phase 5 shell).
 
-This module defines endpoints for creating and inspecting ingested artifacts.
+Multipart uploads:
+- **text** and **markdown** delegate to ``TextIngestionService`` (unchanged Phase 2).
+- Known **multimodal** types (pdf, pptx, image, audio) delegate to
+  ``MultimodalIngestionService`` with ``ExtractorRegistry`` (no extractors
+  registered by default — clear errors until Slice D+).
 
-Scope and invariants:
-- Phase 2 supports **text** and **Markdown** artifacts only.
-- Artifact creation delegates ingestion orchestration to `TextIngestionService`,
-  which is responsible for creating the Artifact + Evidence Units.
-- Pagination uses `limit`/`offset` (offset-based, deterministic ordering owned by
-  the repository).
-- Identifiers are UUIDs provided as strings at the HTTP boundary.
+Inline JSON remains **text** / **markdown** only.
 
-Error semantics:
-- Unsupported file types and ingestion validation errors return HTTP 400.
-- Unknown artifact IDs return HTTP 404.
-- Invalid UUID strings raise a 422 validation error via FastAPI/Starlette.
+Error semantics at ``POST /artifacts``:
+- ``UnsupportedArtifactTypeError``, ``ExtractorNotRegisteredError``,
+  ``ExtractionReturnedNoEvidenceError``, and most ``GraphClerkError`` → **400**.
+- ``ExtractorUnavailableError`` → **503**.
 """
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
@@ -29,10 +27,50 @@ from app.schemas.artifact import (
     ArtifactListResponse,
     ArtifactResponse,
 )
-from app.services.errors import GraphClerkError
+from app.services.errors import ExtractorUnavailableError, GraphClerkError, UnsupportedArtifactTypeError
+from app.services.extraction import ExtractorRegistry
+from app.services.multimodal_ingestion_service import MultimodalIngestionService
 from app.services.text_ingestion_service import TextIngestionService
 
 router = APIRouter(prefix="", tags=["artifacts"])
+
+
+def get_multimodal_extractor_registry() -> ExtractorRegistry:
+    """Return the multimodal ``ExtractorRegistry`` (tests may monkeypatch this)."""
+
+    return ExtractorRegistry()
+
+
+def _resolve_multipart_artifact_type(filename: str, mime_type: str | None) -> str:
+    """Classify multipart upload as text, markdown, or multimodal ``artifact_type``.
+
+    Raises:
+        UnsupportedArtifactTypeError: unknown types or deferred video.
+    """
+
+    lower = filename.lower()
+    mt = (mime_type or "").lower()
+
+    if lower.endswith((".md", ".markdown")):
+        return "markdown"
+    if lower.endswith(".txt") or mt.startswith("text/"):
+        return "text"
+
+    if lower.endswith((".mp4", ".webm", ".mov", ".mkv", ".avi")) or mt.startswith("video/"):
+        raise UnsupportedArtifactTypeError("Video ingestion is not supported.")
+
+    if lower.endswith(".pdf") or mt == "application/pdf":
+        return "pdf"
+    if lower.endswith(".pptx") or mt == "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+        return "pptx"
+    image_ext = (".png", ".jpg", ".jpeg", ".webp")
+    if lower.endswith(image_ext) or mt.startswith("image/"):
+        return "image"
+    audio_ext = (".mp3", ".wav", ".m4a", ".ogg", ".flac")
+    if lower.endswith(audio_ext) or mt.startswith("audio/"):
+        return "audio"
+
+    raise UnsupportedArtifactTypeError(f"Unsupported file type for ingestion: {filename!r}.")
 
 
 def _artifact_to_response(a) -> ArtifactResponse:
@@ -57,15 +95,7 @@ async def create_artifact(
     request: Request,
     file: UploadFile | None = File(default=None),
 ) -> ArtifactCreateResponse:
-    """Create an artifact and ingest it into Evidence Units (Phase 2).
-
-    Input modes:
-    - Multipart upload via `file` (preferred for real uploads).
-    - Inline JSON payload (required because mixing `File` and JSON `Body` is
-      awkward in FastAPI signatures).
-
-    Returns HTTP 400 for unsupported file types or ingestion validation errors.
-    """
+    """Create an artifact and ingest it into Evidence Units."""
 
     settings = get_settings()
     SessionMaker = get_sessionmaker()
@@ -74,17 +104,12 @@ async def create_artifact(
         content_bytes = await file.read()
         filename = file.filename or "upload.txt"
         mime_type = file.content_type
-
-        lower = filename.lower()
-        if lower.endswith((".md", ".markdown")):
-            artifact_type = "markdown"
-        elif lower.endswith(".txt") or (mime_type or "").startswith("text/"):
-            artifact_type = "text"
-        else:
-            raise HTTPException(status_code=400, detail="Unsupported file type for Phase 2 (text/markdown only).")
+        try:
+            artifact_type = _resolve_multipart_artifact_type(filename, mime_type)
+        except UnsupportedArtifactTypeError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
         title = None
     else:
-        # JSON inline mode (can't rely on Body model when File is in signature)
         try:
             payload = await request.json()
         except Exception as e:
@@ -97,18 +122,32 @@ async def create_artifact(
         artifact_type = inline.artifact_type
         title = inline.title
 
-    svc = TextIngestionService(settings=settings)
     with SessionMaker() as session:
         try:
-            result = svc.ingest(
-                session=session,
-                filename=filename,
-                artifact_type=artifact_type,
-                mime_type=mime_type,
-                content_bytes=content_bytes,
-                title=title,
-                metadata={"ingestion_phase": "phase_2_text_first_ingestion"},
-            )
+            if artifact_type in {"text", "markdown"}:
+                svc = TextIngestionService(settings=settings)
+                result = svc.ingest(
+                    session=session,
+                    filename=filename,
+                    artifact_type=artifact_type,
+                    mime_type=mime_type,
+                    content_bytes=content_bytes,
+                    title=title,
+                    metadata={"ingestion_phase": "phase_2_text_first_ingestion"},
+                )
+            else:
+                mm = MultimodalIngestionService(settings=settings, registry=get_multimodal_extractor_registry())
+                result = mm.ingest(
+                    session=session,
+                    filename=filename,
+                    artifact_type=artifact_type,
+                    mime_type=mime_type,
+                    content_bytes=content_bytes,
+                    title=title,
+                    metadata={"ingestion_phase": "phase_5_multimodal_ingestion"},
+                )
+        except ExtractorUnavailableError as e:
+            raise HTTPException(status_code=503, detail=str(e)) from e
         except GraphClerkError as e:
             raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -153,4 +192,3 @@ def _uuid(value: str):
     import uuid
 
     return uuid.UUID(value)
-

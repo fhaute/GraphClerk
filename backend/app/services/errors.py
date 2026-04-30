@@ -17,6 +17,13 @@ class ExtractorUnavailableError(GraphClerkError):
     """Raised when a registered extractor cannot run (e.g. missing optional dependency)."""
 
 
+class ExtractionReturnedNoEvidenceError(GraphClerkError):
+    """Raised when an extractor returned zero evidence candidates."""
+
+    def __init__(self) -> None:
+        super().__init__("extraction_returned_no_evidence")
+
+
 class IngestionParseError(GraphClerkError):
     """Raised when parsing fails and ingestion cannot proceed."""
 

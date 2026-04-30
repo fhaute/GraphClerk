@@ -23,9 +23,11 @@ def create_app() -> FastAPI:
     This app wires:
     - infrastructure endpoints (`/health`, `/version`)
     - Phase 2 artifact/evidence endpoints (`/artifacts`, `/evidence-units`)
+    - Phase 5 shell: `POST /artifacts` routes known multimodal types through
+      ``MultimodalIngestionService`` + ``ExtractorRegistry`` (empty by default until extractors register)
 
     It exposes Phase 4 `POST /retrieve` (structured packets only).
-    It must not expose LLM calls/answer synthesis, multimodal ingestion, or UI behavior.
+    It must not expose LLM calls/answer synthesis, UI behavior, or automatic graph extraction.
     """
 
     app = FastAPI(title="GraphClerk", version="0.1.0")
