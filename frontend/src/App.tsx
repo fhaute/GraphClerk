@@ -3,6 +3,7 @@ import { ApiError, getApiBaseUrl } from "./api/client";
 import { fetchHealth } from "./api/health";
 import { ArtifactsExplorer } from "./components/ArtifactsExplorer";
 import { QueryPlayground } from "./components/QueryPlayground";
+import { GraphExplorer } from "./components/GraphExplorer";
 import { SemanticIndexesExplorer } from "./components/SemanticIndexesExplorer";
 import type { HealthResponse } from "./types/health";
 
@@ -11,7 +12,7 @@ type LoadState =
   | { kind: "ok"; data: HealthResponse }
   | { kind: "error"; message: string };
 
-type MainTab = "playground" | "artifacts" | "semantic";
+type MainTab = "playground" | "artifacts" | "semantic" | "graph";
 
 export default function App() {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
@@ -70,7 +71,7 @@ export default function App() {
       </section>
 
       <nav
-        className="mt-8 flex gap-2 border-b border-neutral-200"
+        className="mt-8 flex flex-wrap gap-2 border-b border-neutral-200"
         aria-label="Main sections"
       >
         <button
@@ -106,12 +107,24 @@ export default function App() {
         >
           Semantic indexes
         </button>
+        <button
+          type="button"
+          onClick={() => setTab("graph")}
+          className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+            tab === "graph"
+              ? "border-neutral-900 text-neutral-900"
+              : "border-transparent text-neutral-600 hover:text-neutral-900"
+          }`}
+        >
+          Graph explorer
+        </button>
       </nav>
 
       <div className="mt-6">
         {tab === "playground" && <QueryPlayground />}
         {tab === "artifacts" && <ArtifactsExplorer />}
         {tab === "semantic" && <SemanticIndexesExplorer />}
+        {tab === "graph" && <GraphExplorer />}
       </div>
     </div>
   );
