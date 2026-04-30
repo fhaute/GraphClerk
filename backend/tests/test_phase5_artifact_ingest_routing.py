@@ -81,6 +81,34 @@ async def test_multimodal_pdf_without_registered_extractor_returns_400(db_ready:
 
 
 @pytest.mark.asyncio
+async def test_multimodal_pptx_without_registered_extractor_returns_400(
+    db_ready: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        artifacts_routes,
+        "get_multimodal_extractor_registry",
+        lambda: ExtractorRegistry(),
+    )
+    app = create_app()
+    transport = ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.post(
+            "/artifacts",
+            files={
+                "file": (
+                    "x.pptx",
+                    b"PK\x03\x04",
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                )
+            },
+        )
+    assert res.status_code == 400
+    body = res.json()
+    assert "detail" in body
+    assert "slide" in body["detail"].lower() or "extractor" in body["detail"].lower()
+
+
+@pytest.mark.asyncio
 async def test_multimodal_pdf_with_stub_extractor_succeeds(db_ready: None, monkeypatch: pytest.MonkeyPatch) -> None:
     reg = ExtractorRegistry()
     reg.register(Modality.pdf, _PdfStubExtractor())

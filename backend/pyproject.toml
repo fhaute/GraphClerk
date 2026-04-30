@@ -19,6 +19,9 @@ dependencies = [
 pdf = [
   "pypdf>=5.0",
 ]
+pptx = [
+  "python-pptx>=1.0.0",
+]
 
 [dependency-groups]
 dev = [

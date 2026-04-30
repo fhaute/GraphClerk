@@ -6,8 +6,9 @@ Multipart uploads:
 - **text** and **markdown** delegate to ``TextIngestionService`` (unchanged Phase 2).
 - Known **multimodal** types (pdf, pptx, image, audio) delegate to
   ``MultimodalIngestionService`` with ``ExtractorRegistry``. **PDF:** ``PdfExtractor``
-  is registered when the optional ``pdf`` extra (pypdf) is installed; otherwise
-  PDF uploads return **503** with an install hint.
+  when optional ``pdf`` extra is installed; else **503** with install hint.
+  **PPTX:** ``PptxExtractor`` when optional ``pptx`` extra (python-pptx) is installed;
+  else **503** with install hint.
 
 Inline JSON remains **text** / **markdown** only.
 
@@ -48,14 +49,24 @@ class _PdfDependencyPlaceholder:
         )
 
 
+class _PptxDependencyPlaceholder:
+    """Registers for ``Modality.slide`` when python-pptx is not installed."""
+
+    def extract(self, artifact: Artifact) -> list[EvidenceUnitCandidate]:
+        raise ExtractorUnavailableError(
+            "PPTX extraction requires the optional `pptx` dependency (e.g. pip install -e '.[pptx]').",
+        )
+
+
 def get_multimodal_extractor_registry() -> ExtractorRegistry:
     """Return the multimodal ``ExtractorRegistry`` (tests may monkeypatch this).
 
-    Registers ``PdfExtractor`` when pypdf is available; otherwise a placeholder
-    that raises ``ExtractorUnavailableError``. Does not register video.
+    Registers PDF and PPTX extractors when optional deps are available; otherwise
+    placeholders that raise ``ExtractorUnavailableError``. Does not register video.
     """
 
     from app.services.extraction import pdf_extractor as pdf_extraction_module
+    from app.services.extraction import pptx_extractor as pptx_extraction_module
 
     reg = ExtractorRegistry()
     if pdf_extraction_module.PdfReader is None:
@@ -64,6 +75,13 @@ def get_multimodal_extractor_registry() -> ExtractorRegistry:
         from app.services.extraction.pdf_extractor import PdfExtractor
 
         reg.register(Modality.pdf, PdfExtractor(settings=get_settings()))
+
+    if pptx_extraction_module.Presentation is None:
+        reg.register(Modality.slide, _PptxDependencyPlaceholder())
+    else:
+        from app.services.extraction.pptx_extractor import PptxExtractor
+
+        reg.register(Modality.slide, PptxExtractor(settings=get_settings()))
     return reg
 
 

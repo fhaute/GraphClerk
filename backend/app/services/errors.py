@@ -28,6 +28,10 @@ class PdfExtractionError(GraphClerkError):
     """Raised when PDF bytes cannot be parsed or are otherwise unusable."""
 
 
+class PptxExtractionError(GraphClerkError):
+    """Raised when PPTX bytes cannot be parsed or are otherwise unusable."""
+
+
 class IngestionParseError(GraphClerkError):
     """Raised when parsing fails and ingestion cannot proceed."""
 
