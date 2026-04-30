@@ -50,7 +50,7 @@
   - semantic index search endpoint + entry-point resolution
   - bounded graph traversal (depth/max nodes/edges + relation filtering)
   - required tests + docs/status updates + Phase 3 audit
-- **Status**: not_started
+- **Status**: implemented (**pass_with_notes**; see `docs/audits/PHASE_3_AUDIT.md`)
 
 ## Phase 4 — File Clerk and Retrieval Packets
 - **Defined in**: `docs/phases/graph_clerk_phase_4_file_clerk_retrieval_packets.md`

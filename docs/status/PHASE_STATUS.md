@@ -22,3 +22,15 @@
   - `backend/app/services/text_ingestion_service.py`
   - `backend/tests/test_phase2_ingestion.py`
 
+## Phase 3 — Semantic Index and Graph Layer
+- **Status**: implemented (**pass_with_notes**)
+- **Evidence**:
+  - `docs/phases/PHASE_3_SEMANTIC_INDEX_AND_GRAPH.md`
+  - `docs/audits/PHASE_3_AUDIT.md`
+  - `backend/app/api/routes/graph_nodes.py`
+  - `backend/app/api/routes/graph_edges.py`
+  - `backend/app/api/routes/graph_node_evidence.py`
+  - `backend/app/api/routes/graph_edge_evidence.py`
+  - `backend/app/api/routes/semantic_indexes.py`
+  - `backend/app/api/routes/graph_traversal.py`
+

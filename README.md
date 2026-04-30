@@ -13,14 +13,15 @@ with traceability to original source artifacts.
 - **Phase 0**: governance baseline (`docs/governance/*`)
 - **Phase 1**: backend foundation (FastAPI, SQLAlchemy/Alembic, Docker Compose, `/health`, `/version`)
 - **Phase 2**: text/Markdown ingestion → `Artifact` + `EvidenceUnit` with location metadata
-- **Phase 3 (in progress)**: graph nodes/edges + evidence support links + semantic index CRUD (no vector search yet)
+- **Phase 3**: semantic index + graph meaning layer (graph APIs, evidence links, semantic index APIs, vector index service, semantic index search, bounded traversal)
 
 ## What is explicitly not implemented yet
 - **FileClerk** / RetrievalPacket assembly
 - answer synthesis / LLM calls
 - automatic graph extraction / claim extraction
 - multimodal ingestion (PDF/PPTX/images/audio/video)
-- semantic index vector search (Qdrant search endpoints) and bounded traversal are Phase 3 items but may be incomplete until Phase 3 audit says otherwise
+- production embedding adapter not wired (Phase 3 uses explicit placeholder adapters)
+- SemanticIndex creation does not auto-index into Qdrant; no indexing job/backfill yet
 - UI
 
 ## Governance first
@@ -72,7 +73,7 @@ Artifacts / Evidence (Phase 2):
 - `GET /artifacts/{artifact_id}/evidence`
 - `GET /evidence-units/{evidence_unit_id}`
 
-Graph (Phase 3, in progress):
+Graph (Phase 3):
 - `POST /graph/nodes`
 - `GET /graph/nodes/{node_id}`
 - `GET /graph/nodes`
@@ -82,8 +83,12 @@ Graph (Phase 3, in progress):
 - `POST /graph/nodes/{node_id}/evidence`
 - `POST /graph/edges/{edge_id}/evidence`
 
-Semantic indexes (Phase 3, in progress; **no vector search yet**):
+Semantic indexes (Phase 3):
 - `POST /semantic-indexes`
 - `GET /semantic-indexes/{semantic_index_id}`
 - `GET /semantic-indexes/{semantic_index_id}/entry-points`
+- `GET /semantic-indexes/search`
+
+Graph traversal (Phase 3):
+- `GET /graph/nodes/{node_id}/neighborhood`
 

@@ -1,13 +1,14 @@
 # Project Status
 
 ## Summary
-- **Current phase**: Phase 2 — Text-first ingestion & EvidenceUnits
-- **Implementation status**: Phase 2 implemented (text/Markdown ingestion only; no retrieval/LLM/UI)
+- **Current phase**: Phase 3 — Semantic index & graph layer
+- **Implementation status**: Phase 3 implemented (**pass_with_notes**; no retrieval/LLM/UI; see limitations below)
 
 ## High-level status
 - **Governance baseline**: implemented
 - **Phase 1 foundation**: implemented
 - **Phase 2 text-first ingestion**: implemented
+- **Phase 3 semantic index + graph layer**: implemented (pass_with_notes)
 
 ## Implemented (Phase 1)
 - FastAPI skeleton with infrastructure routes (`/health`, `/version`)
@@ -30,9 +31,23 @@
 
 ## Not implemented (by design)
 - multimodal parsing (PDF/PPTX/images/audio/video)
-- embeddings and semantic search
-- graph traversal logic
 - FileClerk logic and retrieval packets
 - LLM calls / answer synthesis
 - UI
+
+## Implemented (Phase 3)
+- Graph nodes/edges APIs and persistence
+- Evidence support link tables + APIs (nodes and edges)
+- SemanticIndex APIs + normalized entry nodes (`semantic_index_entry_node` is source of truth)
+- `SemanticIndex.vector_status` (`pending | indexed | failed`)
+- Embedding adapter interface + deterministic fake + explicit “not configured” adapter
+- Qdrant VectorIndexService (collection management, upsert, search) with explicit error behavior
+- `GET /semantic-indexes/search` (Postgres-backed metadata + Qdrant score; returns only `vector_status=indexed`)
+- Bounded graph traversal: `GET /graph/nodes/{node_id}/neighborhood` with truncation reporting
+
+## Phase 3 limitations (explicit)
+- production embedding adapter not wired
+- SemanticIndex creation does not auto-index vectors into Qdrant
+- no indexing job/backfill
+- integration tests are opt-in/gated (`RUN_INTEGRATION_TESTS=1` + env vars)
 
