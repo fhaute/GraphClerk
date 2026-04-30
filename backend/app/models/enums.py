@@ -56,3 +56,11 @@ class GraphRelationType(StrEnum):
     represents = "represents"
     has_source = "has_source"
 
+
+class SemanticIndexVectorStatus(StrEnum):
+    """Indexing state for a SemanticIndex vector (Phase 3)."""
+
+    pending = "pending"
+    indexed = "indexed"
+    failed = "failed"
+
