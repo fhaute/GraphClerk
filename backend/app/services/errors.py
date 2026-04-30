@@ -32,6 +32,10 @@ class PptxExtractionError(GraphClerkError):
     """Raised when PPTX bytes cannot be parsed or are otherwise unusable."""
 
 
+class ImageExtractionError(GraphClerkError):
+    """Raised when image bytes cannot be decoded or are otherwise unusable."""
+
+
 class IngestionParseError(GraphClerkError):
     """Raised when parsing fails and ingestion cannot proceed."""
 
