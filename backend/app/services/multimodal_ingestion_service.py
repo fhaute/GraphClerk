@@ -5,31 +5,18 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
-from app.models.enums import Modality
 from app.services.artifact_service import ArtifactService
 from app.services.errors import ExtractionReturnedNoEvidenceError, UnsupportedArtifactTypeError
 from app.services.evidence_unit_service import EvidenceUnitService
 from app.services.extraction import ExtractorRegistry
+from app.services.ingestion.artifact_type_resolver import (
+    modality_for_artifact_type,
+    supported_artifact_types,
+)
 from app.services.raw_source_store import RawSourceStore
 from app.services.text_ingestion_service import IngestResult
 
-
-_MULTIMODAL_ARTIFACT_TYPES = frozenset({"pdf", "pptx", "image", "audio"})
-
-
-def modality_for_artifact_type(artifact_type: str) -> Modality:
-    """Map persisted ``artifact_type`` string to registry ``Modality``."""
-
-    mapping: dict[str, Modality] = {
-        "pdf": Modality.pdf,
-        "pptx": Modality.slide,
-        "image": Modality.image,
-        "audio": Modality.audio,
-    }
-    try:
-        return mapping[artifact_type]
-    except KeyError as e:
-        raise UnsupportedArtifactTypeError(f"Unsupported multimodal artifact_type: {artifact_type!r}") from e
+_MULTIMODAL_ARTIFACT_TYPES = frozenset(supported_artifact_types()) - {"text", "markdown"}
 
 
 class MultimodalIngestionService:
@@ -55,7 +42,8 @@ class MultimodalIngestionService:
         metadata: dict[str, Any] | None = None,
     ) -> IngestResult:
         if artifact_type not in _MULTIMODAL_ARTIFACT_TYPES:
-            raise UnsupportedArtifactTypeError(f"Unsupported multimodal artifact_type: {artifact_type!r}")
+            msg = f"Unsupported multimodal artifact_type: {artifact_type!r}"
+            raise UnsupportedArtifactTypeError(msg)
 
         modality = modality_for_artifact_type(artifact_type)
         extractor = self._registry.get(modality)
@@ -81,7 +69,10 @@ class MultimodalIngestionService:
                 if not candidates:
                     raise ExtractionReturnedNoEvidenceError()
 
-                evidence_service.create_from_candidates(artifact_id=artifact.id, candidates=candidates)
+                evidence_service.create_from_candidates(
+                    artifact_id=artifact.id,
+                    candidates=candidates,
+                )
 
             return IngestResult(artifact=artifact, evidence_unit_count=len(candidates))
         except Exception:

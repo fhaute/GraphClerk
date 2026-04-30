@@ -34,6 +34,7 @@ from app.models.enums import Modality
 from app.schemas.evidence_unit_candidate import EvidenceUnitCandidate
 from app.services.errors import ExtractorUnavailableError, GraphClerkError, UnsupportedArtifactTypeError
 from app.services.extraction import ExtractorRegistry
+from app.services.ingestion.artifact_type_resolver import resolve_from_filename_and_mime
 from app.services.multimodal_ingestion_service import MultimodalIngestionService
 from app.services.text_ingestion_service import TextIngestionService
 
@@ -85,38 +86,6 @@ def get_multimodal_extractor_registry() -> ExtractorRegistry:
     return reg
 
 
-def _resolve_multipart_artifact_type(filename: str, mime_type: str | None) -> str:
-    """Classify multipart upload as text, markdown, or multimodal ``artifact_type``.
-
-    Raises:
-        UnsupportedArtifactTypeError: unknown types or deferred video.
-    """
-
-    lower = filename.lower()
-    mt = (mime_type or "").lower()
-
-    if lower.endswith((".md", ".markdown")):
-        return "markdown"
-    if lower.endswith(".txt") or mt.startswith("text/"):
-        return "text"
-
-    if lower.endswith((".mp4", ".webm", ".mov", ".mkv", ".avi")) or mt.startswith("video/"):
-        raise UnsupportedArtifactTypeError("Video ingestion is not supported.")
-
-    if lower.endswith(".pdf") or mt == "application/pdf":
-        return "pdf"
-    if lower.endswith(".pptx") or mt == "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-        return "pptx"
-    image_ext = (".png", ".jpg", ".jpeg", ".webp")
-    if lower.endswith(image_ext) or mt.startswith("image/"):
-        return "image"
-    audio_ext = (".mp3", ".wav", ".m4a", ".ogg", ".flac")
-    if lower.endswith(audio_ext) or mt.startswith("audio/"):
-        return "audio"
-
-    raise UnsupportedArtifactTypeError(f"Unsupported file type for ingestion: {filename!r}.")
-
-
 def _artifact_to_response(a) -> ArtifactResponse:
     """Convert an Artifact ORM model into its API response schema."""
     return ArtifactResponse(
@@ -149,7 +118,10 @@ async def create_artifact(
         filename = file.filename or "upload.txt"
         mime_type = file.content_type
         try:
-            artifact_type = _resolve_multipart_artifact_type(filename, mime_type)
+            artifact_type = resolve_from_filename_and_mime(
+                filename=filename,
+                mime_type=mime_type,
+            ).artifact_type
         except UnsupportedArtifactTypeError as e:
             raise HTTPException(status_code=400, detail=str(e)) from e
         title = None

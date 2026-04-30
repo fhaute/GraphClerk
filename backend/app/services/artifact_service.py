@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.models.artifact import Artifact
 from app.repositories.artifact_repository import ArtifactRepository
 from app.services.errors import RawSourceStorageError, UnsupportedArtifactTypeError
+from app.services.ingestion.artifact_type_resolver import supported_artifact_types
 from app.services.raw_source_store import RawSourceStore
 
 
@@ -34,8 +35,7 @@ class ArtifactService:
             (artifact, disk_path_str_or_none)
         """
 
-        _allowed = {"text", "markdown", "pdf", "pptx", "image", "audio"}
-        if artifact_type not in _allowed:
+        if artifact_type not in supported_artifact_types():
             raise UnsupportedArtifactTypeError(f"Unsupported artifact_type: {artifact_type!r}")
 
         try:
