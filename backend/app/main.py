@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import os
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.artifacts import router as artifacts_router
 from app.api.routes.evidence_units import router as evidence_router
@@ -33,6 +36,28 @@ def create_app() -> FastAPI:
     """
 
     app = FastAPI(title="GraphClerk", version="0.1.0")
+
+    # Browser UI (Vite, etc.) runs on another origin than the API; without CORS, fetches fail
+    # with "Failed to fetch" / status 0. Allow loopback dev hosts by default; pin origins in
+    # production via GRAPHCLE_CORS_ORIGINS="https://app.example,https://...".
+    _cors_raw = os.environ.get("GRAPHCLE_CORS_ORIGINS", "").strip()
+    if _cors_raw:
+        _origins = [o.strip() for o in _cors_raw.split(",") if o.strip()]
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    else:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     app.include_router(health_router)
     app.include_router(version_router)
