@@ -11,8 +11,14 @@ from app.api.routes.version import router as version_router
 def create_app() -> FastAPI:
     """Create the GraphClerk FastAPI application.
 
-    Phase 1 provides infrastructure endpoints only. This app must not expose
-    ingestion, retrieval, or graph traversal behavior.
+    Phase 0–2 scope: infrastructure plus text-first ingestion inspection routes.
+
+    This app wires:
+    - infrastructure endpoints (`/health`, `/version`)
+    - Phase 2 artifact/evidence endpoints (`/artifacts`, `/evidence-units`)
+
+    It must not expose semantic search, graph traversal, FileClerk/retrieval packets,
+    LLM calls/answer synthesis, multimodal ingestion, or UI behavior.
     """
 
     app = FastAPI(title="GraphClerk", version="0.1.0")

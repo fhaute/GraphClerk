@@ -2,6 +2,7 @@
 
 ## Phase 0 — Governance Baseline
 - Establish governance docs, protected terms, contracts, invariants, testing and documentation rules.
+- **Status**: implemented
 
 ## Phase 1 — Foundation and Core Architecture
 - **Defined in**: `docs/phases/graph_clerk_phase_1_foundation_core_architecture.md`
@@ -16,6 +17,7 @@
   - infrastructure endpoints: `GET /health`, `GET /version`
   - baseline tests + Phase 1 audit + status doc updates
 - **Status**: implemented (see `docs/phases/PHASE_1_FOUNDATION.md`)
+- **Audit**: pass_with_notes (see `docs/audits/PHASE_1_AUDIT.md`)
 
 ## Phase 2 — Text-First Ingestion and Evidence Units
 - **Defined in**: `docs/phases/graph_clerk_phase_2_text_first_ingestion_evidence_units.md`
@@ -33,7 +35,8 @@
   - explicit error handling (no silent parsing failures)
   - required tests for source preservation + parser behavior
   - Phase 2 docs/status updates + Phase 2 audit
-- **Status**: not_started
+- **Status**: implemented
+- **Audit**: pass_with_notes (see `docs/audits/PHASE_2_AUDIT.md`)
 
 ## Phase 3 — Semantic Index and Graph Layer
 - **Defined in**: `docs/phases/graph_clerk_phase_3_semantic_index_and_graph_layer.md`
