@@ -56,3 +56,23 @@ class SemanticIndexRequiresEntryNodesError(GraphClerkError):
 class DuplicateEntryNodeIdError(GraphClerkError):
     """Raised when a semantic index creation request has duplicate entry node IDs."""
 
+
+class EmbeddingAdapterNotConfiguredError(GraphClerkError):
+    """Raised when no embedding adapter is configured."""
+
+
+class EmbeddingTextEmptyError(GraphClerkError):
+    """Raised when embedding text is empty or whitespace-only."""
+
+
+class EmbeddingInvalidVectorError(GraphClerkError):
+    """Raised when an adapter returns a non-numeric or non-finite vector."""
+
+
+class EmbeddingDimensionMismatchError(GraphClerkError):
+    """Raised when an adapter returns a vector of unexpected dimension."""
+
+
+class EmbeddingGenerationError(GraphClerkError):
+    """Raised when embedding generation fails explicitly."""
+
