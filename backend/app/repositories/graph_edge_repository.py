@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import or_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.graph_edge import GraphEdge
@@ -40,5 +40,28 @@ class GraphEdgeRepository:
             .limit(limit)
             .offset(offset)
         )
+        return list(self._session.execute(stmt).scalars().all())
+
+    def list_incident_edges(
+        self,
+        *,
+        node_ids: list[uuid.UUID],
+        relation_types: list[str] | None = None,
+        limit: int = 5000,
+    ) -> list[GraphEdge]:
+        """List edges incident to any node in `node_ids`.
+
+        Deterministic ordering is important for bounded traversal; we order by
+        `created_at` ascending and then `id` ascending.
+        """
+
+        if not node_ids:
+            return []
+
+        cond = or_(GraphEdge.from_node_id.in_(node_ids), GraphEdge.to_node_id.in_(node_ids))
+        if relation_types is not None:
+            cond = and_(cond, GraphEdge.relation_type.in_(relation_types))
+
+        stmt = select(GraphEdge).where(cond).order_by(GraphEdge.created_at.asc(), GraphEdge.id.asc()).limit(limit)
         return list(self._session.execute(stmt).scalars().all())
 

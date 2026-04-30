@@ -58,3 +58,16 @@ class GraphEdgeEvidenceRepository:
         )
         return list(self._session.execute(stmt).scalars().all())
 
+    def list_by_graph_edges(self, graph_edge_ids: list[uuid.UUID], limit: int = 5000) -> list[GraphEdgeEvidence]:
+        """List evidence links for multiple graph edges deterministically."""
+
+        if not graph_edge_ids:
+            return []
+        stmt = (
+            select(GraphEdgeEvidence)
+            .where(GraphEdgeEvidence.graph_edge_id.in_(graph_edge_ids))
+            .order_by(GraphEdgeEvidence.created_at.asc(), GraphEdgeEvidence.id.asc())
+            .limit(limit)
+        )
+        return list(self._session.execute(stmt).scalars().all())
+

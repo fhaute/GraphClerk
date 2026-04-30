@@ -58,3 +58,16 @@ class GraphNodeEvidenceRepository:
         )
         return list(self._session.execute(stmt).scalars().all())
 
+    def list_by_graph_nodes(self, graph_node_ids: list[uuid.UUID], limit: int = 5000) -> list[GraphNodeEvidence]:
+        """List evidence links for multiple graph nodes deterministically."""
+
+        if not graph_node_ids:
+            return []
+        stmt = (
+            select(GraphNodeEvidence)
+            .where(GraphNodeEvidence.graph_node_id.in_(graph_node_ids))
+            .order_by(GraphNodeEvidence.created_at.asc(), GraphNodeEvidence.id.asc())
+            .limit(limit)
+        )
+        return list(self._session.execute(stmt).scalars().all())
+

@@ -8,6 +8,7 @@ from app.api.routes.graph_edges import router as graph_edges_router
 from app.api.routes.graph_edge_evidence import router as graph_edge_evidence_router
 from app.api.routes.graph_nodes import router as graph_nodes_router
 from app.api.routes.graph_node_evidence import router as graph_node_evidence_router
+from app.api.routes.graph_traversal import router as graph_traversal_router
 from app.api.routes.health import router as health_router
 from app.api.routes.semantic_indexes import router as semantic_indexes_router
 from app.api.routes.version import router as version_router
@@ -22,7 +23,7 @@ def create_app() -> FastAPI:
     - infrastructure endpoints (`/health`, `/version`)
     - Phase 2 artifact/evidence endpoints (`/artifacts`, `/evidence-units`)
 
-    It must not expose semantic search, graph traversal, FileClerk/retrieval packets,
+    It must not expose FileClerk/retrieval packets,
     LLM calls/answer synthesis, multimodal ingestion, or UI behavior.
     """
 
@@ -36,6 +37,7 @@ def create_app() -> FastAPI:
     app.include_router(graph_edges_router)
     app.include_router(graph_node_evidence_router)
     app.include_router(graph_edge_evidence_router)
+    app.include_router(graph_traversal_router)
     app.include_router(semantic_indexes_router)
 
     return app

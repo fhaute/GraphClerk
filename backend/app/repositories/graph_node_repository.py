@@ -30,3 +30,11 @@ class GraphNodeRepository:
         stmt = select(GraphNode).order_by(GraphNode.created_at.desc()).limit(limit).offset(offset)
         return list(self._session.execute(stmt).scalars().all())
 
+    def list_by_ids(self, node_ids: list[uuid.UUID]) -> list[GraphNode]:
+        """Fetch nodes by id set (ordering not guaranteed)."""
+
+        if not node_ids:
+            return []
+        stmt = select(GraphNode).where(GraphNode.id.in_(node_ids))
+        return list(self._session.execute(stmt).scalars().all())
+
