@@ -36,3 +36,11 @@ class GraphEdgeNotFoundError(GraphClerkError):
 class InvalidRelationTypeError(GraphClerkError):
     """Raised when a graph edge relation_type is invalid."""
 
+
+class GraphNodeEvidenceLinkAlreadyExistsError(GraphClerkError):
+    """Raised when a GraphNodeEvidence link already exists."""
+
+
+class GraphEdgeEvidenceLinkAlreadyExistsError(GraphClerkError):
+    """Raised when a GraphEdgeEvidence link already exists."""
+
