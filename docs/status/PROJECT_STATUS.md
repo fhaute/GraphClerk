@@ -11,6 +11,7 @@
 - **Phase 3 semantic index + graph layer**: implemented (pass_with_notes)
 - **Phase 4 File Clerk + retrieval packets**: implemented (pass_with_notes)
 - **Phase 5 multimodal ingestion**: **in progress** / **partially implemented** (see Phase 5 section below; audit **`pass_with_notes`**)
+- **Phase 6 readiness:** Per [`docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`](docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md) (**Slice 6.0**), productization/UI work may proceed without Phase 5 being fully complete, provided the documented baseline and UI honesty rules are followed.
 
 ## Implemented (Phase 1)
 - FastAPI skeleton with infrastructure routes (`/health`, `/version`)

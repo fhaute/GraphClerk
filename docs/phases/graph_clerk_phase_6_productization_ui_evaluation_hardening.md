@@ -1,6 +1,17 @@
 # GraphClerk Phase 6 — Productization, UI, Evaluation, and Hardening
 
 ## Phase Dependency
+
+### Slice 6.0 — Phase-document gate (documentation only)
+
+Phase **6** implementation work may begin when **Phases 0–4 are implemented** as already required, and **Phase 5 has an audit result of `pass` or `pass_with_notes`**. **Phase 5 does not need to be fully complete** for Phase 6 to start. Phase 5 may remain **partially implemented / in progress** (for example: PDF/PPTX text evidence exists; image and audio are **validation shells** only; OCR, ASR, captioning, and video ingestion are **not** shipped; see `docs/audits/PHASE_5_AUDIT.md` and `docs/phases/graph_clerk_phase_5_multimodal_ingestion.md` **Implementation status (current)**).
+
+**Agreed baseline for UI/productization:** File Clerk **`POST /retrieve`** `RetrievalPacket`s, graph and semantic-index APIs, text/Markdown ingestion, **PDF/PPTX** multimodal `EvidenceUnit`s (when optional extras are installed), plus honest error semantics for unsupported or shell-only modalities.
+
+**Phase 6 must respect Phase 5 limitations.** The UI must **not** imply OCR, ASR, captioning, **video ingestion**, or **full multimodal completion**. The UI **may** show **PDF/PPTX** multimodal evidence in packets and lists. The UI **must** show **image** and **audio** as **unsupported or unavailable** for text evidence (for example **503** / not-configured messaging, or empty evidence where accurate) rather than inventing transcripts or captions.
+
+---
+
 This phase must only start after:
 
 ```text
@@ -9,7 +20,7 @@ Phase 1 — Foundation and Core Architecture
 Phase 2 — Text-First Ingestion and Evidence Units
 Phase 3 — Semantic Index and Graph Layer
 Phase 4 — File Clerk and Retrieval Packets
-Phase 5 — Multimodal Ingestion
+Phase 5 — Multimodal Ingestion (partial implementation allowed; see Slice 6.0 gate above)
 ```
 
 Phase 6 assumes:
@@ -26,17 +37,17 @@ Phase 6 assumes:
 - Qdrant works
 - Artifact and EvidenceUnit models exist
 - Text/Markdown ingestion works
-- Multimodal ingestion works at a basic level
+- Multimodal ingestion: PDF/PPTX text extraction to EvidenceUnits where optional extras are installed; image/audio validation shells may return 503 for text evidence — UI must reflect this honestly (not “full multimodal”)
 - Graph layer exists
 - Semantic index search works
 - File Clerk retrieval packets exist
 - Context budget exists
 - Retrieval logs exist
-- Phase 5 tests pass
-- Phase 5 audit is pass or pass_with_notes
+- Phase 5 tests pass for the shipped Phase 5 scope (integration tests remain opt-in where applicable)
+- Phase 5 audit is pass or pass_with_notes (partial Phase 5 is acceptable)
 ```
 
-Cursor must not implement this phase unless Phase 5 is complete and status docs confirm it.
+Cursor must not implement this phase unless **Phases 0–4 are complete**, **Phase 5 audit is `pass` or `pass_with_notes`**, and **status docs** reflect the agreed baseline. **Do not** require Phase 5 to be “fully complete” or to ship OCR, ASR, captioning, or video before starting Phase 6.
 
 ---
 

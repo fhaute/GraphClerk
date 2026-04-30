@@ -92,6 +92,7 @@
 
 ## Phase 6 — Productization, UI, Evaluation, and Hardening
 - **Defined in**: `docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`
+- **Entry gate (Slice 6.0):** Phases **0–4** implemented; **Phase 5 audit `pass` or `pass_with_notes`** — Phase 5 may stay **partial** (see phase doc **Phase Dependency** / Slice 6.0). UI must not imply full multimodal completion, OCR, ASR, captioning, or video.
 - **Goal**: make GraphClerk usable/demo-ready and make retrieval trace visible.
 - **Deliverables**:
   - frontend skeleton (React/Vite/TypeScript/Tailwind)
