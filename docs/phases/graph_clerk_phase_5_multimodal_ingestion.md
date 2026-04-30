@@ -38,6 +38,46 @@ Cursor must not implement this phase unless Phase 4 is complete and status docs 
 
 ---
 
+## Implementation status (current)
+
+Phase 5 is **partially implemented**, **in progress**, and **not fully complete**. The **Phase 5 audit is pending**. The sections below this block remain the **aspirational phase design**; this block is the **implementation truth** as of the latest status/docs slice.
+
+### Shipped (in code today)
+
+- **`EvidenceUnitCandidate`** contract hardening
+- **`ArtifactExtractor`** protocol + **`ExtractorRegistry`**
+- Multimodal **routing shell** for multipart `POST /artifacts` (alongside unchanged text/Markdown paths)
+- **`ArtifactTypeResolver`** (filename + MIME → artifact type / modality)
+- **PDF** basic text extraction via optional **`pdf`** extra (**pypdf**) → modality-specific `EvidenceUnit`s
+- **PPTX** basic slide text via optional **`pptx`** extra (**python-pptx**) → `EvidenceUnit`s
+- **Tests**: File Clerk + graph + `POST /retrieve` compatibility for **PDF/PPTX** multimodal `EvidenceUnit`s; HTTP tests for multimodal `POST /artifacts` error semantics
+
+### Validation shell only (no text EvidenceUnits yet)
+
+- **Image**: optional **`image`** extra (**Pillow**) validates bytes; **OCR and captioning/visual summaries are not implemented**; uploads do **not** produce `EvidenceUnit`s (API returns **503** after validation when the shell is active)
+- **Audio**: optional **`audio`** extra (**mutagen**) validates bytes; **transcription / ASR is not implemented**; uploads do **not** produce `EvidenceUnit`s (**503** after validation when the shell is active)
+
+### Deferred / unsupported
+
+- **Video** ingestion: **not supported** (resolver rejects with **400**); treated as deferred/cancelled for this codebase state
+- **Automatic multimodal graph extraction**: not implemented
+- **FileClerk redesign** and **`RetrievalPacket` schema redesign**: not done; existing packet path **carries** PDF/PPTX multimodal evidence as covered by tests
+
+### Optional extras (install from `backend/`)
+
+- **`pdf`** → pypdf: `python -m pip install -e ".[pdf]"`
+- **`pptx`** → python-pptx: `python -m pip install -e ".[pptx]"`
+- **`image`** → Pillow: `python -m pip install -e ".[image]"`
+- **`audio`** → mutagen: `python -m pip install -e ".[audio]"`
+- Combined example: `python -m pip install -e ".[dev,pdf,pptx,image,audio]"`
+
+### Not implemented (do not infer from older prose in this doc)
+
+- OCR, ASR, image captioning, video extractors
+- **`POST /answer`**, **`LocalRAGConsumer`**, LLM/cloud answer paths
+
+---
+
 ## Purpose
 Expand GraphClerk beyond text and Markdown into real-world multimodal knowledge.
 
@@ -89,6 +129,8 @@ At the end of this phase, GraphClerk should be able to:
 ```
 
 This phase makes GraphClerk a multimodal evidence-routing system, not only a text RAG helper.
+
+The **Core Objective** checklist below describes the **target** end state for the phase, not the current shipping state — see **Implementation status (current)** near the top of this document for what is implemented today.
 
 ---
 

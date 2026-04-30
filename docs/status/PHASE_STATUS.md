@@ -43,3 +43,13 @@
   - `backend/app/services/file_clerk_service.py`
   - `backend/app/schemas/retrieval_packet.py`
 
+## Phase 5 — Multimodal Ingestion
+- **Status**: **in progress** / **partially implemented** (**not fully complete**)
+- **Audit**: **pending**
+- **Evidence** (representative):
+  - `docs/phases/graph_clerk_phase_5_multimodal_ingestion.md` (spec + **Implementation status (current)**)
+  - `backend/app/api/routes/artifacts.py`, `backend/app/services/multimodal_ingestion_service.py`
+  - `backend/app/services/ingestion/artifact_type_resolver.py`
+  - `backend/app/services/extraction/` (registry, PDF, PPTX, image, audio extractors)
+  - `backend/tests/test_phase5_*.py`, `backend/tests/test_phase5_file_clerk_multimodal_evidence.py`, `backend/tests/test_phase5_multimodal_ingest_http_errors.py`
+

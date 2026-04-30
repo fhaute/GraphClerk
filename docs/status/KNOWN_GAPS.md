@@ -3,8 +3,11 @@
 This file tracks known missing pieces so they are explicit and not hidden.
 
 - **Text ingestion (Markdown/plain text)**: implemented (Phase 2)
-- **EvidenceUnit extraction from real files on disk**: not_started (future follow-up)
-- **Multimodal ingestion (PDF/slides/images/audio/video)**: not_started (future phase)
+- **Multimodal ingestion (Phase 5 — partial)**:
+  - **PDF / PPTX**: basic **text** extraction to `EvidenceUnit`s when optional **`pdf`** (pypdf) / **`pptx`** (python-pptx) extras are installed; quality and edge cases remain ongoing constraints
+  - **Image / audio**: **validation shells only** (optional **`image`** / Pillow, **`audio`** / mutagen); **OCR, captioning/visual summaries, and transcription/ASR are not implemented**; image/audio **do not** emit `EvidenceUnit`s (typically **503** after validation)
+  - **Video**: ingestion **not supported** (**400**); deferred / cancelled for this codebase state
+  - **No** automatic multimodal graph extraction; **no** FileClerk or `RetrievalPacket` schema redesign for multimodal
 - **Embedding adapter interface**: implemented (Phase 3; production adapter not wired)
 - **Qdrant VectorIndexService**: implemented (Phase 3; integration tests are opt-in/gated)
 - **Semantic index search**: implemented (Phase 3; only returns `vector_status=indexed`)
@@ -31,4 +34,8 @@ This file tracks known missing pieces so they are explicit and not hidden.
 - **Alternative interpretation detection is basic** (mostly derived from semantic index alternates + ambiguity warnings).
 - **Context budget uses simple ranking rules** (fidelity + confidence + dedupe + optional token cap).
 - **LocalRAGConsumer / answer synthesis** is not implemented (packet-only `/answer` remains deferred).
+
+## Known limitations (Phase 5 — in progress)
+- **Phase 5 audit** is **pending**; status here is implementation-truth, not audit sign-off.
+- **Optional dependency matrix**: local/CI coverage for all combinations of extras + integration tests may need hardening later.
 

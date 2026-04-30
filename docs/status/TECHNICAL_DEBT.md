@@ -21,3 +21,9 @@
 - **Alembic migration chain vs tests**: integration tests may use `Base.metadata.create_all()`, which can create the current ORM shape (including `retrieval_log.retrieval_packet`) without exercising the Alembic revision graph. That does **not** prove that `alembic upgrade head` from an older base revision succeeds on a real database.
 - **Future CI task**: run `alembic upgrade head` against a throwaway Postgres instance (from `backend/`) so migration ordering and upgrade scripts are validated automatically, not only implied by ORM metadata in tests.
 
+## Phase 5 (in progress)
+- **OCR / caption backend selection and wiring**: deferred (not implemented); image path intentionally ends in **503** after validation until a backend is chosen and approved.
+- **ASR / transcription backend selection and wiring**: deferred (not implemented); audio path intentionally ends in **503** after validation.
+- **Image/audio validation shells** returning **503**: explicit product choice for now; must stay honest in docs and APIs until extractors emit `EvidenceUnit`s.
+- **Optional dependency install + test matrix** (`pdf`, `pptx`, `image`, `audio` extras vs CI): may need a documented/standardized CI job later so regressions in placeholder vs real extractor paths are caught consistently.
+

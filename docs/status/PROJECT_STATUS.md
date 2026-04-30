@@ -1,8 +1,8 @@
 # Project Status
 
 ## Summary
-- **Current phase**: Phase 4 — File Clerk & retrieval packets
-- **Implementation status**: Phase 4 implemented (**pass_with_notes**; structured retrieval only; no `/answer` yet; see limitations below)
+- **Current phase**: Phase 5 — Multimodal ingestion (**in progress**, **partially implemented**, **not fully complete**; Phase 5 **audit pending**)
+- **Prior milestone**: Phase 4 implemented (**pass_with_notes**; structured retrieval only; no `/answer` yet; see limitations below)
 
 ## High-level status
 - **Governance baseline**: implemented
@@ -10,6 +10,7 @@
 - **Phase 2 text-first ingestion**: implemented
 - **Phase 3 semantic index + graph layer**: implemented (pass_with_notes)
 - **Phase 4 File Clerk + retrieval packets**: implemented (pass_with_notes)
+- **Phase 5 multimodal ingestion**: **in progress** / **partially implemented** (see Phase 5 section below; audit pending)
 
 ## Implemented (Phase 1)
 - FastAPI skeleton with infrastructure routes (`/health`, `/version`)
@@ -30,11 +31,29 @@
 - EvidenceUnit creation with location metadata
 - Inspection APIs (`GET /artifacts`, `GET /artifacts/{id}`, evidence listing and retrieval)
 
-## Not implemented (by design)
-- multimodal parsing (PDF/PPTX/images/audio/video)
+## Implemented (Phase 5 — partial; not fully complete)
+- **`EvidenceUnitCandidate`** contract hardening
+- **`ArtifactExtractor`** protocol + **`ExtractorRegistry`**
+- Multimodal **routing shell** for `POST /artifacts` multipart uploads
+- **`ArtifactTypeResolver`** (filename + MIME → artifact type / modality)
+- **PDF** basic text extraction via optional **`pdf`** extra (pypdf) → `EvidenceUnit`s with location metadata
+- **PPTX** basic slide text via optional **`pptx`** extra (python-pptx) → `EvidenceUnit`s
+- **Image** / **audio** **validation shells** only (optional **`image`** / Pillow, **`audio`** / mutagen): bytes validated; **no** OCR, captioning, or transcription; **no** `EvidenceUnit`s from image/audio (API returns **503** after validation)
+- **Tests**: File Clerk + graph compatibility for PDF/PPTX multimodal evidence in `POST /retrieve` packets; HTTP error matrix for multimodal `POST /artifacts`
+
+## Not implemented (by design) — unchanged global items
 - optional packet-only answer synthesis (`POST /answer`, LocalRAGConsumer) — deferred
 - LLM calls / answer synthesis
 - UI
+
+## Phase 5 limitations (explicit)
+- **OCR / image captioning / visual summaries**: not implemented
+- **Audio transcription / ASR**: not implemented
+- **Image and audio** do **not** currently emit `EvidenceUnit`s
+- **Video** ingestion: rejected (**400**); deferred / not supported
+- **No** automatic multimodal graph extraction
+- **No** FileClerk redesign and **no** `RetrievalPacket` schema redesign for multimodal (existing packet path carries PDF/PPTX evidence as tested)
+- Optional extras and extraction quality remain **known constraints**; Phase 5 **audit pending**
 
 ## Implemented (Phase 3)
 - Graph nodes/edges APIs and persistence

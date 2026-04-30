@@ -71,20 +71,25 @@
 
 ## Phase 5 — Multimodal Ingestion
 - **Defined in**: `docs/phases/graph_clerk_phase_5_multimodal_ingestion.md`
-- **Goal**: normalize PDFs/slides/images/audio/(optional video groundwork) into `EvidenceUnit`s with correct `source_fidelity`.
-- **Deliverables**:
-  - modality router + extractor adapter contracts
-  - extractors (local-first):
-    - PDF
-    - PPTX
-    - image (OCR/caption)
-    - audio (transcription)
-    - optional video groundwork (audio transcript, optional keyframes)
-  - modality-specific evidence content types + location metadata
-  - File Clerk packet compatibility with multimodal evidence metadata
-  - explicit extractor failure behavior + required tests
-  - docs/status updates + Phase 5 audit
-- **Status**: not_started
+- **Goal**: normalize PDFs/slides/images/audio into `EvidenceUnit`s with correct `source_fidelity` where extraction exists; preserve honest handling for shells and unsupported types.
+- **Status**: **in progress** / **partially implemented** (**not fully complete**)
+- **Audit**: **pending**
+- **Delivered so far (implementation truth)**:
+  - `EvidenceUnitCandidate` contract hardening
+  - `ArtifactExtractor` protocol + `ExtractorRegistry`
+  - multimodal routing shell + `ArtifactTypeResolver`
+  - PDF basic text extraction (optional **`pdf`** / pypdf)
+  - PPTX basic slide text extraction (optional **`pptx`** / python-pptx)
+  - image/audio **validation shells** (optional **`image`** / Pillow, **`audio`** / mutagen) — **no** EvidenceUnits from image/audio yet
+  - tests: File Clerk + graph + `POST /retrieve` compatibility for PDF/PPTX multimodal evidence; multimodal `POST /artifacts` HTTP error hardening
+  - docs/status updates (this slice)
+- **Remaining / not done** (non-exhaustive; see phase doc):
+  - OCR, image captioning/visual summaries, audio transcription/ASR
+  - image/audio extractors that emit `EvidenceUnit`s
+  - video ingestion (unsupported / deferred)
+  - Phase 5 **audit** document
+  - further extraction quality, edge cases, and optional CI matrix for extras
+- **Optional install (from `backend/`)**: `python -m pip install -e ".[pdf]"`, `".[pptx]"`, `".[image]"`, `".[audio]"`, or e.g. `python -m pip install -e ".[dev,pdf,pptx,image,audio]"`
 
 ## Phase 6 — Productization, UI, Evaluation, and Hardening
 - **Defined in**: `docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`
@@ -105,10 +110,9 @@
 - No silent fallbacks; failures must be explicit.
 - Protected terms/contracts require change-control.
 
-## Later phases (high level)
-- Semantic index population + search (indexes as access paths, not truth).
-- Graph traversal logic with bounded context budgets.
-- FileClerk retrieval packet assembly.
-- Optional model adapters and answer synthesis (strictly separate from retrieval).
-- UI (only after retrieval/packets are stable and audited).
+## Later work (high level; Phases 3–4 already cover parts of this list)
+- Semantic index **vector population** (auto-index on create, backfill jobs) — indexing/search APIs exist; population workflow remains a gap.
+- **Embedding production adapter** wiring and calibration (Phase 3 placeholder today).
+- **Optional** packet-only **`POST /answer`** / consumer (strictly separate from retrieval; not implemented).
+- **UI** and demo tooling (Phase 6).
 
