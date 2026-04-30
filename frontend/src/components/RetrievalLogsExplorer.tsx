@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../api/client";
 import { fetchRetrievalLog, fetchRetrievalLogs } from "../api/retrievalLogs";
+import { parseStoredRetrievalPacket } from "../lib/parseStoredRetrievalPacket";
 import type { RetrievalLogDetailResponse, RetrievalLogSummary } from "../types/retrievalLog";
-import type { RetrievalPacket } from "../types/retrievalPacket";
 import { RetrievalPacketPanel } from "./RetrievalPacketPanel";
 
 function formatError(err: unknown): string {
@@ -17,24 +17,6 @@ function formatJson(value: unknown): string {
   } catch {
     return String(value);
   }
-}
-
-/** Minimal structural check before handing stored JSON to RetrievalPacketPanel. */
-function parseStoredRetrievalPacket(raw: unknown): RetrievalPacket | null {
-  if (raw == null || typeof raw !== "object") return null;
-  const o = raw as Record<string, unknown>;
-  if (o.packet_type !== "retrieval_packet") return null;
-  if (typeof o.question !== "string") return null;
-  if (!Array.isArray(o.evidence_units)) return null;
-  if (!Array.isArray(o.graph_paths)) return null;
-  if (!Array.isArray(o.selected_indexes)) return null;
-  if (!Array.isArray(o.alternative_interpretations)) return null;
-  if (!Array.isArray(o.warnings)) return null;
-  if (o.interpreted_intent == null || typeof o.interpreted_intent !== "object") return null;
-  if (o.context_budget == null || typeof o.context_budget !== "object") return null;
-  if (typeof o.answer_mode !== "string") return null;
-  if (typeof o.confidence !== "number") return null;
-  return o as unknown as RetrievalPacket;
 }
 
 function WarningsInline({ warnings }: { warnings: string[] | null | undefined }) {

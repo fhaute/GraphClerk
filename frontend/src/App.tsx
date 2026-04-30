@@ -3,6 +3,7 @@ import { ApiError, getApiBaseUrl } from "./api/client";
 import { fetchHealth } from "./api/health";
 import { ArtifactsExplorer } from "./components/ArtifactsExplorer";
 import { QueryPlayground } from "./components/QueryPlayground";
+import { EvaluationDashboard } from "./components/EvaluationDashboard";
 import { GraphExplorer } from "./components/GraphExplorer";
 import { RetrievalLogsExplorer } from "./components/RetrievalLogsExplorer";
 import { SemanticIndexesExplorer } from "./components/SemanticIndexesExplorer";
@@ -13,7 +14,7 @@ type LoadState =
   | { kind: "ok"; data: HealthResponse }
   | { kind: "error"; message: string };
 
-type MainTab = "playground" | "artifacts" | "semantic" | "graph" | "logs";
+type MainTab = "playground" | "artifacts" | "semantic" | "graph" | "logs" | "eval";
 
 export default function App() {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
@@ -130,6 +131,17 @@ export default function App() {
         >
           Retrieval logs
         </button>
+        <button
+          type="button"
+          onClick={() => setTab("eval")}
+          className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+            tab === "eval"
+              ? "border-neutral-900 text-neutral-900"
+              : "border-transparent text-neutral-600 hover:text-neutral-900"
+          }`}
+        >
+          Evaluation
+        </button>
       </nav>
 
       <div className="mt-6">
@@ -138,6 +150,7 @@ export default function App() {
         {tab === "semantic" && <SemanticIndexesExplorer />}
         {tab === "graph" && <GraphExplorer />}
         {tab === "logs" && <RetrievalLogsExplorer />}
+        {tab === "eval" && <EvaluationDashboard />}
       </div>
     </div>
   );
