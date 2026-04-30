@@ -62,6 +62,20 @@ It receives a user question and returns a structured RetrievalPacket containing:
 
 This phase turns GraphClerk from a meaning index into an actual evidence-routing layer.
 
+Phase 4 also formalizes an optional RAG consumer mode. This does **not** change the core identity of GraphClerk. The core remains the File Clerk and the RetrievalPacket. The optional RAG consumer exists only to consume RetrievalPackets and produce packet-grounded answers.
+
+GraphClerk can therefore be used in two modes:
+
+```text
+Mode 1 — Retrieval layer only
+GraphClerk returns RetrievalPackets for another RAG app, LLM app, agent, or external consumer.
+
+Mode 2 — Optional local RAG consumer
+GraphClerk creates a RetrievalPacket and then uses a packet-bound AnswerSynthesizer to produce an answer.
+```
+
+The optional RAG consumer must never bypass the File Clerk.
+
 ---
 
 ## Core Objective
@@ -78,7 +92,7 @@ At the end of this phase, GraphClerk should be able to:
 - collect source-backed evidence
 - rank and prune evidence according to a context budget
 - assemble a structured RetrievalPacket
-- optionally synthesize an answer from the RetrievalPacket using a local-first answer adapter
+- optionally synthesize an answer from the RetrievalPacket using a packet-bound LocalRAGConsumer / AnswerSynthesizer
 - log retrieval decisions
 - expose /retrieve and optional /answer endpoints
 - test retrieval packet structure and behavior
@@ -123,6 +137,20 @@ GraphClerk's correction:
 
 The File Clerk is the component that enforces this.
 
+The optional RAG consumer is not a shortcut around GraphClerk. It is a consumer of GraphClerk output.
+
+Bad architecture:
+
+```text
+question → vector chunks → LLM answer
+```
+
+Allowed architecture:
+
+```text
+question → FileClerk → RetrievalPacket → LocalRAGConsumer / AnswerSynthesizer → answer
+```
+
 ---
 
 ## Scope
@@ -144,6 +172,7 @@ The File Clerk is the component that enforces this.
 - RetrievalLog updates
 - /retrieve endpoint
 - optional /answer endpoint using RetrievalPacket only
+- optional LocalRAGConsumer boundary
 - AnswerSynthesizer boundary
 - tests for retrieval packets
 - tests for context budget behavior
@@ -165,6 +194,7 @@ The File Clerk is the component that enforces this.
 - cloud LLM requirement
 - advanced UI
 - production-grade evaluation dashboard
+- direct chunk-based RAG bypass around the File Clerk
 ```
 
 ---
@@ -178,21 +208,26 @@ The File Clerk is the component that enforces this.
 4. The File Clerk must not mutate source artifacts.
 5. The File Clerk must not perform hidden retrieval outside documented steps.
 6. Answer synthesis, if implemented, must consume only the RetrievalPacket.
-7. The AnswerSynthesizer must not perform hidden semantic search or graph traversal.
-8. Context budget pruning must be explicit and visible in the packet.
-9. Ambiguity must be represented instead of hidden.
-10. Retrieval failures must be explicit.
-11. No external LLM dependency is required.
-12. Every public class/function must have a docstring.
-13. Every public endpoint must have tests.
-14. Retrieval packets must have schema/contract tests.
-15. Status docs must be updated before phase completion.
-16. Phase 4 audit must be created before phase completion.
+7. The optional LocalRAGConsumer must consume RetrievalPackets only.
+8. The optional LocalRAGConsumer must not bypass the File Clerk.
+9. The AnswerSynthesizer must not perform hidden semantic search or graph traversal.
+10. The AnswerSynthesizer must not query Qdrant, Postgres, files, or repositories directly.
+11. Context budget pruning must be explicit and visible in the packet.
+12. Ambiguity must be represented instead of hidden.
+13. Retrieval failures must be explicit.
+14. No external LLM dependency is required.
+15. Every public class/function must have a docstring.
+16. Every public endpoint must have tests.
+17. Retrieval packets must have schema/contract tests.
+18. Status docs must be updated before phase completion.
+19. Phase 4 audit must be created before phase completion.
 ```
 
 ---
 
 # Core Flow
+
+## Core retrieval flow
 
 ```text
 User question
@@ -216,9 +251,25 @@ Evidence collection
 Evidence ranking and pruning
   ↓
 RetrievalPacket assembly
-  ↓
-Optional AnswerSynthesizer consumes packet only
 ```
+
+## Optional RAG consumer flow
+
+```text
+User question
+  ↓
+FileClerkService
+  ↓
+RetrievalPacket
+  ↓
+LocalRAGConsumer
+  ↓
+AnswerSynthesizer
+  ↓
+Packet-grounded answer
+```
+
+The optional RAG consumer starts only after a RetrievalPacket exists. It does not perform its own retrieval.
 
 ---
 
@@ -235,6 +286,47 @@ It does not answer:
 > What should the final user-facing response say?
 
 That belongs to the AnswerSynthesizer.
+
+The File Clerk is the mandatory core of Phase 4. The optional LocalRAGConsumer is downstream of the File Clerk and must not replace it.
+
+---
+
+# Optional RAG Consumer Boundary
+
+GraphClerk may include an optional RAG consumer, but this consumer is not the core product boundary.
+
+```text
+GraphClerk Core:
+Artifact → EvidenceUnit → Graph → SemanticIndex → RetrievalPacket
+
+Optional RAG Consumer:
+RetrievalPacket → AnswerSynthesizer → Answer
+```
+
+The optional RAG consumer exists to make GraphClerk easier to demo and easier to use locally. It must still prove the value of RetrievalPackets rather than bypassing them.
+
+## LocalRAGConsumer rules
+
+```text
+- It may accept a question only if it internally calls FileClerkService first.
+- It may accept a RetrievalPacket directly.
+- It must generate answers only from the RetrievalPacket.
+- It must respect answer_mode, warnings, confidence, and ambiguity fields.
+- It must not perform hidden retrieval.
+- It must not query SemanticIndexSearchService, GraphTraversalService, EvidenceUnitRepository, Qdrant, Postgres, files, or external tools directly.
+```
+
+Allowed:
+
+```text
+question → FileClerkService → RetrievalPacket → LocalRAGConsumer → AnswerSynthesizer → answer
+```
+
+Forbidden:
+
+```text
+question → direct vector/chunk search → LLM answer
+```
 
 ---
 
@@ -552,9 +644,11 @@ They are not source truth.
 
 ---
 
-# Optional AnswerSynthesizer
+# Optional LocalRAGConsumer and AnswerSynthesizer
 
-Phase 4 may include a basic AnswerSynthesizer, but it must be strictly separated.
+Phase 4 may include a basic LocalRAGConsumer and AnswerSynthesizer, but they must be strictly separated from retrieval.
+
+The LocalRAGConsumer is the optional RAG mode. It consumes a RetrievalPacket and asks an AnswerSynthesizer to produce a final response.
 
 The AnswerSynthesizer consumes a RetrievalPacket and produces a final response.
 
@@ -564,8 +658,13 @@ It must not:
 - perform semantic search
 - traverse the graph
 - retrieve hidden evidence
+- query Qdrant
+- query Postgres
+- read files
+- call repositories
 - invent citations
 - ignore packet warnings
+- ignore answer_mode
 ```
 
 ## Local-First Rule
@@ -582,6 +681,14 @@ Possible implementations:
 For Phase 4, a template-based synthesizer may be enough.
 
 This avoids cost and keeps behavior testable.
+
+## Packet-bound answer behavior
+
+If the packet says `answer_mode = not_enough_evidence`, the answer must not present a confident unsupported answer.
+
+If the packet contains warnings or alternative interpretations, the answer must either surface them or follow the packet's suggested mode.
+
+The answer layer is allowed to format, summarize, and explain the packet. It is not allowed to expand the evidence set.
 
 ---
 
@@ -632,7 +739,7 @@ Input:
 Flow:
 
 ```text
-question → RetrievalPacket → AnswerSynthesizer → final response
+question → FileClerkService → RetrievalPacket → LocalRAGConsumer → AnswerSynthesizer → final response
 ```
 
 The response should include the packet ID or retrieval log ID for traceability.
@@ -710,6 +817,26 @@ Responsible for:
 - ensuring machine-readable warnings
 ```
 
+## LocalRAGConsumer Optional
+Responsible for:
+
+```text
+- consuming RetrievalPackets
+- coordinating packet-bound answer generation
+- exposing optional local RAG behavior without bypassing FileClerk
+- respecting answer_mode, warnings, ambiguity, and confidence
+```
+
+Forbidden:
+
+```text
+- direct semantic search
+- direct graph traversal
+- direct vector search
+- repository/database/file access
+- evidence expansion outside the packet
+```
+
 ## AnswerSynthesizer Optional
 Responsible for:
 
@@ -768,6 +895,7 @@ test_low_evidence_sets_not_enough_evidence_mode
 test_retrieval_warnings_are_machine_readable
 test_retrieval_log_created
 test_answer_synthesizer_uses_packet_only_if_implemented
+test_local_rag_consumer_does_not_bypass_file_clerk_if_implemented
 ```
 
 Optional tests:
@@ -810,7 +938,7 @@ Implemented:
 - Retrieval logs
 
 Optional if implemented:
-- Basic answer synthesis from RetrievalPackets only
+- Basic LocalRAGConsumer / answer synthesis from RetrievalPackets only
 
 Not implemented yet:
 - Multimodal ingestion
@@ -854,7 +982,7 @@ Not implemented:
 - Query intent classification is simple/deterministic.
 - Alternative interpretation detection is basic.
 - Context budget uses simple ranking rules.
-- Answer synthesis, if present, is packet-bound and basic.
+- LocalRAGConsumer / answer synthesis, if present, is packet-bound and basic.
 - No multimodal ingestion yet.
 ```
 
@@ -877,6 +1005,7 @@ Audit must answer:
 - Does the File Clerk avoid generating final prose answers directly?
 - Does the File Clerk avoid inventing evidence?
 - Does answer synthesis, if implemented, consume only the packet?
+- Does the optional LocalRAGConsumer avoid bypassing the File Clerk?
 - Are context budget decisions visible?
 - Are ambiguity and alternatives represented?
 - Are retrieval warnings machine-readable?
@@ -988,19 +1117,21 @@ Acceptance:
 - endpoint is tested
 ```
 
-## Task 9 — Optional AnswerSynthesizer
-Implement template-based answer generation from packet only.
+## Task 9 — Optional LocalRAGConsumer and AnswerSynthesizer
+Implement packet-bound local RAG answer generation from RetrievalPackets only.
 
 Acceptance:
 
 ```text
-- synthesizer consumes packet only
+- LocalRAGConsumer consumes RetrievalPacket only
+- AnswerSynthesizer consumes RetrievalPacket only
 - no hidden retrieval occurs
 - tests prove packet-bound behavior
+- tests prove the optional RAG path does not bypass FileClerk
 ```
 
 ## Task 10 — Optional /answer endpoint
-Expose answer synthesis if Task 9 is implemented.
+Expose LocalRAGConsumer / answer synthesis if Task 9 is implemented.
 
 Acceptance:
 
@@ -1050,7 +1181,7 @@ You are working on GraphClerk Phase 4 — File Clerk and Retrieval Packets.
 You must follow docs/governance/*.
 Do not implement multimodal ingestion, automatic graph extraction, autonomous agent loops, advanced UI, or cloud LLM requirements.
 The File Clerk must return structured RetrievalPackets and must not invent evidence.
-Answer synthesis, if implemented, must consume RetrievalPackets only.
+Answer synthesis and LocalRAGConsumer behavior, if implemented, must consume RetrievalPackets only and must not bypass FileClerk.
 Only modify the files listed below.
 Add or update tests as specified.
 Add docstrings to public classes/functions.
@@ -1083,6 +1214,7 @@ At the end of Phase 4:
 - FileClerkService
 - /retrieve endpoint
 - RetrievalLog updates
+- optional LocalRAGConsumer
 - optional AnswerSynthesizer
 - optional /answer endpoint
 - required tests
@@ -1114,6 +1246,9 @@ then the packet uses warnings and answer_mode to show low support.
 
 Given answer synthesis is implemented,
 then the synthesizer only uses the RetrievalPacket and performs no hidden retrieval.
+
+Given LocalRAGConsumer is implemented,
+then it either consumes an existing RetrievalPacket or calls FileClerkService first and performs no direct retrieval.
 
 Given pytest is run,
 then all Phase 4 tests pass.
@@ -1171,7 +1306,18 @@ Mitigation:
 - no retriever dependencies inside AnswerSynthesizer
 ```
 
-## Risk 3 — Context budget becomes invisible
+## Risk 3 — Optional RAG consumer bypasses File Clerk
+If the optional RAG consumer performs direct vector search or repository lookup, GraphClerk becomes another hidden chunk-RAG system.
+
+Mitigation:
+
+```text
+- LocalRAGConsumer must consume RetrievalPackets only
+- tests prove no retriever/repository dependencies inside LocalRAGConsumer
+- /answer must call /retrieve/FileClerk path first
+```
+
+## Risk 4 — Context budget becomes invisible
 If pruning happens silently, users cannot trust the packet.
 
 Mitigation:
@@ -1181,7 +1327,7 @@ Mitigation:
 - pruning reasons required
 ```
 
-## Risk 4 — Ambiguity is ignored
+## Risk 5 — Ambiguity is ignored
 If ambiguity is hidden, the answer may look more certain than the evidence supports.
 
 Mitigation:
@@ -1192,7 +1338,7 @@ Mitigation:
 - confidence penalty
 ```
 
-## Risk 5 — Packet bloat
+## Risk 6 — Packet bloat
 The packet can become as noisy as chunk dumping.
 
 Mitigation:

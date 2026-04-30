@@ -31,6 +31,8 @@ class RetrievalLog(Base):
 
     metadata_json: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
 
+    retrieval_packet: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

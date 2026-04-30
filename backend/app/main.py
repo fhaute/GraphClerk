@@ -10,6 +10,7 @@ from app.api.routes.graph_nodes import router as graph_nodes_router
 from app.api.routes.graph_node_evidence import router as graph_node_evidence_router
 from app.api.routes.graph_traversal import router as graph_traversal_router
 from app.api.routes.health import router as health_router
+from app.api.routes.retrieve import router as retrieve_router
 from app.api.routes.semantic_indexes import router as semantic_indexes_router
 from app.api.routes.version import router as version_router
 
@@ -23,8 +24,8 @@ def create_app() -> FastAPI:
     - infrastructure endpoints (`/health`, `/version`)
     - Phase 2 artifact/evidence endpoints (`/artifacts`, `/evidence-units`)
 
-    It must not expose FileClerk/retrieval packets,
-    LLM calls/answer synthesis, multimodal ingestion, or UI behavior.
+    It exposes Phase 4 `POST /retrieve` (structured packets only).
+    It must not expose LLM calls/answer synthesis, multimodal ingestion, or UI behavior.
     """
 
     app = FastAPI(title="GraphClerk", version="0.1.0")
@@ -39,6 +40,7 @@ def create_app() -> FastAPI:
     app.include_router(graph_edge_evidence_router)
     app.include_router(graph_traversal_router)
     app.include_router(semantic_indexes_router)
+    app.include_router(retrieve_router)
 
     return app
 

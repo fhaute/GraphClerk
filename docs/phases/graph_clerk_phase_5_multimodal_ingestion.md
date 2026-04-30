@@ -81,6 +81,7 @@ At the end of this phase, GraphClerk should be able to:
 - expose multimodal evidence through existing evidence APIs
 - allow graph nodes/edges to link to multimodal EvidenceUnits
 - allow File Clerk packets to include multimodal evidence references
+- preserve compatibility with optional packet-bound LocalRAGConsumer answers
 - test multimodal extraction and traceability
 - document extractor limitations
 - update status docs
@@ -107,6 +108,8 @@ They all produce EvidenceUnits.
 Those EvidenceUnits can support graph nodes and edges.
 
 Those graph paths can later appear inside RetrievalPackets.
+
+If the optional LocalRAGConsumer exists, it must consume those RetrievalPackets only. Multimodal evidence must therefore carry enough modality, source_fidelity, and location metadata for packet-grounded answers without allowing hidden media lookup or direct model access.
 
 ---
 
@@ -166,10 +169,11 @@ Those graph paths can later appear inside RetrievalPackets.
 10. Every EvidenceUnit must link back to an Artifact.
 11. Location metadata must be stored where available.
 12. File Clerk packets must be able to carry modality metadata.
-13. No external LLM dependency is required.
-14. Every public class/function must have a docstring.
-15. Status docs must be updated before phase completion.
-16. Phase 5 audit must be created before phase completion.
+13. Optional LocalRAGConsumer answers must remain packet-bound and must not perform hidden media retrieval.
+14. No external LLM dependency is required.
+15. Every public class/function must have a docstring.
+16. Status docs must be updated before phase completion.
+17. Phase 5 audit must be created before phase completion.
 ```
 
 ---
@@ -677,9 +681,9 @@ metadata
 
 ---
 
-# File Clerk Compatibility
+# File Clerk and LocalRAGConsumer Compatibility
 
-Phase 5 should not redesign the File Clerk.
+Phase 5 should not redesign the File Clerk or the optional LocalRAGConsumer.
 
 Instead, it should make sure RetrievalPackets can include multimodal evidence metadata.
 
@@ -699,6 +703,8 @@ confidence
 That should be enough for Phase 5.
 
 If any schema update is needed, it must go through change-control.
+
+If an optional LocalRAGConsumer is implemented, it may use multimodal evidence only through RetrievalPacket fields. It must not directly fetch source media, rerun extractors, query the database, or call vision/audio models outside the packet-bound answer flow.
 
 ---
 
@@ -763,6 +769,7 @@ test_audio_transcript_marked_extracted
 test_unsupported_artifact_type_fails_clearly
 test_multimodal_evidence_units_link_to_artifact
 test_file_clerk_packet_can_include_multimodal_evidence_metadata
+test_optional_rag_consumer_stays_packet_bound_for_multimodal_evidence_if_implemented
 test_extraction_failure_is_explicit
 ```
 
@@ -878,6 +885,7 @@ Audit must answer:
 - Are extraction failures explicit?
 - Did any modality create a separate truth layer outside EvidenceUnits?
 - Are File Clerk packets still compatible with multimodal evidence?
+- If LocalRAGConsumer exists, does it remain packet-bound for multimodal evidence?
 - Were any unsupported capabilities overclaimed in README?
 - Are known extraction limitations documented?
 - Are all implemented extractors tested?

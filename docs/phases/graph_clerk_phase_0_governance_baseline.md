@@ -91,6 +91,18 @@ GraphClerk's correction:
 - send less junk to the LLM
 ```
 
+GraphClerk may include an optional packet-bound RAG consumer, but this must remain separate from the core retrieval layer.
+
+```text
+GraphClerk Core:
+Artifact → EvidenceUnit → Graph → SemanticIndex → RetrievalPacket
+
+Optional LocalRAGConsumer:
+RetrievalPacket → AnswerSynthesizer → Answer
+```
+
+The optional consumer must never bypass FileClerk, RetrievalPackets, graph traversal rules, or evidence traceability.
+
 ---
 
 ## Phase Scope
@@ -220,6 +232,7 @@ Search meaning first, then retrieve evidence.
 10. Every major behavior must be testable.
 11. Context should be pruned before reaching the LLM.
 12. Retrieval should expose confidence, ambiguity, and source support.
+13. Optional answer generation must consume RetrievalPackets only and must not perform hidden retrieval.
 ```
 
 ## Non-Goals
@@ -231,6 +244,8 @@ Search meaning first, then retrieve evidence.
 - GraphClerk is not a document storage system only.
 - GraphClerk is not EBES.
 - GraphClerk does not replace original source material with summaries.
+- GraphClerk core is not a direct chunk-to-LLM RAG shortcut.
+- Optional answer generation must remain packet-bound and traceable.
 ```
 
 ---
@@ -256,6 +271,7 @@ Define strict operating rules for Cursor and any coding assistant.
 11. Do not mix ingestion, retrieval, graph, and answer synthesis layers.
 12. Do not generate final answers inside retrieval services.
 13. Do not make LLM calls required for core local-first ingestion unless explicitly scoped.
+14. Do not implement a direct RAG bypass that answers from chunks, vectors, files, or hidden database reads instead of RetrievalPackets.
 ```
 
 ## Cursor Prompt Requirements
@@ -406,6 +422,25 @@ Forbidden:
 - overriding packet warnings
 ```
 
+## LocalRAGConsumer Agent
+Responsible for:
+
+```text
+- optional packet-grounded answer flow
+- consuming RetrievalPackets
+- invoking an AnswerSynthesizer only from packet content
+- returning final answers with traceability to packet evidence
+```
+
+Forbidden:
+
+```text
+- bypassing FileClerk
+- performing hidden semantic search, graph traversal, vector search, file lookup, or database evidence lookup
+- answering without a RetrievalPacket
+- hiding packet warnings or uncertainty
+```
+
 ## Evaluation Agent
 Responsible for:
 
@@ -466,6 +501,9 @@ Retrieval packets should manage evidence size intentionally. Context bloat is a 
 ## Invariant 12 — Ambiguity should be represented
 When user intent is ambiguous, RetrievalPackets should include alternatives instead of pretending certainty.
 
+## Invariant 13 — Optional RAG consumes packets only
+If GraphClerk includes an optional RAG consumer or answer endpoint, it must consume RetrievalPackets only. It must not perform hidden retrieval, vector search, graph traversal, file lookup, database evidence lookup, or direct chunk-to-LLM answering.
+
 ---
 
 # Governance Document 5 — CONTRACTS.md
@@ -485,6 +523,7 @@ GraphEdge Contract
 SemanticIndex Contract
 RetrievalPacket Contract
 FileClerk Contract
+LocalRAGConsumer Contract
 ModelAdapter Contract
 IngestionPipeline Contract
 ```
@@ -570,6 +609,21 @@ context_budget
 answer_mode
 ```
 
+## LocalRAGConsumer Contract Summary
+A LocalRAGConsumer is an optional component that produces packet-grounded answers.
+
+It must consume a RetrievalPacket and must not perform hidden retrieval.
+
+Forbidden behavior:
+
+```text
+- direct vector/chunk search
+- hidden graph traversal
+- hidden file or database evidence lookup
+- answering without a RetrievalPacket
+- ignoring packet warnings, ambiguity, confidence, or answer_mode
+```
+
 ---
 
 # Governance Document 6 — PHASE_PROTOCOL.md
@@ -636,6 +690,7 @@ GraphEdge
 SemanticIndex
 FileClerk
 RetrievalPacket
+LocalRAGConsumer
 SourceFidelity
 ModelAdapter
 IngestionPipeline

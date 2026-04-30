@@ -34,3 +34,12 @@
   - `backend/app/api/routes/semantic_indexes.py`
   - `backend/app/api/routes/graph_traversal.py`
 
+## Phase 4 — File Clerk and Retrieval Packets
+- **Status**: implemented (**pass_with_notes**)
+- **Evidence**:
+  - `docs/phases/graph_clerk_phase_4_file_clerk_retrieval_packets.md`
+  - `docs/audits/PHASE_4_AUDIT.md`
+  - `backend/app/api/routes/retrieve.py`
+  - `backend/app/services/file_clerk_service.py`
+  - `backend/app/schemas/retrieval_packet.py`
+

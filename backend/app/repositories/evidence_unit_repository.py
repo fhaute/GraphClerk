@@ -41,3 +41,11 @@ class EvidenceUnitRepository:
         )
         return list(self._session.execute(stmt).scalars().all())
 
+    def list_by_ids(self, evidence_unit_ids: list[uuid.UUID]) -> list[EvidenceUnit]:
+        """Fetch evidence units by id (order not guaranteed)."""
+
+        if not evidence_unit_ids:
+            return []
+        stmt = select(EvidenceUnit).where(EvidenceUnit.id.in_(evidence_unit_ids))
+        return list(self._session.execute(stmt).scalars().all())
+

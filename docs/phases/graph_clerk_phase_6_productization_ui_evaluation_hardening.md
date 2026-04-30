@@ -63,6 +63,8 @@ GraphClerk’s value is not only the final response.
 
 Its value is that users can inspect how the evidence was selected.
 
+If Phase 4 includes the optional LocalRAGConsumer, Phase 6 may display answers, but the answer view must remain packet-bound. The UI must make the RetrievalPacket or retrieval trace visible next to the answer.
+
 ---
 
 ## Core Objective
@@ -72,6 +74,7 @@ At the end of this phase, GraphClerk should have:
 - a usable web UI
 - a query playground
 - a retrieval packet viewer
+- an optional packet-grounded answer viewer
 - an artifact/evidence viewer
 - a graph explorer
 - a semantic index explorer
@@ -117,6 +120,7 @@ The user should be able to see:
 - Frontend application skeleton
 - Query playground
 - RetrievalPacket viewer
+- optional LocalRAGConsumer answer viewer
 - Artifact viewer
 - EvidenceUnit viewer
 - SemanticIndex explorer
@@ -163,6 +167,9 @@ The user should be able to see:
 10. Errors must be visible to the user.
 11. Status docs must be updated before phase completion.
 12. Phase 6 audit must be created before phase completion.
+13. If an answer is shown, the RetrievalPacket or trace used to generate it must be visible.
+14. The UI must not present answer-only output as if traceability is optional.
+15. The frontend must not call model/LLM adapters directly or invent answer data outside backend contracts.
 ```
 
 ---
@@ -188,7 +195,9 @@ UI shows evidence units
   ↓
 UI shows context budget decisions
   ↓
-Optional answer is shown
+Optional packet-grounded answer is shown
+  ↓
+The RetrievalPacket/trace remains inspectable
   ↓
 Evaluation metrics are logged
 ```
@@ -316,7 +325,10 @@ Should show:
 - warnings
 - confidence
 - final answer if available
+- packet/trace used to produce the final answer
 ```
+
+If the optional answer view exists, it must never replace the packet view.
 
 This is the most important page.
 
@@ -353,7 +365,34 @@ Answer mode
 
 ---
 
-## 4. Artifact Viewer
+## 4. Optional Answer Viewer
+
+Purpose:
+
+```text
+Display packet-grounded answers produced by the optional LocalRAGConsumer.
+```
+
+Must show:
+
+```text
+- final answer
+- answer_mode
+- packet ID or retrieval log ID
+- warnings/caveats from the packet
+- evidence references used
+- link to open the full RetrievalPacket
+```
+
+Forbidden:
+
+```text
+- answer-only display with no trace
+- frontend-generated answers
+- hidden calls to model adapters or retrieval services
+```
+
+## 5. Artifact Viewer
 
 Purpose:
 
@@ -375,7 +414,7 @@ Should show:
 
 ---
 
-## 5. EvidenceUnit Viewer
+## 6. EvidenceUnit Viewer
 
 Purpose:
 
@@ -406,7 +445,7 @@ source_fidelity
 
 ---
 
-## 6. SemanticIndex Explorer
+## 7. SemanticIndex Explorer
 
 Purpose:
 
@@ -433,7 +472,7 @@ Should support:
 
 ---
 
-## 7. Graph Explorer
+## 8. Graph Explorer
 
 Purpose:
 
@@ -464,7 +503,7 @@ Traceability matters more than beauty.
 
 ---
 
-## 8. Retrieval Logs Viewer
+## 9. Retrieval Logs Viewer
 
 Purpose:
 
@@ -489,7 +528,7 @@ Should allow opening a previous RetrievalPacket.
 
 ---
 
-## 9. Evaluation Dashboard
+## 10. Evaluation Dashboard
 
 Purpose:
 
@@ -797,7 +836,8 @@ If automated frontend tests are too heavy in first pass, document manual smoke t
 - Inspect graph path
 - Inspect evidence units
 - Inspect context budget
-- Inspect optional answer
+- Inspect optional answer if implemented
+- Confirm the answer links back to its RetrievalPacket/trace
 - Open retrieval log
 ```
 
@@ -842,6 +882,7 @@ Implemented:
 - File Clerk retrieval packets
 - Context budget pruning
 - Retrieval trace UI
+- Optional packet-grounded answer view if LocalRAGConsumer is implemented
 - Basic evaluation comparison
 
 Limitations:
@@ -907,6 +948,7 @@ Audit must answer:
 
 ```text
 - Does the UI show retrieval traceability?
+- If answers are shown, does the UI expose the packet/trace used to generate them?
 - Does the UI consume backend contracts correctly?
 - Are any fake frontend-only packets used?
 - Are evaluation metrics honest and reproducible?
@@ -1137,6 +1179,9 @@ then the Query Playground shows a RetrievalPacket.
 Given a RetrievalPacket is displayed,
 then semantic indexes, graph paths, evidence units, context budget, warnings, confidence, and answer mode are visible.
 
+Given an optional answer is displayed,
+then the packet ID, retrieval log ID, warnings, and evidence references used for that answer are visible.
+
 Given evidence units are displayed,
 then artifact, modality, content_type, source_fidelity, and location metadata are visible.
 
@@ -1189,7 +1234,18 @@ Mitigation:
 - make packet inspection central
 ```
 
-## Risk 2 — Fake evaluation metrics
+## Risk 2 — Answer UI hides evidence
+If the optional answer view becomes the primary experience and hides the packet, GraphClerk loses its traceability advantage.
+
+Mitigation:
+
+```text
+- always show packet/trace links beside answers
+- require answer views to surface warnings and evidence references
+- test that answer UI consumes backend contracts only
+```
+
+## Risk 3 — Fake evaluation metrics
 Bad metrics can make the project look dishonest.
 
 Mitigation:
@@ -1200,7 +1256,7 @@ Mitigation:
 - make comparisons reproducible
 ```
 
-## Risk 3 — Frontend invents data shapes
+## Risk 4 — Frontend invents data shapes
 If the frontend does not follow backend contracts, the system splits.
 
 Mitigation:
@@ -1211,7 +1267,7 @@ Mitigation:
 - frontend API client discipline
 ```
 
-## Risk 4 — Overclaiming release maturity
+## Risk 5 — Overclaiming release maturity
 A public demo is not an enterprise product.
 
 Mitigation:
@@ -1223,7 +1279,7 @@ Mitigation:
 - audit
 ```
 
-## Risk 5 — Setup friction
+## Risk 6 — Setup friction
 If users cannot run it quickly, the GitHub project loses momentum.
 
 Mitigation:

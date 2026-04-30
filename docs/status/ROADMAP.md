@@ -65,9 +65,9 @@
   - retrieval logging updates
   - endpoints:
     - `POST /retrieve`
-    - optional `POST /answer` (AnswerSynthesizer must consume packet only)
+    - optional `POST /answer` (AnswerSynthesizer must consume packet only) — **not implemented** (deferred)
   - required tests + docs/status updates + Phase 4 audit
-- **Status**: not_started
+- **Status**: implemented (**pass_with_notes**; see `docs/audits/PHASE_4_AUDIT.md`)
 
 ## Phase 5 — Multimodal Ingestion
 - **Defined in**: `docs/phases/graph_clerk_phase_5_multimodal_ingestion.md`

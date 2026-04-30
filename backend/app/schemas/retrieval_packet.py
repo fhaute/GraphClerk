@@ -1,0 +1,112 @@
+"""RetrievalPacket JSON contracts for Phase 4 File Clerk."""
+
+from __future__ import annotations
+
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
+
+PacketType = Literal["retrieval_packet"]
+
+IntentType = Literal["explain", "compare", "locate", "summarize", "debug", "recommend", "unknown"]
+
+AnswerMode = Literal[
+    "answer_with_evidence",
+    "answer_with_caveats",
+    "ask_clarification",
+    "not_enough_evidence",
+    "conflicting_evidence",
+    "unsupported",
+]
+
+class InterpretedIntent(BaseModel):
+    """Deterministic query intent classification output."""
+
+    intent_type: IntentType
+    confidence: float = Field(ge=0.0, le=1.0)
+    notes: list[str] = Field(default_factory=list)
+
+
+class SelectedSemanticIndex(BaseModel):
+    """A semantic index chosen for graph entry and traversal."""
+
+    semantic_index_id: str
+    meaning: str
+    score: float
+    selection_reason: str
+
+
+class GraphPathPacket(BaseModel):
+    """Bounded traversal snapshot attached to the packet."""
+
+    start_node_id: str
+    nodes: list[str]
+    edges: list[str]
+    depth: int
+
+
+class EvidenceUnitPacket(BaseModel):
+    """Evidence grounded via graph support links, included in the packet."""
+
+    evidence_unit_id: str
+    artifact_id: str
+    modality: str
+    content_type: str
+    source_fidelity: str
+    text: str | None = None
+    location: dict[str, Any] | None = None
+    selection_reason: str
+    confidence: float | None = None
+
+
+class AlternativeInterpretation(BaseModel):
+    """Explicit ambiguity / alternate meaning routing hints."""
+
+    if_user_meant: str
+    suggested_semantic_indexes: list[str]
+    reason: str
+
+
+class ContextBudgetSummary(BaseModel):
+    """Visible context budgeting decisions."""
+
+    max_evidence_units: int
+    selected_evidence_units: int
+    pruned_evidence_units: int
+    pruning_reasons: list[str]
+    max_graph_paths: int | None = None
+    max_selected_indexes: int | None = None
+
+
+class RetrieveOptions(BaseModel):
+    """Optional tuning for a single retrieval request."""
+
+    max_evidence_units: int = Field(default=8, ge=1, le=64)
+    max_graph_depth: int = Field(default=1, ge=0, le=5)
+    max_graph_paths: int = Field(default=3, ge=1, le=32)
+    max_selected_indexes: int = Field(default=3, ge=1, le=16)
+    include_alternatives: bool = True
+    max_tokens_estimate: int | None = Field(default=None, ge=1, le=100_000)
+
+
+class RetrieveRequest(BaseModel):
+    """HTTP body for `POST /retrieve`."""
+
+    question: str
+    options: RetrieveOptions | None = None
+
+
+class RetrievalPacket(BaseModel):
+    """Structured evidence routing output from the File Clerk."""
+
+    packet_type: PacketType = "retrieval_packet"
+    question: str
+    interpreted_intent: InterpretedIntent
+    selected_indexes: list[SelectedSemanticIndex]
+    graph_paths: list[GraphPathPacket]
+    evidence_units: list[EvidenceUnitPacket]
+    alternative_interpretations: list[AlternativeInterpretation]
+    context_budget: ContextBudgetSummary
+    warnings: list[str]
+    confidence: float = Field(ge=0.0, le=1.0)
+    answer_mode: AnswerMode

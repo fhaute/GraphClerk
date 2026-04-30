@@ -1,14 +1,15 @@
 # Project Status
 
 ## Summary
-- **Current phase**: Phase 3 — Semantic index & graph layer
-- **Implementation status**: Phase 3 implemented (**pass_with_notes**; no retrieval/LLM/UI; see limitations below)
+- **Current phase**: Phase 4 — File Clerk & retrieval packets
+- **Implementation status**: Phase 4 implemented (**pass_with_notes**; structured retrieval only; no `/answer` yet; see limitations below)
 
 ## High-level status
 - **Governance baseline**: implemented
 - **Phase 1 foundation**: implemented
 - **Phase 2 text-first ingestion**: implemented
 - **Phase 3 semantic index + graph layer**: implemented (pass_with_notes)
+- **Phase 4 File Clerk + retrieval packets**: implemented (pass_with_notes)
 
 ## Implemented (Phase 1)
 - FastAPI skeleton with infrastructure routes (`/health`, `/version`)
@@ -31,7 +32,7 @@
 
 ## Not implemented (by design)
 - multimodal parsing (PDF/PPTX/images/audio/video)
-- FileClerk logic and retrieval packets
+- optional packet-only answer synthesis (`POST /answer`, LocalRAGConsumer) — deferred
 - LLM calls / answer synthesis
 - UI
 
@@ -45,9 +46,19 @@
 - `GET /semantic-indexes/search` (Postgres-backed metadata + Qdrant score; returns only `vector_status=indexed`)
 - Bounded graph traversal: `GET /graph/nodes/{node_id}/neighborhood` with truncation reporting
 
+## Implemented (Phase 4)
+- `POST /retrieve` returns a validated `RetrievalPacket` JSON object for every request (including empty semantic matches)
+- `FileClerkService` orchestrates intent, route selection (which owns semantic search), bounded traversal, graph-linked evidence selection, budgeting, and packet assembly
+- `RetrievalLog.retrieval_packet` stores the canonical JSON snapshot (plus existing summary JSON fields)
+
 ## Phase 3 limitations (explicit)
 - production embedding adapter not wired
 - SemanticIndex creation does not auto-index vectors into Qdrant
 - no indexing job/backfill
 - integration tests are opt-in/gated (`RUN_INTEGRATION_TESTS=1` + env vars)
+
+## Phase 4 limitations (explicit)
+- query intent + ambiguity handling are deterministic/heuristic (not ML-tuned)
+- confidence is a simple heuristic (not calibrated)
+- optional `/answer` path is intentionally not implemented in this repository state
 

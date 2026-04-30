@@ -92,3 +92,27 @@ class VectorIndexOperationError(GraphClerkError):
 class SemanticIndexSearchInconsistentIndexError(GraphClerkError):
     """Raised when Qdrant results cannot be reconciled with Postgres source of truth."""
 
+
+class QueryIntentError(GraphClerkError):
+    """Raised when query intent classification fails unexpectedly."""
+
+
+class SemanticIndexResolutionError(GraphClerkError):
+    """Raised when a semantic index cannot be resolved for traversal."""
+
+
+class GraphTraversalError(GraphClerkError):
+    """Raised when graph traversal fails unexpectedly."""
+
+
+class EvidenceSelectionError(GraphClerkError):
+    """Raised when evidence selection fails unexpectedly."""
+
+
+class ContextBudgetError(GraphClerkError):
+    """Raised when context budgeting fails unexpectedly."""
+
+
+class RetrievalPacketBuildError(GraphClerkError):
+    """Raised when a RetrievalPacket cannot be assembled or validated."""
+

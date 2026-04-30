@@ -30,28 +30,13 @@ from app.services.semantic_index_search_service import SemanticIndexSearchServic
 
 router = APIRouter(prefix="", tags=["semantic_indexes"])
 
+
 def _build_search_service(*, session) -> SemanticIndexSearchService:
-    # Slice H: keep wiring explicit and easily overridable in tests.
-    # Default behavior is "not configured" for embeddings; tests can override.
-    from app.services.embedding_adapter import NotConfiguredEmbeddingAdapter
-    from app.services.embedding_service import EmbeddingService
-    from app.services.vector_index_service import VectorIndexService
+    """Delegate to shared factory (tests may monkeypatch this symbol)."""
 
-    from qdrant_client import QdrantClient
+    from app.services.semantic_index_search_factory import build_semantic_index_search_service
 
-    from app.core.config import get_settings
-
-    settings = get_settings()
-    client = QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key)
-
-    # Phase 3: explicit expected dimension. Until a real adapter exists, this remains a fixed constant.
-    expected_dimension = 8
-    embedding = EmbeddingService(
-        adapter=NotConfiguredEmbeddingAdapter(dimension=expected_dimension),
-        expected_dimension=expected_dimension,
-    )
-    vector = VectorIndexService(qdrant_client=client, expected_dimension=expected_dimension)
-    return SemanticIndexSearchService(session=session, embedding_service=embedding, vector_index_service=vector)
+    return build_semantic_index_search_service(session=session)
 
 
 @router.post("/semantic-indexes", response_model=SemanticIndexResponse)
