@@ -76,3 +76,15 @@ class EmbeddingDimensionMismatchError(GraphClerkError):
 class EmbeddingGenerationError(GraphClerkError):
     """Raised when embedding generation fails explicitly."""
 
+
+class VectorIndexUnavailableError(GraphClerkError):
+    """Raised when the vector index (Qdrant) is unreachable or misconfigured."""
+
+
+class VectorIndexDimensionMismatchError(GraphClerkError):
+    """Raised when a vector does not match the expected dimension."""
+
+
+class VectorIndexOperationError(GraphClerkError):
+    """Raised when a Qdrant operation fails unexpectedly."""
+
