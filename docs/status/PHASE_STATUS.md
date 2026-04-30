@@ -45,8 +45,9 @@
 
 ## Phase 5 — Multimodal Ingestion
 - **Status**: **in progress** / **partially implemented** (**not fully complete**)
-- **Audit**: **pending**
+- **Audit**: **pass_with_notes** (see `docs/audits/PHASE_5_AUDIT.md` — accepts **partial** implementation only)
 - **Evidence** (representative):
+  - `docs/audits/PHASE_5_AUDIT.md`
   - `docs/phases/graph_clerk_phase_5_multimodal_ingestion.md` (spec + **Implementation status (current)**)
   - `backend/app/api/routes/artifacts.py`, `backend/app/services/multimodal_ingestion_service.py`
   - `backend/app/services/ingestion/artifact_type_resolver.py`

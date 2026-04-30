@@ -1,7 +1,7 @@
 # Project Status
 
 ## Summary
-- **Current phase**: Phase 5 — Multimodal ingestion (**in progress**, **partially implemented**, **not fully complete**; Phase 5 **audit pending**)
+- **Current phase**: Phase 5 — Multimodal ingestion (**in progress**, **partially implemented**, **not fully complete**; Phase 5 audit **`pass_with_notes`** — see `docs/audits/PHASE_5_AUDIT.md`)
 - **Prior milestone**: Phase 4 implemented (**pass_with_notes**; structured retrieval only; no `/answer` yet; see limitations below)
 
 ## High-level status
@@ -10,7 +10,7 @@
 - **Phase 2 text-first ingestion**: implemented
 - **Phase 3 semantic index + graph layer**: implemented (pass_with_notes)
 - **Phase 4 File Clerk + retrieval packets**: implemented (pass_with_notes)
-- **Phase 5 multimodal ingestion**: **in progress** / **partially implemented** (see Phase 5 section below; audit pending)
+- **Phase 5 multimodal ingestion**: **in progress** / **partially implemented** (see Phase 5 section below; audit **`pass_with_notes`**)
 
 ## Implemented (Phase 1)
 - FastAPI skeleton with infrastructure routes (`/health`, `/version`)
@@ -53,7 +53,7 @@
 - **Video** ingestion: rejected (**400**); deferred / not supported
 - **No** automatic multimodal graph extraction
 - **No** FileClerk redesign and **no** `RetrievalPacket` schema redesign for multimodal (existing packet path carries PDF/PPTX evidence as tested)
-- Optional extras and extraction quality remain **known constraints**; Phase 5 **audit pending**
+- Optional extras and extraction quality remain **known constraints**; Phase 5 audit is **`pass_with_notes`** (partial implementation accepted — not full phase completion)
 
 ## Implemented (Phase 3)
 - Graph nodes/edges APIs and persistence

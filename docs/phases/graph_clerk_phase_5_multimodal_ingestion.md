@@ -40,7 +40,7 @@ Cursor must not implement this phase unless Phase 4 is complete and status docs 
 
 ## Implementation status (current)
 
-Phase 5 is **partially implemented**, **in progress**, and **not fully complete**. The **Phase 5 audit is pending**. The sections below this block remain the **aspirational phase design**; this block is the **implementation truth** as of the latest status/docs slice.
+Phase 5 is **partially implemented**, **in progress**, and **not fully complete**. The **Phase 5 audit** is recorded as **`pass_with_notes`** in `docs/audits/PHASE_5_AUDIT.md` — that audit **accepts the current partial implementation** and explicitly **does not** certify full multimodal completion. The sections below this block remain the **aspirational phase design**; this block is the **implementation truth** as of the latest status/docs slice.
 
 ### Shipped (in code today)
 

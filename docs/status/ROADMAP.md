@@ -73,7 +73,7 @@
 - **Defined in**: `docs/phases/graph_clerk_phase_5_multimodal_ingestion.md`
 - **Goal**: normalize PDFs/slides/images/audio into `EvidenceUnit`s with correct `source_fidelity` where extraction exists; preserve honest handling for shells and unsupported types.
 - **Status**: **in progress** / **partially implemented** (**not fully complete**)
-- **Audit**: **pending**
+- **Audit**: **pass_with_notes** (see `docs/audits/PHASE_5_AUDIT.md`; **not** a sign-off of full multimodal completion)
 - **Delivered so far (implementation truth)**:
   - `EvidenceUnitCandidate` contract hardening
   - `ArtifactExtractor` protocol + `ExtractorRegistry`
@@ -87,7 +87,6 @@
   - OCR, image captioning/visual summaries, audio transcription/ASR
   - image/audio extractors that emit `EvidenceUnit`s
   - video ingestion (unsupported / deferred)
-  - Phase 5 **audit** document
   - further extraction quality, edge cases, and optional CI matrix for extras
 - **Optional install (from `backend/`)**: `python -m pip install -e ".[pdf]"`, `".[pptx]"`, `".[image]"`, `".[audio]"`, or e.g. `python -m pip install -e ".[dev,pdf,pptx,image,audio]"`
 

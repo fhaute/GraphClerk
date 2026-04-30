@@ -36,6 +36,6 @@ This file tracks known missing pieces so they are explicit and not hidden.
 - **LocalRAGConsumer / answer synthesis** is not implemented (packet-only `/answer` remains deferred).
 
 ## Known limitations (Phase 5 — in progress)
-- **Phase 5 audit** is **pending**; status here is implementation-truth, not audit sign-off.
+- **Phase 5 audit** is **`pass_with_notes`** (`docs/audits/PHASE_5_AUDIT.md`): partial implementation is accepted; **full** multimodal completion (OCR, ASR, image/audio EUs, etc.) remains **not done**.
 - **Optional dependency matrix**: local/CI coverage for all combinations of extras + integration tests may need hardening later.
 
