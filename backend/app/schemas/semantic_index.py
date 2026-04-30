@@ -46,3 +46,12 @@ class SemanticIndexSearchResult(BaseModel):
 class SemanticIndexSearchResponse(BaseModel):
     results: list[SemanticIndexSearchResult]
 
+
+class SemanticIndexListPageResponse(BaseModel):
+    """Paginated list response for ``GET /semantic-indexes``."""
+
+    items: list[SemanticIndexResponse]
+    limit: int
+    offset: int
+    count: int
+

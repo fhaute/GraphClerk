@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.enums import SemanticIndexVectorStatus
@@ -24,6 +24,12 @@ class SemanticIndexRepository:
         """Fetch a semantic index by id."""
 
         return self._session.get(SemanticIndex, semantic_index_id)
+
+    def count_all(self) -> int:
+        """Return the total number of semantic index rows."""
+
+        stmt = select(func.count()).select_from(SemanticIndex)
+        return int(self._session.execute(stmt).scalar_one())
 
     def list(self, limit: int = 100, offset: int = 0) -> list[SemanticIndex]:
         """List semantic indexes ordered by creation time descending."""

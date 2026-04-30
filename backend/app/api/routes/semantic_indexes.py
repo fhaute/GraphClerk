@@ -5,9 +5,11 @@ import uuid
 from fastapi import APIRouter, HTTPException, Query
 
 from app.db.session import get_sessionmaker
+from app.repositories.semantic_index_repository import SemanticIndexRepository
 from app.schemas.semantic_index import (
     SemanticIndexCreateRequest,
     SemanticIndexEntryPointsResponse,
+    SemanticIndexListPageResponse,
     SemanticIndexResponse,
     SemanticIndexSearchResponse,
 )
@@ -122,6 +124,38 @@ def search_semantic_indexes(
             raise HTTPException(status_code=500, detail=str(e)) from e
         except SemanticIndexSearchInconsistentIndexError as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("/semantic-indexes", response_model=SemanticIndexListPageResponse)
+def list_semantic_indexes(
+    limit: int = Query(100, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> SemanticIndexListPageResponse:
+    """List semantic indexes (newest ``created_at`` first). Entry node ids come from the join table."""
+
+    SessionMaker = get_sessionmaker()
+    with SessionMaker() as session:
+        repo = SemanticIndexRepository(session)
+        svc = SemanticIndexService(session=session)
+        total = repo.count_all()
+        rows = repo.list(limit=limit, offset=offset)
+        items = []
+        for idx in rows:
+            entry_node_ids = [str(x) for x in svc.get_entry_nodes(idx.id)]
+            items.append(
+                SemanticIndexResponse(
+                    id=str(idx.id),
+                    meaning=idx.meaning,
+                    summary=idx.summary,
+                    embedding_text=idx.embedding_text,
+                    entry_node_ids=entry_node_ids,
+                    vector_status=str(idx.vector_status),
+                    metadata=idx.metadata_json,
+                    created_at=idx.created_at,
+                    updated_at=idx.updated_at,
+                )
+            )
+        return SemanticIndexListPageResponse(items=items, limit=limit, offset=offset, count=total)
 
 
 @router.get("/semantic-indexes/{semantic_index_id}", response_model=SemanticIndexResponse)
