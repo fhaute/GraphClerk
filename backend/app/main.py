@@ -39,8 +39,12 @@ def create_app() -> FastAPI:
 
     # Browser UI (Vite, etc.) runs on another origin than the API; without CORS, fetches fail
     # with "Failed to fetch" / status 0. Allow loopback dev hosts by default; pin origins in
-    # production via GRAPHCLE_CORS_ORIGINS="https://app.example,https://...".
-    _cors_raw = os.environ.get("GRAPHCLE_CORS_ORIGINS", "").strip()
+    # production via GRAPHCLERK_CORS_ORIGINS="https://app.example,https://...".
+    # GRAPHCLE_CORS_ORIGINS is a backward-compatible alias (legacy typo in shipped env name).
+    _cors_raw = (
+        os.environ.get("GRAPHCLERK_CORS_ORIGINS", "").strip()
+        or os.environ.get("GRAPHCLE_CORS_ORIGINS", "").strip()
+    )
     if _cors_raw:
         _origins = [o.strip() for o in _cors_raw.split(",") if o.strip()]
         app.add_middleware(

@@ -56,7 +56,7 @@ export function QueryPlayground() {
         if (err instanceof ApiError) {
           setSubmitState({
             kind: "error",
-            message: `${err.message} (status ${err.status})`,
+            message: err.message,
           });
         } else if (err instanceof Error) {
           setSubmitState({ kind: "error", message: err.message });

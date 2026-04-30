@@ -32,7 +32,7 @@ export default function App() {
         if (e instanceof ApiError) {
           setState({
             kind: "error",
-            message: `${e.message} (status ${e.status})`,
+            message: e.message,
           });
         } else if (e instanceof Error) {
           setState({ kind: "error", message: e.message });

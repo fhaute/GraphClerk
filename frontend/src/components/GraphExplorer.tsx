@@ -10,7 +10,7 @@ import {
 import type { GraphEdge, GraphNeighborhood, GraphNode } from "../types/graph";
 
 function formatError(err: unknown): string {
-  if (err instanceof ApiError) return `${err.message} (status ${err.status})`;
+  if (err instanceof ApiError) return err.message;
   if (err instanceof Error) return err.message;
   return String(err);
 }

@@ -12,7 +12,7 @@ import type {
 } from "../types/semanticIndex";
 
 function formatError(err: unknown): string {
-  if (err instanceof ApiError) return `${err.message} (status ${err.status})`;
+  if (err instanceof ApiError) return err.message;
   if (err instanceof Error) return err.message;
   return String(err);
 }
@@ -71,7 +71,7 @@ export function SemanticIndexesExplorer() {
     setListLoading(true);
     setListError(null);
     setListUnavailable(false);
-    fetchSemanticIndexes({ limit: 500 })
+    fetchSemanticIndexes({ limit: 200 })
       .then((res) => {
         if (!cancelled) setIndexes(res.items ?? []);
       })
@@ -259,6 +259,10 @@ export function SemanticIndexesExplorer() {
         <h2 className="text-sm font-medium text-neutral-700">Semantic indexes list</h2>
         <p className="mt-1 text-xs text-neutral-500">
           <code className="font-mono">GET /semantic-indexes</code>
+          <span className="text-neutral-600">
+            {" "}
+            (loads up to <strong>200</strong> rows per request — API maximum)
+          </span>
         </p>
 
         {listLoading && <p className="mt-4 text-sm text-neutral-600">Loading indexes…</p>}
