@@ -18,6 +18,7 @@ venv/
 ENV/
 .env
 .env.*
+!frontend/.env.example
 
 # Node (if introduced later)
 node_modules/

@@ -1,6 +1,8 @@
 /**
  * Typed HTTP client for the GraphClerk API.
- * Base URL: `VITE_API_BASE_URL` or `http://localhost:8000`.
+ * Base URL: `VITE_API_BASE_URL`, else `http://localhost:8000` (typical uvicorn/Docker).
+ * If port 8000 is already taken on your machine, run the API on another port and set
+ * `VITE_API_BASE_URL` (see `frontend/.env.example`).
  */
 
 const DEFAULT_BASE = "http://localhost:8000";
