@@ -9,6 +9,14 @@ class UnsupportedArtifactTypeError(GraphClerkError):
     """Raised when an artifact type is not supported in the current phase."""
 
 
+class ExtractorNotRegisteredError(GraphClerkError):
+    """Raised when no multimodal extractor is registered for the modality."""
+
+
+class ExtractorUnavailableError(GraphClerkError):
+    """Raised when a registered extractor cannot run (e.g. missing optional dependency)."""
+
+
 class IngestionParseError(GraphClerkError):
     """Raised when parsing fails and ingestion cannot proceed."""
 
