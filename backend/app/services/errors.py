@@ -44,3 +44,15 @@ class GraphNodeEvidenceLinkAlreadyExistsError(GraphClerkError):
 class GraphEdgeEvidenceLinkAlreadyExistsError(GraphClerkError):
     """Raised when a GraphEdgeEvidence link already exists."""
 
+
+class SemanticIndexNotFoundError(GraphClerkError):
+    """Raised when a semantic index is not found."""
+
+
+class SemanticIndexRequiresEntryNodesError(GraphClerkError):
+    """Raised when a semantic index creation request has no entry nodes."""
+
+
+class DuplicateEntryNodeIdError(GraphClerkError):
+    """Raised when a semantic index creation request has duplicate entry node IDs."""
+

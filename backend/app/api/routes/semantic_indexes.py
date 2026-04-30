@@ -1,0 +1,96 @@
+from __future__ import annotations
+
+import uuid
+
+from fastapi import APIRouter, HTTPException
+
+from app.db.session import get_sessionmaker
+from app.schemas.semantic_index import (
+    SemanticIndexCreateRequest,
+    SemanticIndexEntryPointsResponse,
+    SemanticIndexResponse,
+)
+from app.services.errors import (
+    DuplicateEntryNodeIdError,
+    GraphNodeNotFoundError,
+    SemanticIndexNotFoundError,
+    SemanticIndexRequiresEntryNodesError,
+)
+from app.services.semantic_index_service import SemanticIndexService
+
+router = APIRouter(prefix="", tags=["semantic_indexes"])
+
+
+@router.post("/semantic-indexes", response_model=SemanticIndexResponse)
+def create_semantic_index(payload: SemanticIndexCreateRequest) -> SemanticIndexResponse:
+    SessionMaker = get_sessionmaker()
+    with SessionMaker() as session:
+        svc = SemanticIndexService(session=session)
+        try:
+            entry_ids = [uuid.UUID(x) for x in payload.entry_node_ids]
+            idx = svc.create(
+                meaning=payload.meaning,
+                summary=payload.summary,
+                embedding_text=payload.embedding_text,
+                entry_node_ids=entry_ids,
+                metadata=payload.metadata,
+            )
+            session.commit()
+            # Source of truth: read from join table after persistence.
+            entry_node_ids = [str(x) for x in svc.get_entry_nodes(idx.id)]
+            return SemanticIndexResponse(
+                id=str(idx.id),
+                meaning=idx.meaning,
+                summary=idx.summary,
+                embedding_text=idx.embedding_text,
+                entry_node_ids=entry_node_ids,
+                vector_status=str(idx.vector_status),
+                metadata=idx.metadata_json,
+                created_at=idx.created_at,
+                updated_at=idx.updated_at,
+            )
+        except (SemanticIndexRequiresEntryNodesError, DuplicateEntryNodeIdError) as e:
+            session.rollback()
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        except GraphNodeNotFoundError as e:
+            session.rollback()
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        except ValueError as e:
+            session.rollback()
+            raise HTTPException(status_code=400, detail="invalid_entry_node_id") from e
+
+
+@router.get("/semantic-indexes/{semantic_index_id}", response_model=SemanticIndexResponse)
+def get_semantic_index(semantic_index_id: str) -> SemanticIndexResponse:
+    SessionMaker = get_sessionmaker()
+    with SessionMaker() as session:
+        svc = SemanticIndexService(session=session)
+        try:
+            idx = svc.get(uuid.UUID(semantic_index_id))
+            entry_node_ids = [str(x) for x in svc.get_entry_nodes(idx.id)]
+            return SemanticIndexResponse(
+                id=str(idx.id),
+                meaning=idx.meaning,
+                summary=idx.summary,
+                embedding_text=idx.embedding_text,
+                entry_node_ids=entry_node_ids,
+                vector_status=str(idx.vector_status),
+                metadata=idx.metadata_json,
+                created_at=idx.created_at,
+                updated_at=idx.updated_at,
+            )
+        except SemanticIndexNotFoundError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@router.get("/semantic-indexes/{semantic_index_id}/entry-points", response_model=SemanticIndexEntryPointsResponse)
+def resolve_semantic_index_entry_points(semantic_index_id: str) -> SemanticIndexEntryPointsResponse:
+    SessionMaker = get_sessionmaker()
+    with SessionMaker() as session:
+        svc = SemanticIndexService(session=session)
+        try:
+            ids = [str(x) for x in svc.get_entry_nodes(uuid.UUID(semantic_index_id))]
+            return SemanticIndexEntryPointsResponse(entry_node_ids=ids)
+        except SemanticIndexNotFoundError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+
