@@ -31,3 +31,10 @@ Thumbs.db
 .idea/
 .vscode/
 
+# Cursor
+# Keep repository rules tracked; ignore transient agent/plans output.
+.cursor/plans/
+.cursor/terminals/
+.cursor/agent-tools/
+.cursor/agent-transcripts/
+

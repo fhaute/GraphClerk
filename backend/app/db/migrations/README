@@ -1,0 +1,4 @@
+Generic single-database Alembic environment (Phase 1).
+
+Migrations are configured via the DATABASE_URL environment variable.
+

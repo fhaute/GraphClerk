@@ -15,6 +15,8 @@ until the governance baseline is present and committed.
 
 - `docs/graph_clerk_phase_0_governance_baseline.md`: Phase 0 initialization document (source)
 - `docs/governance/`: split governance documents used by prompts, reviews, and audits
+- `docs/phases/PHASE_1_FOUNDATION.md`: Phase 1 implementation status and non-features
+- `docs/phases/PHASE_2_TEXT_FIRST_INGESTION.md`: Phase 2 ingestion behavior (text/Markdown only)
 - `docs/status/`: status tracking (honesty rules)
 - `docs/adr/`: architecture decision records (ADRs)
 
