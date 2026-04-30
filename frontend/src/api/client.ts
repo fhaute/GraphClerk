@@ -46,3 +46,32 @@ export async function apiGetJson<T>(path: string): Promise<T> {
 
   return res.json() as Promise<T>;
 }
+
+export async function apiPostJson<T>(path: string, body: unknown): Promise<T> {
+  const base = getApiBaseUrl();
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const url = `${base}${normalizedPath}`;
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    throw new ApiError(`Network error calling ${url}: ${msg}`, 0);
+  }
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new ApiError(
+      `HTTP ${res.status} ${res.statusText}${text ? `: ${text}` : ""}`,
+      res.status,
+      text || undefined,
+    );
+  }
+
+  return res.json() as Promise<T>;
+}
