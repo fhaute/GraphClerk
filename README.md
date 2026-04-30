@@ -14,9 +14,10 @@ with traceability to original source artifacts.
 - **Phase 1**: backend foundation (FastAPI, SQLAlchemy/Alembic, Docker Compose, `/health`, `/version`)
 - **Phase 2**: text/Markdown ingestion → `Artifact` + `EvidenceUnit` with location metadata
 - **Phase 3**: semantic index + graph meaning layer (graph APIs, evidence links, semantic index APIs, vector index service, semantic index search, bounded traversal)
+- **Phase 4**: File Clerk retrieval packets (`POST /retrieve`), structured `RetrievalPacket` contracts, deterministic intent + route selection + graph-linked evidence selection + context budgeting, and `RetrievalLog.retrieval_packet` JSON snapshots
 
 ## What is explicitly not implemented yet
-- **FileClerk** / RetrievalPacket assembly
+- optional **`POST /answer`** / `LocalRAGConsumer` / `AnswerSynthesizer` (deferred until separately approved)
 - answer synthesis / LLM calls
 - automatic graph extraction / claim extraction
 - multimodal ingestion (PDF/PPTX/images/audio/video)
@@ -61,6 +62,21 @@ python -m uvicorn app.main:app --reload
   - `DATABASE_URL=...`
   - `QDRANT_URL=...` (only for Qdrant tests)
 
+**Tests and schema:** some integration tests build schema with SQLAlchemy `Base.metadata.create_all()`. That is **not** a substitute for running Alembic on real databases. Deployments and local Postgres that should match production must apply migrations (see below).
+
+## Database migrations (PostgreSQL / deployment)
+
+For a **real PostgreSQL** database (staging, production, or a long-lived local DB), apply migrations from the `backend/` directory (where `alembic.ini` lives):
+
+```bash
+cd backend
+alembic upgrade head
+```
+
+**Phase 4** adds revision **`0004_phase4_retrieval_packet_log`**, which creates the nullable JSONB column **`retrieval_log.retrieval_packet`** (canonical `RetrievalPacket` snapshot for retrieval logs). If that migration has not been applied, `POST /retrieve` logging against that column will not match a migrated database.
+
+`alembic upgrade head` applies the full chain, including `0004`. Do not rely on test `create_all()` behavior alone to prove migration correctness.
+
 ## API surface (current)
 Infrastructure:
 - `GET /health`
@@ -91,4 +107,7 @@ Semantic indexes (Phase 3):
 
 Graph traversal (Phase 3):
 - `GET /graph/nodes/{node_id}/neighborhood`
+
+Retrieval (Phase 4):
+- `POST /retrieve`
 

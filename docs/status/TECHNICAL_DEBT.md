@@ -15,3 +15,9 @@
 - **Integration tests are gated**: Postgres/Qdrant tests are opt-in via env vars; provide a single documented “run integration tests” command set.
 - **Traversal performance may need optimization later**: traversal is bounded/deterministic, but may need more batching/SQL tuning as graph sizes grow.
 
+## Phase 4
+- **RetrievalLog write failures are swallowed** (API still returns a packet; observability may be lost without separate error reporting).
+- **Route selection duplicates semantic search calls** if other callers also search separately (acceptable for now; revisit if latency becomes an issue).
+- **Alembic migration chain vs tests**: integration tests may use `Base.metadata.create_all()`, which can create the current ORM shape (including `retrieval_log.retrieval_packet`) without exercising the Alembic revision graph. That does **not** prove that `alembic upgrade head` from an older base revision succeeds on a real database.
+- **Future CI task**: run `alembic upgrade head` against a throwaway Postgres instance (from `backend/`) so migration ordering and upgrade scripts are validated automatically, not only implied by ORM metadata in tests.
+
