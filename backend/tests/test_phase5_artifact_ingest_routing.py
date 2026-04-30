@@ -68,7 +68,8 @@ async def test_phase2_markdown_json_ingestion_unchanged(db_ready: None) -> None:
 
 
 @pytest.mark.asyncio
-async def test_multimodal_pdf_without_registered_extractor_returns_400(db_ready: None) -> None:
+async def test_multimodal_pdf_without_registered_extractor_returns_400(db_ready: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(artifacts_routes, "get_multimodal_extractor_registry", lambda: ExtractorRegistry())
     app = create_app()
     transport = ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:

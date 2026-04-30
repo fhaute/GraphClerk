@@ -5,8 +5,9 @@ from __future__ import annotations
 Multipart uploads:
 - **text** and **markdown** delegate to ``TextIngestionService`` (unchanged Phase 2).
 - Known **multimodal** types (pdf, pptx, image, audio) delegate to
-  ``MultimodalIngestionService`` with ``ExtractorRegistry`` (no extractors
-  registered by default — clear errors until Slice D+).
+  ``MultimodalIngestionService`` with ``ExtractorRegistry``. **PDF:** ``PdfExtractor``
+  is registered when the optional ``pdf`` extra (pypdf) is installed; otherwise
+  PDF uploads return **503** with an install hint.
 
 Inline JSON remains **text** / **markdown** only.
 
@@ -27,6 +28,9 @@ from app.schemas.artifact import (
     ArtifactListResponse,
     ArtifactResponse,
 )
+from app.models.artifact import Artifact
+from app.models.enums import Modality
+from app.schemas.evidence_unit_candidate import EvidenceUnitCandidate
 from app.services.errors import ExtractorUnavailableError, GraphClerkError, UnsupportedArtifactTypeError
 from app.services.extraction import ExtractorRegistry
 from app.services.multimodal_ingestion_service import MultimodalIngestionService
@@ -35,10 +39,32 @@ from app.services.text_ingestion_service import TextIngestionService
 router = APIRouter(prefix="", tags=["artifacts"])
 
 
-def get_multimodal_extractor_registry() -> ExtractorRegistry:
-    """Return the multimodal ``ExtractorRegistry`` (tests may monkeypatch this)."""
+class _PdfDependencyPlaceholder:
+    """Registers for ``Modality.pdf`` when pypdf is not installed so uploads fail with 503, not fake success."""
 
-    return ExtractorRegistry()
+    def extract(self, artifact: Artifact) -> list[EvidenceUnitCandidate]:
+        raise ExtractorUnavailableError(
+            "PDF extraction requires the optional `pdf` dependency (e.g. pip install -e '.[pdf]').",
+        )
+
+
+def get_multimodal_extractor_registry() -> ExtractorRegistry:
+    """Return the multimodal ``ExtractorRegistry`` (tests may monkeypatch this).
+
+    Registers ``PdfExtractor`` when pypdf is available; otherwise a placeholder
+    that raises ``ExtractorUnavailableError``. Does not register video.
+    """
+
+    from app.services.extraction import pdf_extractor as pdf_extraction_module
+
+    reg = ExtractorRegistry()
+    if pdf_extraction_module.PdfReader is None:
+        reg.register(Modality.pdf, _PdfDependencyPlaceholder())
+    else:
+        from app.services.extraction.pdf_extractor import PdfExtractor
+
+        reg.register(Modality.pdf, PdfExtractor(settings=get_settings()))
+    return reg
 
 
 def _resolve_multipart_artifact_type(filename: str, mime_type: str | None) -> str:

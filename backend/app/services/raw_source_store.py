@@ -47,13 +47,22 @@ class RawSourceStore:
 
         if size_bytes <= RAW_TEXT_DB_THRESHOLD_BYTES:
             raw_text = self._try_decode_utf8(content_bytes)
-            storage_uri = f"localdb://artifacts/sha256/{checksum}{ext}"
+            if raw_text is not None:
+                return RawSourceResult(
+                    checksum_sha256=checksum,
+                    size_bytes=size_bytes,
+                    storage_uri=f"localdb://artifacts/sha256/{checksum}{ext}",
+                    raw_text=raw_text,
+                    disk_path=None,
+                )
+            # Binary or non-UTF-8 small payloads: persist on disk so bytes stay recoverable.
+            disk_path = self._write_to_disk(checksum=checksum, ext=ext, content_bytes=content_bytes)
             return RawSourceResult(
                 checksum_sha256=checksum,
                 size_bytes=size_bytes,
-                storage_uri=storage_uri,
-                raw_text=raw_text,
-                disk_path=None,
+                storage_uri=f"local://artifacts/sha256/{checksum[:2]}/{checksum}{ext}",
+                raw_text=None,
+                disk_path=disk_path,
             )
 
         disk_path = self._write_to_disk(checksum=checksum, ext=ext, content_bytes=content_bytes)
@@ -99,6 +108,34 @@ class RawSourceStore:
         os.replace(tmp_path, target_path)
 
         return target_path
+
+    def read_persisted_bytes(
+        self,
+        *,
+        storage_uri: str,
+        checksum: str | None,
+        filename: str,
+        raw_text: str | None,
+    ) -> bytes:
+        """Load raw bytes previously stored for an artifact.
+
+        ``local://`` uses ``ARTIFACTS_DIR`` + checksum layout. ``localdb://`` uses
+        UTF-8 re-encoding of ``raw_text`` (text artifacts only).
+        """
+
+        if storage_uri.startswith("local://"):
+            if not checksum:
+                raise OSError("Missing checksum for disk-backed artifact.")
+            ext = Path(filename).suffix.lower() or ".bin"
+            path = Path(self._settings.artifacts_dir) / "sha256" / checksum[:2] / f"{checksum}{ext}"
+            if not path.is_file():
+                raise OSError(f"Raw source file not found: {path}")
+            return path.read_bytes()
+        if storage_uri.startswith("localdb://"):
+            if raw_text is None:
+                raise OSError("localdb artifact has no raw_text; binary content is not recoverable.")
+            return raw_text.encode("utf-8")
+        raise OSError(f"Unsupported storage_uri scheme: {storage_uri!r}")
 
     @staticmethod
     def _try_decode_utf8(content_bytes: bytes) -> str | None:

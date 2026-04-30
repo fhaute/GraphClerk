@@ -24,6 +24,10 @@ class ExtractionReturnedNoEvidenceError(GraphClerkError):
         super().__init__("extraction_returned_no_evidence")
 
 
+class PdfExtractionError(GraphClerkError):
+    """Raised when PDF bytes cannot be parsed or are otherwise unusable."""
+
+
 class IngestionParseError(GraphClerkError):
     """Raised when parsing fails and ingestion cannot proceed."""
 
