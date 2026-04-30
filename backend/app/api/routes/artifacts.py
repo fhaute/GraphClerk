@@ -11,6 +11,9 @@ Multipart uploads:
   **Image:** ``ImageExtractor`` when optional ``image`` extra (Pillow) is installed;
   validates bytes then **503** until OCR/caption is approved in a later slice; if Pillow
   is missing, **503** with install hint.
+  **Audio:** ``AudioExtractor`` when optional ``audio`` extra (mutagen) is installed;
+  validates bytes then **503** until transcription is approved in a later slice; if
+  mutagen is missing, **503** with install hint.
 
 Inline JSON remains **text** / **markdown** only.
 
@@ -70,13 +73,23 @@ class _ImageDependencyPlaceholder:
         )
 
 
+class _AudioDependencyPlaceholder:
+    """Registers for ``Modality.audio`` when mutagen is not installed."""
+
+    def extract(self, artifact: Artifact) -> list[EvidenceUnitCandidate]:
+        raise ExtractorUnavailableError(
+            "Audio handling requires the optional `audio` dependency (e.g. pip install -e '.[audio]').",
+        )
+
+
 def get_multimodal_extractor_registry() -> ExtractorRegistry:
     """Return the multimodal ``ExtractorRegistry`` (tests may monkeypatch this).
 
-    Registers PDF, PPTX, and image extractors when optional deps are available; otherwise
-    placeholders that raise ``ExtractorUnavailableError``. Does not register video.
+    Registers PDF, PPTX, image, and audio extractors when optional deps are available;
+    otherwise placeholders that raise ``ExtractorUnavailableError``. Does not register video.
     """
 
+    from app.services.extraction import audio_extractor as audio_extraction_module
     from app.services.extraction import image_extractor as image_extraction_module
     from app.services.extraction import pdf_extractor as pdf_extraction_module
     from app.services.extraction import pptx_extractor as pptx_extraction_module
@@ -102,6 +115,13 @@ def get_multimodal_extractor_registry() -> ExtractorRegistry:
         from app.services.extraction.image_extractor import ImageExtractor
 
         reg.register(Modality.image, ImageExtractor(settings=get_settings()))
+
+    if audio_extraction_module.MutagenFile is None:
+        reg.register(Modality.audio, _AudioDependencyPlaceholder())
+    else:
+        from app.services.extraction.audio_extractor import AudioExtractor
+
+        reg.register(Modality.audio, AudioExtractor(settings=get_settings()))
     return reg
 
 

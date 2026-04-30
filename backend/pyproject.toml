@@ -25,6 +25,9 @@ pptx = [
 image = [
   "Pillow>=10.0",
 ]
+audio = [
+  "mutagen>=1.47",
+]
 
 [dependency-groups]
 dev = [

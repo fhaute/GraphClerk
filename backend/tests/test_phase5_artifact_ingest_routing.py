@@ -137,6 +137,28 @@ async def test_multimodal_image_without_registered_extractor_returns_400(
 
 
 @pytest.mark.asyncio
+async def test_multimodal_audio_without_registered_extractor_returns_400(
+    db_ready: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        artifacts_routes,
+        "get_multimodal_extractor_registry",
+        lambda: ExtractorRegistry(),
+    )
+    app = create_app()
+    transport = ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.post(
+            "/artifacts",
+            files={"file": ("x.wav", b"RIFF\x24\x00\x00\x00WAVEfmt ", "audio/wav")},
+        )
+    assert res.status_code == 400
+    body = res.json()
+    assert "detail" in body
+    assert "audio" in body["detail"].lower() or "extractor" in body["detail"].lower()
+
+
+@pytest.mark.asyncio
 async def test_multimodal_pdf_with_stub_extractor_succeeds(db_ready: None, monkeypatch: pytest.MonkeyPatch) -> None:
     reg = ExtractorRegistry()
     reg.register(Modality.pdf, _PdfStubExtractor())
