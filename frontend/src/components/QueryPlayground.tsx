@@ -69,7 +69,7 @@ export function QueryPlayground() {
   );
 
   return (
-    <section className="mt-10 rounded-md border border-neutral-200 bg-white p-4 shadow-sm">
+    <section className="rounded-md border border-neutral-200 bg-white p-4 shadow-sm">
       <h2 className="text-sm font-medium text-neutral-700">Query playground</h2>
       <p className="mt-1 text-xs text-neutral-500">
         Submit a natural-language question to <code className="font-mono">POST /retrieve</code>.
