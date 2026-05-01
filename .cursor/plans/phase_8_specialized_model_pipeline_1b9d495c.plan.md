@@ -23,7 +23,7 @@ todos:
     status: completed
   - id: phase8-slice-8f-eval-fixtures
     content: "Slice 8F — Evaluation fixtures for model-helper outputs (deterministic; failure cases; no production inference)."
-    status: pending
+    status: completed
   - id: phase8-slice-8g-local-inference-design
     content: "Slice 8G — Optional local inference adapter design (Ollama/vLLM etc.); design-only unless deps explicitly approved."
     status: pending
@@ -140,7 +140,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 | **8C** | NotConfigured model adapter shell | Adapter protocol; NotConfigured raises **explicit** error; deterministic **test** adapter only; **no** real model. |
 | **8D** | Model output validation service | Validates typed outputs; rejects unbounded prose where structured output is required; rejects source‑truth claims; **no** FileClerk integration yet. |
 | **8E** | Candidate‑only integration seam | **Approval‑gated:** helpers may produce **candidate metadata only**; **no** `EvidenceUnit` text mutation; **no** `RetrievalPacket` source evidence mutation; **no** route/evidence ranking change. **Slice 8E (projection-only):** `ModelPipelineCandidateMetadataProjectionService` landed — validated envelope → `graphclerk_model_pipeline` subtree only; **no** ingestion/enrichment wiring yet. |
-| **8F** | Evaluation fixtures | Deterministic fixtures + failure cases; **no** production inference. |
+| **8F** | Evaluation fixtures | Deterministic fixtures + failure cases; **no** production inference. **Implemented:** `backend/tests/fixtures/phase8_model_pipeline_cases.py` + `backend/tests/test_phase8_model_pipeline_evaluation_fixtures.py`. |
 | **8G** | Optional local inference adapter design | Design only (Ollama/vLLM/etc.); **no** dependency add without approval. |
 | **8H** | Docs/status update | Document what Phase 8 **is / is not**; no claim of model implementation or answer synthesis until true. |
 | **8I** | Phase 8 audit | After implementation slices; artifact under `docs/audits/` per project audit rules. |
@@ -153,7 +153,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 - [x] **8C** — Adapter shell (`ModelPipelineAdapter`, `NotConfiguredModelPipelineAdapter`, `DeterministicTestModelPipelineAdapter` tests-only; no registry, no real inference).
 - [x] **8D** — Output validation service (`model_pipeline_output_validation_service.py`; deep recursive checks; reports only, no mutation).
 - [x] **8E** — Candidate seam (**projection-only Option A** — `model_pipeline_candidate_projection_service.py` + tests; merge into candidates / enrichment deferred per § Slice 8E).
-- [ ] **8F** — Evaluation fixtures.
+- [x] **8F** — Evaluation fixtures (`tests/fixtures/phase8_model_pipeline_cases.py`, `test_phase8_model_pipeline_evaluation_fixtures.py`; no adapter execution in fixtures).
 - [ ] **8G** — Local inference design only.
 - [ ] **8H** — Docs/status alignment post‑implementation.
 - [ ] **8I** — Phase 8 audit.
