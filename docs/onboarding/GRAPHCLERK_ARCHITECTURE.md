@@ -230,15 +230,14 @@ The following are **tracked** by the [**Phase 1–8 completion program**](../pla
 |----------|----------------|
 | [`GRAPHCLERK_PIPELINE_GUIDE.md`](GRAPHCLERK_PIPELINE_GUIDE.md) | **Concepts**, minimal vs rich, failure-mode table, integration patterns — **narrative** complement to this **architecture** page. |
 | [`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md) | **Smallest** hands-on sequence (PowerShell templates) — **walks** the data flow above. |
+| [`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md) | **Failure modes**, Qdrant/HTTP, expected vs bug (**F4**). |
+| [`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md) | **PowerShell / curl / Python** copy-paste (**F5**). |
 | [`README.md`](README.md) (this folder) | Entry point and **Start here** ordering. |
 
 ---
 
 ## Next architecture / documentation work
 
-| Track F slice | Intent |
-|---------------|--------|
-| **F4** | Expanded failure modes + Qdrant operator narrative (beyond links here). |
-| **F5** | curl / Python examples cookbook. |
+**Track F F4–F5** (troubleshooting + examples cookbook) are **implemented** — see [`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md) and [`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md). Optional **future** doc work **outside** that baseline includes production deployment runbooks, deeper multimodal examples, and **`/answer`** documentation if the program ships those.
 
 **Open decisions** (product owner / program): production embeddings, multimodal engines, **`/answer`**, Phase **9** scope — **not** resolved in this doc; see [`docs/plans/phase_1_8_completion_program.md`](../plans/phase_1_8_completion_program.md) §15 and status tables.

@@ -29,7 +29,7 @@ Honest high-level state lives in [`docs/status/PROJECT_STATUS.md`](../status/PRO
 
 ## Start here
 
-1. Read **[`GRAPHCLERK_PIPELINE_GUIDE.md`](GRAPHCLERK_PIPELINE_GUIDE.md)** — pipeline at a glance, core concepts, baseline flow, minimal vs rich, failure modes, integration patterns, security/honesty rules, placeholders for future slices.
+1. Read **[`GRAPHCLERK_PIPELINE_GUIDE.md`](GRAPHCLERK_PIPELINE_GUIDE.md)** — pipeline at a glance, core concepts, baseline flow, minimal vs rich, failure modes, integration patterns, security/honesty rules; links to architecture (**F3**), troubleshooting (**F4**), examples (**F5**); production/OCR/answer depth remains future program scope.
 2. Follow **[`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md)** — smallest useful path: stack → artifact → evidence → graph → semantic index → backfill → retrieve → logs → UI (text/markdown; **template** examples).
 3. View **[`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md)** — components, **Postgres vs Qdrant**, **manual** backfill placement, UI/API surfaces, **Mermaid** diagrams with **`[current]`** / **`[manual/operator]`** / **`[future / not implemented]`** labels.
 4. Use **[`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md)** when something fails — triage table, expected vs bug, Qdrant, **`deterministic_fake`**, HTTP codes, runbooks.
