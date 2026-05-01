@@ -11,7 +11,7 @@
 ## Phase 3
 - **Embedding configuration is not centralized**: embedding/vector expected dimension is explicit but not yet surfaced as a single settings value.
 - **Production embedding adapter not wired**: default wiring uses an explicit “not configured” adapter (intentional placeholder).
-- **SemanticIndex creation does not auto-index into Qdrant**: vector upsert/backfill workflow is not implemented yet.
+- **SemanticIndex creation does not auto-index into Qdrant**: automatic upsert on create is still absent; **manual** backfill is available via `scripts/backfill_semantic_indexes.py` / `SemanticIndexVectorIndexingService` (Track B Slice B1 — dev `DeterministicFakeEmbeddingAdapter`, not a production embedding story).
 - **Integration tests are gated**: Postgres/Qdrant tests are opt-in via env vars; provide a single documented “run integration tests” command set.
 - **Traversal performance may need optimization later**: traversal is bounded/deterministic, but may need more batching/SQL tuning as graph sizes grow.
 

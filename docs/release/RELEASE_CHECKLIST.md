@@ -50,6 +50,7 @@ Executed in the audit pass (evidence also summarized in `docs/audits/PHASE_6_AUD
   ```bash
   python scripts/load_phase6_demo.py
   ```
+- [ ] **Optional rich demo — manual semantic index backfill** (Track B Slice B1): after a loader run, `python scripts/backfill_semantic_indexes.py --help` then index the new semantic index id with `DATABASE_URL` + `QDRANT_URL` aligned to the API stack (see `docs/demo/PHASE_6_DEMO_CORPUS.md` → *Manual vector indexing*). Confirms `vector_status` transitions to **`indexed`** or explicit **`failed`**, not silent **`pending`**.
 
 ## Manual
 

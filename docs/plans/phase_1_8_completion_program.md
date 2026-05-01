@@ -90,6 +90,13 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 | **Dependencies** | Production or dev embedding endpoint decision; may parallel **Track F** skeleton. |
 | **Acceptance criteria** | Operator can follow doc and reach **`indexed`** or see explicit **`failed`**; demo path can show **non-empty** semantic evidence; no undocumented `pending` limbo. |
 
+### Track B — Slice B1 (implemented)
+
+- **Service:** `SemanticIndexVectorIndexingService` in [`backend/app/services/semantic_index_service.py`](../../backend/app/services/semantic_index_service.py) — embeds non-empty `embedding_text`, upserts to Qdrant via `VectorIndexService`, sets `vector_status` to **`indexed`** on success or **`failed`** on empty text / embedding / vector errors; records diagnostics under `metadata_json.graphclerk_vector_indexing`; skips already **`indexed`** unless `force=True`; retries **`failed`** rows from `index_all_pending`.
+- **Operator CLI:** [`scripts/backfill_semantic_indexes.py`](../../scripts/backfill_semantic_indexes.py) — `--semantic-index-id` or `--all-pending` (dev embeddings: `DeterministicFakeEmbeddingAdapter`, not production semantics).
+- **Tests:** [`backend/tests/test_phase1_8_track_b_indexed_retrieval.py`](../../backend/tests/test_phase1_8_track_b_indexed_retrieval.py) (requires DB-backed `db_ready` when `RUN_INTEGRATION_TESTS=1` + `DATABASE_URL`).
+- **Not in B1:** automatic indexing on `POST /semantic-indexes` create; background job system; production embedding adapter in the API default factory.
+
 ---
 
 ## 6. Track C — Phase 7 full context intelligence completion

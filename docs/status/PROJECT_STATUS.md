@@ -106,6 +106,7 @@
 - Qdrant VectorIndexService (collection management, upsert, search) with explicit error behavior
 - `GET /semantic-indexes/search` (Postgres-backed metadata + Qdrant score; returns only `vector_status=indexed`)
 - Bounded graph traversal: `GET /graph/nodes/{node_id}/neighborhood` with truncation reporting
+- **Track B Slice B1:** `SemanticIndexVectorIndexingService` + operator script [`scripts/backfill_semantic_indexes.py`](../scripts/backfill_semantic_indexes.py) — explicit **`pending`/`failed` → `indexed`/`failed`** (no silent `pending`); dev embeddings only until a production adapter is wired for this path
 
 ## Implemented (Phase 4)
 - `POST /retrieve` returns a validated `RetrievalPacket` JSON object for every request (including empty semantic matches)
@@ -115,7 +116,7 @@
 ## Phase 3 limitations (explicit)
 - production embedding adapter not wired
 - SemanticIndex creation does not auto-index vectors into Qdrant
-- no indexing job/backfill
+- **Manual dev/operator vector backfill** (Track B Slice B1): `SemanticIndexVectorIndexingService` + [`scripts/backfill_semantic_indexes.py`](../scripts/backfill_semantic_indexes.py) — uses **deterministic fake** embeddings for dev; **not** automatic indexing or a background job system
 - integration tests are opt-in/gated (`RUN_INTEGRATION_TESTS=1` + env vars)
 
 ## Phase 7 limitations (explicit)

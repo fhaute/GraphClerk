@@ -152,7 +152,7 @@
 - Protected terms/contracts require change-control.
 
 ## Later work (high level; Phases 3–4 already cover parts of this list)
-- Semantic index **vector population** (auto-index on create, backfill jobs) — indexing/search APIs exist; population workflow remains a gap.
+- Semantic index **vector population** — **manual** operator/dev backfill shipped (Track B Slice B1: `scripts/backfill_semantic_indexes.py`); **automatic** indexing on create and **background job** system remain future work.
 - **Embedding production adapter** wiring and calibration (Phase 3 placeholder today).
 - **Optional** packet-only **`POST /answer`** / consumer (strictly separate from retrieval; not implemented).
 - **Phase 6 stretch / hardening** (in-product demo UX, E2E harness, further polish) — baseline + audit **`pass_with_notes`** delivered; see Phase 6 section above and `docs/audits/PHASE_6_AUDIT.md`.

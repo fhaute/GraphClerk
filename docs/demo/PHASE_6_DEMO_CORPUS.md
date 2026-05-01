@@ -64,6 +64,22 @@ Therefore:
 
 This loader **does not** write to the database directly and **does not** fake indexing through hidden APIs.
 
+## Manual vector indexing (rich demo — Track B Slice B1)
+
+After the demo loader creates a semantic index, `vector_status` is usually **`pending`**. To move it to **`indexed`** (or explicit **`failed`**) using the **same** Postgres + Qdrant the API uses:
+
+1. From the loader output or **Semantic indexes** UI, copy the new semantic index **UUID**.
+2. Set **`DATABASE_URL`** and **`QDRANT_URL`** to match the running API (same values as the `api` container / `backend` `.env`).
+3. From the **repository root** (with `qdrant-client` and backend deps installed):
+
+   ```bash
+   python scripts/backfill_semantic_indexes.py --semantic-index-id "<UUID>"
+   ```
+
+   Or process pending rows in batch (see `python scripts/backfill_semantic_indexes.py --help`).
+
+The script uses **`DeterministicFakeEmbeddingAdapter`** (8 dimensions) for embeddings — **dev/test only**, not a semantic production model. It **does not** auto-run on `POST /semantic-indexes` create. If `embedding_text` is missing or whitespace-only, the row becomes **`failed`** with `metadata.graphclerk_vector_indexing` explaining why (no fake **`indexed`**).
+
 ## Manual end-to-end smoke path
 
 Use this path to verify **control plane + UI + retrieval logging** with the Phase 6 demo. There is **no** `POST /answer`, **no** answer synthesis step, **no** OCR/ASR/video pipeline on this path, and **no** claim of production model inference — only public APIs and the script-only loader.
@@ -100,7 +116,7 @@ Use this path to verify **control plane + UI + retrieval logging** with the Phas
 
 **Rich demo (optional “evidence-filled” tier)**
 
-- **Requires:** at least one semantic index with **`vector_status=indexed`** (dev backfill, Qdrant upsert, integration harness, or a future first-class indexing story — **not** performed by `load_phase6_demo.py` today).
+- **Requires:** at least one semantic index with **`vector_status=indexed`**. Use the **manual backfill** script above (or your own operator flow calling `SemanticIndexVectorIndexingService`) after `load_phase6_demo.py`; the loader still **does not** index vectors itself.
 - **Then:** `GET /semantic-indexes/search` and File Clerk route selection can attach traversal and you may see **non-empty** `evidence_units` when the question aligns with indexed meaning.
 
 For release-style verification, record whether your run was **minimal** (empty evidence acceptable with pending indexes) or **rich** (indexed vectors present).
@@ -111,7 +127,7 @@ For release-style verification, record whether your run was **minimal** (empty e
 
 - **Minimal E2E** (loader + UI + retrieve + logs; **`vector_status`** often **`pending`**; evidence may be empty) is **accepted as sufficient** for Phase **0–8** closure and for **Phase 9 planning** — no requirement to implement automatic backfill first.
 - **External or stakeholder demos** that must show **semantic-route evidence snippets** need a **dev-only “indexed” setup** (for example opt-in integration flows with Qdrant + embedding upsert, or other operator-documented steps — **not** added to `load_phase6_demo.py` by this policy) **or** an explicit walkthrough that **pending** indexes mean search and File Clerk semantic routing only consider **`indexed`** rows.
-- **Automatic vector indexing/backfill** remains **out of scope** here; treat it as existing **Phase 3** product/debt work if prioritized later.
+- **Automatic** vector indexing on create / background jobs remain **out of scope** for this policy; **manual** backfill (`scripts/backfill_semantic_indexes.py`) is available for dev/rich demos (Track B Slice B1).
 
 ## APIs used
 

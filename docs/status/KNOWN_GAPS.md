@@ -12,7 +12,7 @@ This file tracks known missing pieces so they are explicit and not hidden.
 - **Qdrant VectorIndexService**: implemented (Phase 3; integration tests are opt-in/gated)
 - **Semantic index search**: implemented (Phase 3; only returns `vector_status=indexed`)
 - **Graph traversal logic**: implemented (Phase 3; bounded traversal only)
-- **Embeddings / semantic index population**: not_started (indexing job/backfill; automatic indexing on create)
+- **Embeddings / semantic index population**: **manual dev/operator backfill** exists ([`scripts/backfill_semantic_indexes.py`](../scripts/backfill_semantic_indexes.py) + `SemanticIndexVectorIndexingService` — Track B Slice B1); **automatic** indexing on `POST /semantic-indexes` create and **background job system** remain **not implemented**
 - **FileClerk retrieval packet assembly**: implemented (Phase 4; deterministic/heuristic components)
 - **Optional packet-only answer synthesis (`POST /answer`)**: not_started (deferred; requires separate approval)
 - **Answer synthesis / LLM calls**: not_started (future phase)
@@ -26,8 +26,8 @@ This file tracks known missing pieces so they are explicit and not hidden.
 
 ## Known limitations (Phase 3)
 - **Production embedding adapter not wired**: default wiring is explicitly “not configured”.
-- **SemanticIndex creation does not auto-index into Qdrant**.
-- **No indexing job/backfill** exists yet for vector population.
+- **SemanticIndex creation does not auto-index into Qdrant** (unchanged).
+- **Manual backfill** (operator script) can transition `vector_status` to **`indexed`** or **`failed`** with explicit metadata; **no** silent promotion from **`pending`**.
 
 ## Known limitations (Phase 4)
 - **Query intent classification is simple/deterministic** (keyword/heuristic).
