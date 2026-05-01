@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from app.schemas.evidence_unit_candidate import (
+    LANGUAGE_METADATA_KEY_LANGUAGE,
+    LANGUAGE_METADATA_KEY_LANGUAGE_CONFIDENCE,
+)
 from app.services.artifact_language_aggregation_service import (
     CONFIDENCE_KEY,
     GRAPHCLERK_LANGUAGE_AGGREGATION_KEY,
@@ -18,6 +22,12 @@ from app.services.artifact_language_aggregation_service import (
 
 def _eu(**kwargs: object) -> dict[str, object]:
     return dict(kwargs)
+
+
+def test_aggregation_module_keys_match_schema_canonicals() -> None:
+    """Aggregation must read the same metadata keys the candidate schema documents."""
+    assert LANGUAGE_KEY == LANGUAGE_METADATA_KEY_LANGUAGE
+    assert CONFIDENCE_KEY == LANGUAGE_METADATA_KEY_LANGUAGE_CONFIDENCE
 
 
 def test_single_language_with_confidence_stats() -> None:

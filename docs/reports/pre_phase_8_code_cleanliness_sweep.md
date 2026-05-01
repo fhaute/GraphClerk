@@ -87,6 +87,15 @@ Rationale: **zero Severity-A** items; Phase 8 is **not** blocked by code cleanli
 
 ---
 
+## Remediation log (pre-Phase-8 hygiene)
+
+### Hygiene fix 1 — centralize language metadata keys (2026-05-01)
+
+- **`artifact_language_aggregation_service.py`** imports `LANGUAGE_METADATA_KEY_LANGUAGE` and `LANGUAGE_METADATA_KEY_LANGUAGE_CONFIDENCE` from **`evidence_unit_candidate.py`** and keeps **`LANGUAGE_KEY` / `CONFIDENCE_KEY`** as module-level aliases to those canonical constants (no parallel string literals for the EU metadata contract).
+- **`test_phase7_artifact_language_aggregation_service.py`:** added `test_aggregation_module_keys_match_schema_canonicals` to assert aggregation keys stay aligned with the schema module.
+
+---
+
 ## Primary handoff summaries
 
 Summaries below follow `docs/governance/AGENT_ROLES.md` → **Dedicated sub-agents** → **Handoff to primary / parent** (condensed from sub-agent runs).

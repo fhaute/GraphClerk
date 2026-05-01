@@ -16,8 +16,14 @@ from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-LANGUAGE_KEY = "language"
-CONFIDENCE_KEY = "language_confidence"
+from app.schemas.evidence_unit_candidate import (
+    LANGUAGE_METADATA_KEY_LANGUAGE,
+    LANGUAGE_METADATA_KEY_LANGUAGE_CONFIDENCE,
+)
+
+# Aliases for readability and stable imports; string values are defined only on the schema module.
+LANGUAGE_KEY = LANGUAGE_METADATA_KEY_LANGUAGE
+CONFIDENCE_KEY = LANGUAGE_METADATA_KEY_LANGUAGE_CONFIDENCE
 GRAPHCLERK_LANGUAGE_AGGREGATION_KEY = "graphclerk_language_aggregation"
 
 WARNING_NO_LANGUAGE_METADATA = "no_language_metadata"
