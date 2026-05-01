@@ -16,6 +16,7 @@
 - **Sweep 1** docstring corrections were applied afterward in commit **`fe68101`** (`docs: correct retrieval docstrings after phase 7`).
 - **Sweep 2** phase/status structural corrections were applied afterward in commit **`1700966`** (`docs: align phase documents before phase 8`).
 - Severity **A** / **B** / **C** rows below are **historical findings** unless **re-confirmed** by a fresh sweep.
+- **Executive summary** through **Primary handoff** reflect the **Metadata** baseline (before **`fe68101`** / **`1700966`**); treat them as the archival sweep narrative unless you re-run verification.
 
 ## Executive summary
 
