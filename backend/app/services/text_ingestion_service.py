@@ -8,6 +8,9 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings
 from app.models.artifact import Artifact
 from app.schemas.evidence_unit_candidate import EvidenceUnitCandidate
+from app.services.artifact_language_aggregation_service import (
+    apply_language_aggregation_to_artifact,
+)
 from app.services.artifact_service import ArtifactService
 from app.services.errors import IngestionParseError
 from app.services.evidence_enrichment_service import (
@@ -86,8 +89,16 @@ class TextIngestionService:
                 candidates = self._parse(artifact_type=artifact_type, text=text)
                 enriched = self._enrichment.enrich(candidates)
                 if candidates and not enriched:
-                    raise EvidenceEnrichmentEmptiedCandidatesError("enrichment_removed_all_candidates")
-                evidence_service.create_from_candidates(artifact_id=artifact.id, candidates=enriched)
+                    raise EvidenceEnrichmentEmptiedCandidatesError(
+                        "enrichment_removed_all_candidates"
+                    )
+                created_eus = evidence_service.create_from_candidates(
+                    artifact_id=artifact.id,
+                    candidates=enriched,
+                )
+                apply_language_aggregation_to_artifact(
+                    artifact=artifact, evidence_units=created_eus
+                )
 
             # committed
             return IngestResult(artifact=artifact, evidence_unit_count=len(enriched))
@@ -106,4 +117,3 @@ class TextIngestionService:
             return PlainTextParser().parse(text)
         except Exception as e:
             raise IngestionParseError(str(e)) from e
-

@@ -1,9 +1,13 @@
 """Artifact-level language aggregation from EvidenceUnit metadata projections (Phase 7).
 
-Pure helper: **no database**, **no persistence**, **no ingestion wiring**. Consumes
-read-only ``Mapping`` projections shaped like ``EvidenceUnit.metadata_json`` and
-returns a **new** artifact ``metadata_json``-style dict with language summaries
-under ``graphclerk_language_aggregation``.
+``ArtifactLanguageAggregationService.aggregate`` is a pure helper: **no database**,
+**no I/O**. It consumes read-only ``Mapping`` projections shaped like
+``EvidenceUnit.metadata_json`` and returns a **new** artifact ``metadata_json``-style
+dict with language summaries under ``graphclerk_language_aggregation``.
+
+Track C Slice C5: ``apply_language_aggregation_to_artifact`` is called from text and
+multimodal ingestion **after** ``EvidenceUnitService.create_from_candidates`` so the
+artifact row receives merged metadata (same transaction).
 
 Aggregated language is **routing metadata**, not evidence; absence of language
 metadata must never be interpreted as a definite natural language.
@@ -16,6 +20,8 @@ from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from app.models.artifact import Artifact
+from app.models.evidence_unit import EvidenceUnit
 from app.schemas.evidence_unit_candidate import (
     LANGUAGE_METADATA_KEY_LANGUAGE,
     LANGUAGE_METADATA_KEY_LANGUAGE_CONFIDENCE,
@@ -30,6 +36,33 @@ WARNING_NO_LANGUAGE_METADATA = "no_language_metadata"
 WARNING_LANGUAGE_MISSING_OR_NULL = "language_missing_or_null"
 WARNING_LANGUAGE_CONFIDENCE_MISSING = "language_confidence_missing"
 WARNING_LANGUAGE_CONFIDENCE_INVALID = "language_confidence_invalid"
+
+
+def apply_language_aggregation_to_artifact(
+    *,
+    artifact: Artifact,
+    evidence_units: Sequence[EvidenceUnit],
+) -> None:
+    """Merge ``graphclerk_language_aggregation`` onto ``artifact.metadata_json``.
+
+    Reads each ``EvidenceUnit.metadata_json`` as the aggregation input (what was
+    persisted for that row). Replaces only ``graphclerk_language_aggregation``;
+    other artifact metadata keys are preserved by ``aggregate``.
+
+    Raises:
+        Same as underlying logic if projections are structurally invalid (data/bug);
+        ingestion callers should not swallow unexpected errors.
+    """
+
+    svc = ArtifactLanguageAggregationService()
+    projections: list[dict[str, Any]] = []
+    for eu in evidence_units:
+        m = eu.metadata_json
+        projections.append(dict(m) if isinstance(m, dict) else {})
+    artifact.metadata_json = svc.aggregate(
+        artifact_metadata=artifact.metadata_json,
+        evidence_metadata_projections=projections,
+    )
 
 
 class ArtifactLanguageAggregationService:
@@ -57,7 +90,9 @@ class ArtifactLanguageAggregationService:
 
         result: dict[str, Any] = dict(artifact_metadata) if artifact_metadata else {}
 
-        buckets: dict[str, dict[str, Any]] = defaultdict(lambda: {"count": 0, "valid_confidences": list[float]()})
+        buckets: dict[str, dict[str, Any]] = defaultdict(
+            lambda: {"count": 0, "valid_confidences": list[float]()}
+        )
         without_language = 0
         warnings: set[str] = set()
 
@@ -102,7 +137,9 @@ class ArtifactLanguageAggregationService:
         result[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY] = subtree
         return result
 
-    def _maybe_capture_invalid_confidence(self, meta: Mapping[str, Any], warnings: set[str]) -> None:
+    def _maybe_capture_invalid_confidence(
+        self, meta: Mapping[str, Any], warnings: set[str]
+    ) -> None:
         """If a confidence key exists but is malformed, record invalid warning."""
 
         if CONFIDENCE_KEY not in meta:

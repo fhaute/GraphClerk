@@ -5,6 +5,9 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
+from app.services.artifact_language_aggregation_service import (
+    apply_language_aggregation_to_artifact,
+)
 from app.services.artifact_service import ArtifactService
 from app.services.errors import ExtractionReturnedNoEvidenceError, UnsupportedArtifactTypeError
 from app.services.evidence_enrichment_service import (
@@ -85,11 +88,16 @@ class MultimodalIngestionService:
 
                 enriched = self._enrichment.enrich(candidates)
                 if candidates and not enriched:
-                    raise EvidenceEnrichmentEmptiedCandidatesError("enrichment_removed_all_candidates")
+                    raise EvidenceEnrichmentEmptiedCandidatesError(
+                        "enrichment_removed_all_candidates"
+                    )
 
-                evidence_service.create_from_candidates(
+                created_eus = evidence_service.create_from_candidates(
                     artifact_id=artifact.id,
                     candidates=enriched,
+                )
+                apply_language_aggregation_to_artifact(
+                    artifact=artifact, evidence_units=created_eus
                 )
 
             return IngestResult(artifact=artifact, evidence_unit_count=len(enriched))

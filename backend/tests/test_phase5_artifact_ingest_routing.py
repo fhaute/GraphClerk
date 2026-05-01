@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import pytest
 import httpx
+import pytest
 from httpx import ASGITransport
 
 from app.api.routes import artifacts as artifacts_routes
@@ -68,12 +68,18 @@ async def test_phase2_markdown_json_ingestion_unchanged(db_ready: None) -> None:
 
 
 @pytest.mark.asyncio
-async def test_multimodal_pdf_without_registered_extractor_returns_400(db_ready: None, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(artifacts_routes, "get_multimodal_extractor_registry", lambda: ExtractorRegistry())
+async def test_multimodal_pdf_without_registered_extractor_returns_400(
+    db_ready: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        artifacts_routes, "get_multimodal_extractor_registry", lambda: ExtractorRegistry()
+    )
     app = create_app()
     transport = ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        res = await client.post("/artifacts", files={"file": ("x.pdf", b"%PDF-1.4 minimal", "application/pdf")})
+        res = await client.post(
+            "/artifacts", files={"file": ("x.pdf", b"%PDF-1.4 minimal", "application/pdf")}
+        )
     assert res.status_code == 400
     body = res.json()
     assert "detail" in body
@@ -159,7 +165,9 @@ async def test_multimodal_audio_without_registered_extractor_returns_400(
 
 
 @pytest.mark.asyncio
-async def test_multimodal_pdf_with_stub_extractor_succeeds(db_ready: None, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_multimodal_pdf_with_stub_extractor_succeeds(
+    db_ready: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
     reg = ExtractorRegistry()
     reg.register(Modality.pdf, _PdfStubExtractor())
     monkeypatch.setattr(artifacts_routes, "get_multimodal_extractor_registry", lambda: reg)
@@ -167,15 +175,23 @@ async def test_multimodal_pdf_with_stub_extractor_succeeds(db_ready: None, monke
     app = create_app()
     transport = ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        res = await client.post("/artifacts", files={"file": ("doc.pdf", b"%PDF-1.4 stub", "application/pdf")})
-    assert res.status_code == 200
-    data = res.json()
-    assert data["artifact_type"] == "pdf"
-    assert data["evidence_unit_count"] == 1
+        res = await client.post(
+            "/artifacts", files={"file": ("doc.pdf", b"%PDF-1.4 stub", "application/pdf")}
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["artifact_type"] == "pdf"
+        assert data["evidence_unit_count"] == 1
+        got = await client.get(f"/artifacts/{data['artifact_id']}")
+    assert got.status_code == 200
+    meta = got.json().get("metadata") or {}
+    assert "graphclerk_language_aggregation" in meta
 
 
 @pytest.mark.asyncio
-async def test_extractor_unavailable_returns_503(db_ready: None, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_extractor_unavailable_returns_503(
+    db_ready: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
     reg = ExtractorRegistry()
     reg.register(Modality.image, _UnavailableExtractor())
     monkeypatch.setattr(artifacts_routes, "get_multimodal_extractor_registry", lambda: reg)
@@ -185,13 +201,21 @@ async def test_extractor_unavailable_returns_503(db_ready: None, monkeypatch: py
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         res = await client.post(
             "/artifacts",
-            files={"file": ("p.png", b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01", "image/png")},
+            files={
+                "file": (
+                    "p.png",
+                    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01",
+                    "image/png",
+                )
+            },
         )
     assert res.status_code == 503
 
 
 @pytest.mark.asyncio
-async def test_extractor_empty_candidates_returns_400(db_ready: None, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_extractor_empty_candidates_returns_400(
+    db_ready: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
     reg = ExtractorRegistry()
     reg.register(Modality.audio, _EmptyListExtractor())
     monkeypatch.setattr(artifacts_routes, "get_multimodal_extractor_registry", lambda: reg)
@@ -199,7 +223,9 @@ async def test_extractor_empty_candidates_returns_400(db_ready: None, monkeypatc
     app = create_app()
     transport = ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        res = await client.post("/artifacts", files={"file": ("a.wav", b"RIFF\x24\x00\x00\x00WAVEfmt ", "audio/wav")})
+        res = await client.post(
+            "/artifacts", files={"file": ("a.wav", b"RIFF\x24\x00\x00\x00WAVEfmt ", "audio/wav")}
+        )
     assert res.status_code == 400
     assert res.json()["detail"] == "extraction_returned_no_evidence"
 
@@ -209,7 +235,9 @@ async def test_unsupported_extension_returns_400(db_ready: None) -> None:
     app = create_app()
     transport = ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        res = await client.post("/artifacts", files={"file": ("x.exe", b"MZ", "application/octet-stream")})
+        res = await client.post(
+            "/artifacts", files={"file": ("x.exe", b"MZ", "application/octet-stream")}
+        )
     assert res.status_code == 400
 
 
@@ -218,6 +246,8 @@ async def test_video_returns_400(db_ready: None) -> None:
     app = create_app()
     transport = ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        res = await client.post("/artifacts", files={"file": ("v.mp4", b"\x00\x00\x00", "video/mp4")})
+        res = await client.post(
+            "/artifacts", files={"file": ("v.mp4", b"\x00\x00\x00", "video/mp4")}
+        )
     assert res.status_code == 400
     assert "video" in res.json()["detail"].lower()

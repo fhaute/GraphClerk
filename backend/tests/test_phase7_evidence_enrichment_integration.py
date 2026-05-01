@@ -21,6 +21,7 @@ from app.schemas.evidence_unit_candidate import (
     LANGUAGE_METADATA_KEY_LANGUAGE_DETECTION_METHOD,
     EvidenceUnitCandidate,
 )
+from app.services.artifact_language_aggregation_service import GRAPHCLERK_LANGUAGE_AGGREGATION_KEY
 from app.services.evidence_enrichment_service import (
     EvidenceEnrichmentEmptiedCandidatesError,
     EvidenceEnrichmentService,
@@ -268,6 +269,28 @@ def _configure_test_settings_env(tmp_path, monkeypatch: pytest.MonkeyPatch) -> N
     config_module.get_settings.cache_clear()
 
 
+def _mock_eus_from_candidates(candidates: list[EvidenceUnitCandidate]) -> list[MagicMock]:
+    out: list[MagicMock] = []
+    for c in candidates:
+        eu = MagicMock()
+        eu.metadata_json = dict(c.metadata) if c.metadata else {}
+        eu.text = c.text
+        eu.source_fidelity = c.source_fidelity
+        out.append(eu)
+    return out
+
+
+def _capture_create_from_candidates_return_mock_eus(
+    captured: list[list[EvidenceUnitCandidate]],
+):
+    def _fn(**kw) -> list[MagicMock]:
+        cands = list(kw["candidates"])
+        captured.append(cands)
+        return _mock_eus_from_candidates(cands)
+
+    return _fn
+
+
 def test_text_ingestion_calls_enrichment_before_persistence_mock(
     tmp_path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -280,6 +303,7 @@ def test_text_ingestion_calls_enrichment_before_persistence_mock(
 
     art = MagicMock()
     art.id = uuid.uuid4()
+    art.metadata_json = {}
 
     mock_session = MagicMock()
     begin_cm = MagicMock()
@@ -292,8 +316,8 @@ def test_text_ingestion_calls_enrichment_before_persistence_mock(
     with patch("app.services.text_ingestion_service.ArtifactService") as AS_cls:
         AS_cls.return_value.create_from_bytes.return_value = (art, None)
         with patch("app.services.text_ingestion_service.EvidenceUnitService") as ES_cls:
-            ES_cls.return_value.create_from_candidates.side_effect = lambda **kw: captured.append(
-                list(kw["candidates"])
+            ES_cls.return_value.create_from_candidates.side_effect = (
+                _capture_create_from_candidates_return_mock_eus(captured)
             )
 
             svc.ingest(
@@ -310,6 +334,7 @@ def test_text_ingestion_calls_enrichment_before_persistence_mock(
     assert captured[0][0] is spy.calls[0][0]
     assert captured[0][1] is spy.calls[0][1]
     assert captured[0][0].text == "Hello"
+    assert GRAPHCLERK_LANGUAGE_AGGREGATION_KEY in art.metadata_json
 
 
 def test_multimodal_ingestion_calls_enrichment_before_persistence_mock(
@@ -324,6 +349,7 @@ def test_multimodal_ingestion_calls_enrichment_before_persistence_mock(
 
     art = MagicMock()
     art.id = uuid.uuid4()
+    art.metadata_json = {}
 
     mock_session = MagicMock()
     begin_cm = MagicMock()
@@ -336,8 +362,8 @@ def test_multimodal_ingestion_calls_enrichment_before_persistence_mock(
     with patch("app.services.multimodal_ingestion_service.ArtifactService") as AS_cls:
         AS_cls.return_value.create_from_bytes.return_value = (art, None)
         with patch("app.services.multimodal_ingestion_service.EvidenceUnitService") as ES_cls:
-            ES_cls.return_value.create_from_candidates.side_effect = lambda **kw: captured.append(
-                list(kw["candidates"])
+            ES_cls.return_value.create_from_candidates.side_effect = (
+                _capture_create_from_candidates_return_mock_eus(captured)
             )
 
             svc.ingest(
@@ -352,6 +378,7 @@ def test_multimodal_ingestion_calls_enrichment_before_persistence_mock(
     assert len(spy.calls[0]) == 2
     assert len(captured) == 1
     assert captured[0] == spy.calls[0]
+    assert GRAPHCLERK_LANGUAGE_AGGREGATION_KEY in art.metadata_json
 
 
 def test_multimodal_uses_enrichment_returned_list_mock(
@@ -367,6 +394,7 @@ def test_multimodal_uses_enrichment_returned_list_mock(
 
     art = MagicMock()
     art.id = uuid.uuid4()
+    art.metadata_json = {}
 
     mock_session = MagicMock()
     begin_cm = MagicMock()
@@ -379,8 +407,8 @@ def test_multimodal_uses_enrichment_returned_list_mock(
     with patch("app.services.multimodal_ingestion_service.ArtifactService") as AS_cls:
         AS_cls.return_value.create_from_bytes.return_value = (art, None)
         with patch("app.services.multimodal_ingestion_service.EvidenceUnitService") as ES_cls:
-            ES_cls.return_value.create_from_candidates.side_effect = lambda **kw: captured.append(
-                list(kw["candidates"])
+            ES_cls.return_value.create_from_candidates.side_effect = (
+                _capture_create_from_candidates_return_mock_eus(captured)
             )
 
             svc.ingest(
@@ -394,6 +422,7 @@ def test_multimodal_uses_enrichment_returned_list_mock(
     assert len(captured) == 1
     assert len(captured[0]) == 1
     assert captured[0][0].text == "alpha page"
+    assert GRAPHCLERK_LANGUAGE_AGGREGATION_KEY in art.metadata_json
 
 
 def test_text_enrichment_drops_all_raises_mock(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -478,6 +507,8 @@ def test_text_ingestion_persists_language_metadata_when_detection_injected(db_re
             .scalars()
             .all()
         )
+        art = session.get(Artifact, result.artifact.id)
+        agg = (art.metadata_json or {})[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY]
 
     assert len(evs) == 2
     for ev in evs:
@@ -485,6 +516,8 @@ def test_text_ingestion_persists_language_metadata_when_detection_injected(db_re
         assert meta.get(LANGUAGE_METADATA_KEY_LANGUAGE) == "fr"
         assert meta.get(LANGUAGE_METADATA_KEY_LANGUAGE_CONFIDENCE) == 0.91
         assert meta.get(LANGUAGE_METADATA_KEY_LANGUAGE_DETECTION_METHOD) == "deterministic_test"
+    assert agg["primary_language"] == "fr"
+    assert agg["distinct_language_count"] == 1
 
 
 def test_text_ingestion_passes_enriched_language_metadata_to_create_from_candidates_mock(
@@ -505,6 +538,7 @@ def test_text_ingestion_passes_enriched_language_metadata_to_create_from_candida
 
     art = MagicMock()
     art.id = uuid.uuid4()
+    art.metadata_json = {"preset": True}
 
     mock_session = MagicMock()
     begin_cm = MagicMock()
@@ -517,8 +551,8 @@ def test_text_ingestion_passes_enriched_language_metadata_to_create_from_candida
     with patch("app.services.text_ingestion_service.ArtifactService") as AS_cls:
         AS_cls.return_value.create_from_bytes.return_value = (art, None)
         with patch("app.services.text_ingestion_service.EvidenceUnitService") as ES_cls:
-            ES_cls.return_value.create_from_candidates.side_effect = lambda **kw: captured.append(
-                list(kw["candidates"])
+            ES_cls.return_value.create_from_candidates.side_effect = (
+                _capture_create_from_candidates_return_mock_eus(captured)
             )
 
             svc.ingest(
@@ -538,3 +572,5 @@ def test_text_ingestion_passes_enriched_language_metadata_to_create_from_candida
         assert (
             c.metadata.get(LANGUAGE_METADATA_KEY_LANGUAGE_DETECTION_METHOD) == "deterministic_test"
         )
+    assert art.metadata_json.get("preset") is True
+    assert GRAPHCLERK_LANGUAGE_AGGREGATION_KEY in art.metadata_json

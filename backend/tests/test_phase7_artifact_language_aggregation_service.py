@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from app.schemas.evidence_unit_candidate import (
@@ -17,6 +19,7 @@ from app.services.artifact_language_aggregation_service import (
     WARNING_LANGUAGE_MISSING_OR_NULL,
     WARNING_NO_LANGUAGE_METADATA,
     ArtifactLanguageAggregationService,
+    apply_language_aggregation_to_artifact,
 )
 
 
@@ -137,7 +140,9 @@ def test_bool_confidence_invalid() -> None:
     svc = ArtifactLanguageAggregationService()
     ev = [_eu(**{LANGUAGE_KEY: "en", CONFIDENCE_KEY: True})]  # type: ignore[arg-type]
     out = svc.aggregate(artifact_metadata=None, evidence_metadata_projections=ev)
-    assert WARNING_LANGUAGE_CONFIDENCE_INVALID in out[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY]["warnings"]
+    assert (
+        WARNING_LANGUAGE_CONFIDENCE_INVALID in out[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY]["warnings"]
+    )
     row = out[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY]["languages"][0]
     assert row["average_confidence"] is None
 
@@ -159,7 +164,9 @@ def test_explicit_none_confidence_missing() -> None:
     svc = ArtifactLanguageAggregationService()
     ev = [_eu(**{LANGUAGE_KEY: "de", CONFIDENCE_KEY: None})]
     out = svc.aggregate(artifact_metadata=None, evidence_metadata_projections=ev)
-    assert WARNING_LANGUAGE_CONFIDENCE_MISSING in out[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY]["warnings"]
+    assert (
+        WARNING_LANGUAGE_CONFIDENCE_MISSING in out[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY]["warnings"]
+    )
 
 
 def test_no_language_metadata_empty_evidence() -> None:
@@ -241,6 +248,20 @@ def test_language_string_trimmed_for_bucket() -> None:
 def test_non_string_language_counts_as_without_metadata() -> None:
     svc = ArtifactLanguageAggregationService()
     ev = [_eu(**{LANGUAGE_KEY: 404})]  # type: ignore[arg-type]
-    agg = svc.aggregate(artifact_metadata=None, evidence_metadata_projections=ev)[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY]
+    agg = svc.aggregate(artifact_metadata=None, evidence_metadata_projections=ev)[
+        GRAPHCLERK_LANGUAGE_AGGREGATION_KEY
+    ]
     assert agg["evidence_units_without_language_metadata_count"] == 1
     assert WARNING_LANGUAGE_MISSING_OR_NULL in agg["warnings"]
+
+
+def test_apply_language_aggregation_to_artifact_replaces_subtree_and_preserves_keys() -> None:
+    art = MagicMock()
+    art.metadata_json = {"keep": 1, GRAPHCLERK_LANGUAGE_AGGREGATION_KEY: {"stale": True}}
+    eu = MagicMock()
+    eu.metadata_json = {LANGUAGE_KEY: "ja", CONFIDENCE_KEY: 0.99}
+    apply_language_aggregation_to_artifact(artifact=art, evidence_units=[eu])
+    assert art.metadata_json["keep"] == 1
+    sub = art.metadata_json[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY]
+    assert sub["primary_language"] == "ja"
+    assert "stale" not in sub

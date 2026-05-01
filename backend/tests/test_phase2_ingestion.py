@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import os
 
-import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
 from app.core import config as config_module
 from app.models.artifact import Artifact
 from app.models.evidence_unit import EvidenceUnit
+from app.services.artifact_language_aggregation_service import GRAPHCLERK_LANGUAGE_AGGREGATION_KEY
 from app.services.text_ingestion_service import TextIngestionService
 
 
@@ -69,7 +69,13 @@ def test_plain_text_ingestion_creates_evidence_units(db_ready: None) -> None:
             content_bytes=b"A\n\nB\n",
         )
 
-        evs = session.execute(select(EvidenceUnit).where(EvidenceUnit.artifact_id == result.artifact.id)).scalars().all()
+        evs = (
+            session.execute(
+                select(EvidenceUnit).where(EvidenceUnit.artifact_id == result.artifact.id)
+            )
+            .scalars()
+            .all()
+        )
         assert len(evs) == 2
 
 
@@ -87,7 +93,11 @@ def test_verbatim_evidence_matches_source_text(db_ready: None) -> None:
         )
 
         evs = (
-            session.execute(select(EvidenceUnit).where(EvidenceUnit.artifact_id == result.artifact.id).order_by(EvidenceUnit.created_at))
+            session.execute(
+                select(EvidenceUnit)
+                .where(EvidenceUnit.artifact_id == result.artifact.id)
+                .order_by(EvidenceUnit.created_at)
+            )
             .scalars()
             .all()
         )
@@ -108,7 +118,9 @@ def test_evidence_unit_location_metadata_exists(db_ready: None) -> None:
         )
 
         ev = (
-            session.execute(select(EvidenceUnit).where(EvidenceUnit.artifact_id == result.artifact.id).limit(1))
+            session.execute(
+                select(EvidenceUnit).where(EvidenceUnit.artifact_id == result.artifact.id).limit(1)
+            )
             .scalars()
             .one()
         )
@@ -130,7 +142,30 @@ def test_evidence_unit_links_to_artifact(db_ready: None) -> None:
             content_bytes=b"A\n",
         )
 
-        ev = session.execute(select(EvidenceUnit).where(EvidenceUnit.artifact_id == result.artifact.id)).scalars().first()
+        ev = (
+            session.execute(
+                select(EvidenceUnit).where(EvidenceUnit.artifact_id == result.artifact.id)
+            )
+            .scalars()
+            .first()
+        )
         assert ev is not None
         assert ev.artifact_id == result.artifact.id
 
+
+def test_text_ingestion_persists_graphclerk_language_aggregation_on_artifact(
+    db_ready: None,
+) -> None:
+    settings = config_module.get_settings()
+    svc = TextIngestionService(settings=settings)
+    with _session() as session:
+        result = svc.ingest(
+            session=session,
+            filename="agg-phase2.txt",
+            artifact_type="text",
+            mime_type="text/plain",
+            content_bytes=b"One line\n\nTwo line\n",
+        )
+        art = session.get(Artifact, result.artifact.id)
+    assert art is not None
+    assert GRAPHCLERK_LANGUAGE_AGGREGATION_KEY in (art.metadata_json or {})
