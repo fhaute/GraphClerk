@@ -34,8 +34,8 @@ todos:
     content: "Slice 8I — Phase 8 audit artifact under docs/audits/ after implementation slices warrant it."
     status: completed
   - id: phase8-pm-reconcile
-    content: "PM — After each merged slice update this plan’s slice checklist + todo statuses; flag drift vs docs/status/README."
-    status: pending
+    content: "PM reconcile — closed post–Slice 8I: PHASE_8_AUDIT pass_with_notes; PHASE_STATUS / PROJECT_STATUS / ROADMAP aligned with baseline vs deferred work; Phase 9 not_started; no real inference or /answer claimed."
+    status: completed
 ---
 
 # Phase 8 — Specialized Model Pipeline (working plan)
