@@ -1,4 +1,8 @@
-"""Phase 4 File Clerk retrieval endpoint."""
+"""Phase 4 File Clerk ``POST /retrieve`` plus Phase 7 optional request metadata.
+
+Accepts optional ``actor_context`` on the body; it is validated and recorded on the
+``RetrievalPacket`` only (no routing or evidence-selection influence).
+"""
 
 from __future__ import annotations
 
@@ -17,7 +21,10 @@ router = APIRouter(prefix="", tags=["retrieve"])
 
 @router.post("/retrieve", response_model=RetrievalPacket)
 def retrieve_packet(payload: RetrieveRequest) -> RetrievalPacket:
-    """Return a structured `RetrievalPacket` for a natural-language question."""
+    """Return a structured ``RetrievalPacket`` for a natural-language question.
+
+    Optional ``actor_context`` is recording-only on the packet; it does not alter retrieval.
+    """
 
     if payload.question.strip() == "":
         raise HTTPException(status_code=422, detail="question_empty")

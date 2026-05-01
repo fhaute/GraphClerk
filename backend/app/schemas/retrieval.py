@@ -14,7 +14,11 @@ MAX_ACTOR_STRING_FIELD_LEN = 512
 
 
 class ActorContext(BaseModel):
-    """Optional caller-supplied hints. Not used for route or evidence selection in Slice 7G."""
+    """Optional caller-supplied hints (Slices 7G–7H).
+
+    Validated on ``POST /retrieve`` and may be recorded on ``RetrievalPacket``; not used for
+    route or evidence selection.
+    """
 
     model_config = ConfigDict(extra="forbid")
 

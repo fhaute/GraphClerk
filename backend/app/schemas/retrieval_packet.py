@@ -1,4 +1,4 @@
-"""RetrievalPacket JSON contracts for Phase 4 File Clerk."""
+"""RetrievalPacket JSON contracts: Phase 4 File Clerk plus Phase 7 context extensions."""
 
 from __future__ import annotations
 

@@ -1,4 +1,9 @@
-"""File Clerk orchestration for Phase 4 retrieval packets."""
+"""File Clerk orchestration for Phase 4 retrieval plus Phase 7 packet surfaces.
+
+Builds ``RetrievalPacket`` values that may include Phase 7 ``language_context`` (from
+selected evidence metadata) and optional ``actor_context`` recording. ``actor_context``
+does not influence routing or evidence selection in this baseline.
+"""
 
 from __future__ import annotations
 
@@ -20,7 +25,11 @@ from app.services.semantic_index_search_service import SemanticIndexSearchResult
 
 
 class FileClerkService:
-    """Coordinate retrieval services and persist an honest `RetrievalLog` snapshot."""
+    """Coordinate retrieval services; returning a validated ``RetrievalPacket`` is primary.
+
+    ``RetrievalLog`` writes are **best-effort**: persistence failures roll back the session
+    but the caller still receives the assembled packet.
+    """
 
     def __init__(
         self,

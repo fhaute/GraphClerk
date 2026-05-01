@@ -1,4 +1,8 @@
-"""Assemble and validate `RetrievalPacket` instances (Phase 4)."""
+"""Assemble and validate ``RetrievalPacket`` instances (Phase 4 core + Phase 7 assembly).
+
+Fills Phase 7 ``language_context`` from selected evidence metadata and optional
+``actor_context`` recording metadata (no retrieval influence from actor hints).
+"""
 
 from __future__ import annotations
 
