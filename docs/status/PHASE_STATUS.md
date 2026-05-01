@@ -82,8 +82,8 @@
 - **Remaining (honest)**: Optional future work per audit notes / gaps — production detector policy, translation (not baseline), artifact aggregation ingest wiring, Phase 7 UI surfaces, **7I** boosting (**not** in baseline).
 
 ## Phase 8 — Specialized Model Pipeline
-- **Status**: **baseline implemented** — slices **8A–8F** code + **8G design-only** delivered per working plan; **Slice 8I** (**Phase 8 audit**) **pending**. **Not** full specialized-model production (no production inference adapter, no registry, no pipeline merge into ingestion/FileClerk).
-- **Audit**: **pending** — no `docs/audits/PHASE_8_AUDIT.md` claim in this slice set.
+- **Status**: **baseline implemented** (**`pass_with_notes`**) — slices **8A–8F** code + **8G design-only** + **8H** honesty + **8I** audit artifact. **Not** full specialized-model production (no production inference adapter, no registry, no pipeline merge into ingestion/FileClerk).
+- **Audit**: **`pass_with_notes`** — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**).
 - **Defined in**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md) — see **Implementation status (current)** for shipped baseline vs broader phase objectives.
 - **Working plan (Cursor):** [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md)
 - **Evidence** (representative paths):
@@ -96,6 +96,7 @@
   - `backend/tests/test_phase8_model_pipeline_evaluation_fixtures.py`
   - [`backend/tests/fixtures/phase8_model_pipeline_cases.py`](../../backend/tests/fixtures/phase8_model_pipeline_cases.py)
   - [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md)
+  - [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md)
 - **Honesty constraints**: **`NotConfigured`** remains the **default** adapter story; **deterministic** adapter is **tests-only**; **no** Ollama/vLLM dependency added; **no** model calls in default app paths; **no** `/answer`; model output **not** evidence; projection **metadata-only** under **`graphclerk_model_pipeline`**; **no** retrieval/FileClerk/ingestion integration.
 
 ## Phase 9 — IDE Integration / Developer Evidence Orchestration (future)

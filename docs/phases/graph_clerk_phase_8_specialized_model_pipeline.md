@@ -6,12 +6,12 @@ Draft / proposed — this document remains the **north-star** narrative for spec
 
 ## Implementation status (current)
 
-As recorded in **`docs/status/*` (Phase 8 Slice 8H)**:
+As recorded in **`docs/status/*`** and **[`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md)** (Slice **8I**, **2026-05-03**, **`pass_with_notes`**):
 
 - **Delivered (baseline):** Slices **8A–8F** — typed **`model_pipeline_contracts`** (tasks, results, envelopes, errors), **`ModelPipelineAdapter`** with **`NotConfiguredModelPipelineAdapter`** as the explicit default and a **`DeterministicTestModelPipelineAdapter` limited to tests**, **`ModelPipelineOutputValidationService`**, standalone **`ModelPipelineCandidateMetadataProjectionService`** (metadata subtree **`graphclerk_model_pipeline` only**; **not** wired into ingestion, enrichment, FileClerk, or retrieval), and **deterministic evaluation fixtures** under `backend/tests/fixtures/` plus tests.
 - **Design-only:** Slice **8G** — optional future **local HTTP** inference adapters (e.g. Ollama / vLLM narrative in the working plan); **no** adapter implementation, **no** Ollama/vLLM dependencies added to the repo.
 - **Not delivered:** Production inference adapter, adapter registry, settings-driven model configuration, persistence of model outputs, UI surfaces, **`POST /answer`**, and integration of pipeline output into **`RetrievalPacket`** / **`EvidenceUnit`** flows. **Model output is not evidence**; projection output is **metadata-only**.
-- **Audit:** Phase **8** audit (**Slice 8I**) is **pending** — baseline honesty does not substitute for `docs/audits/` closure.
+- **Audit:** Phase **8** audit (**Slice 8I**) — **`pass_with_notes`** — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md). Baseline accepted; full phase-doc objectives remain largely future work.
 
 Working plan: `.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`.
 

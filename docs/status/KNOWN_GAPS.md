@@ -48,7 +48,7 @@ This file tracks known missing pieces so they are explicit and not hidden.
 - **Optional dependency matrix**: local/CI coverage for all combinations of extras + integration tests may need hardening later.
 
 ## Known limitations (Phase 8 — specialized model pipeline baseline)
-- **Phase 8 audit**: **Slice 8I** — **pending**; baseline code/docs honesty does **not** replace a formal audit artifact.
+- **Phase 8 audit**: **`pass_with_notes`** — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**); accepts baseline only — registry/production inference/UI/integration remain gaps.
 - **No production inference adapter**: **`NotConfigured`** is the default story; **no** Ollama, **no** vLLM, **no** HTTP inference client in shipped product paths; **8G** is **design-only**.
 - **No adapter registry** and **no** model-pipeline configuration in app settings for inference.
 - **`ModelPipelineCandidateMetadataProjectionService`** is **standalone** — **not** wired into text/multimodal ingestion, **`EvidenceEnrichmentService`**, FileClerk, or **`POST /retrieve`**.
