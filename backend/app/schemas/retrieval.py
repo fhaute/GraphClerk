@@ -1,7 +1,7 @@
 """HTTP request schemas for retrieval (Phase 4 base request + Phase 7 actor context).
 
-Slice 7G: ``ActorContext`` is validated request metadata only — not evidence, not persisted,
-not consumed by File Clerk retrieval in this slice.
+Slice 7G: validated request metadata only. Slice 7H: echoed on ``RetrievalPacket`` via
+``PacketActorContextRecording`` — recording-only; still not used for retrieval routing.
 """
 
 from __future__ import annotations

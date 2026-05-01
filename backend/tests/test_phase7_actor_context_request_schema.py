@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from app.main import create_app
 from app.models.enums import SemanticIndexVectorStatus
 from app.schemas.retrieval import MAX_ACTOR_STRING_FIELD_LEN, ActorContext
-from app.schemas.retrieval_packet import RetrievalPacket, RetrieveRequest
+from app.schemas.retrieval_packet import RetrieveRequest
 from app.services.embedding_adapter import DeterministicFakeEmbeddingAdapter
 from app.services.embedding_service import EmbeddingService
 from app.services.semantic_index_search_service import SemanticIndexSearchService
@@ -89,10 +89,6 @@ def test_actor_context_rejects_unknown_nested_fields() -> None:
         ActorContext.model_validate({"extra_field": "nope"})
 
 
-def test_retrieval_packet_has_no_actor_context_field() -> None:
-    assert "actor_context" not in RetrievalPacket.model_fields
-
-
 @pytest.mark.asyncio
 async def test_retrieve_api_with_and_without_actor_context(db_ready: None, monkeypatch) -> None:
     app = create_app()
@@ -148,9 +144,21 @@ async def test_retrieve_api_with_and_without_actor_context(db_ready: None, monke
     body_base = res_base.json()
     body_actor = res_actor.json()
 
-    assert "actor_context" not in body_base
-    assert "actor_context" not in body_actor
+    assert body_base["actor_context"]["used"] is False
+    assert body_actor["actor_context"]["used"] is True
 
-    assert body_base["language_context"] == body_actor["language_context"]
-    assert body_base["selected_indexes"] == body_actor["selected_indexes"]
-    assert body_base["warnings"] == body_actor["warnings"]
+    keys_compare = (
+        "question",
+        "interpreted_intent",
+        "selected_indexes",
+        "graph_paths",
+        "evidence_units",
+        "alternative_interpretations",
+        "context_budget",
+        "warnings",
+        "confidence",
+        "answer_mode",
+        "language_context",
+    )
+    for k in keys_compare:
+        assert body_base[k] == body_actor[k], k

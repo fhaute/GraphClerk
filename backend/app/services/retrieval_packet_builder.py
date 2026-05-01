@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from app.schemas.retrieval import ActorContext
 from app.schemas.retrieval_packet import (
     AlternativeInterpretation,
     ContextBudgetSummary,
@@ -12,6 +13,7 @@ from app.schemas.retrieval_packet import (
     EvidenceUnitPacket,
     GraphPathPacket,
     InterpretedIntent,
+    PacketActorContextRecording,
     RetrievalLanguageContext,
     RetrievalPacket,
     SelectedSemanticIndex,
@@ -42,6 +44,7 @@ class RetrievalPacketAssemblyInput:
     options_max_graph_paths: int
     options_max_selected_indexes: int
     include_alternatives: bool = True
+    request_actor_context: ActorContext | None = None
 
 
 class RetrievalPacketBuilder:
@@ -125,6 +128,8 @@ class RetrievalPacketBuilder:
 
         language_context = self._build_language_context(data.evidence_selected)
 
+        actor_packet = self._build_actor_context_recording(data.request_actor_context)
+
         packet = RetrievalPacket(
             question=data.question,
             interpreted_intent=data.interpreted_intent,
@@ -137,6 +142,7 @@ class RetrievalPacketBuilder:
             confidence=confidence,
             answer_mode=answer_mode,
             language_context=language_context,
+            actor_context=actor_packet,
         )
         # Final validation pass (explicit, even though models enforce shape).
         return RetrievalPacket.model_validate(packet.model_dump(mode="json"))
@@ -178,6 +184,24 @@ class RetrievalPacketBuilder:
                 "evidence_units_without_language_metadata_count"
             ],
             warnings=lc_warnings,
+        )
+
+    @staticmethod
+    def _build_actor_context_recording(request_actor_context: ActorContext | None) -> PacketActorContextRecording:
+        """Attach explicit actor-context recording without retrieval influence (Slice 7H)."""
+
+        if request_actor_context is None:
+            return PacketActorContextRecording(
+                used=False,
+                recorded_context=None,
+                influence="none",
+                warnings=[],
+            )
+        return PacketActorContextRecording(
+            used=True,
+            recorded_context=request_actor_context,
+            influence="recorded_only_no_route_boost_applied",
+            warnings=[],
         )
 
     @staticmethod

@@ -7,6 +7,7 @@ from typing import Callable
 
 from sqlalchemy.orm import Session
 
+from app.schemas.retrieval import ActorContext
 from app.schemas.retrieval_packet import RetrieveOptions, RetrievalPacket, SelectedSemanticIndex
 from app.services.context_budget_service import ContextBudgetService
 from app.services.errors import GraphNodeNotFoundError
@@ -35,7 +36,13 @@ class FileClerkService:
         self._budget = ContextBudgetService()
         self._builder = RetrievalPacketBuilder()
 
-    def retrieve(self, question: str, options: RetrieveOptions | None = None) -> RetrievalPacket:
+    def retrieve(
+        self,
+        question: str,
+        options: RetrieveOptions | None = None,
+        *,
+        actor_context: ActorContext | None = None,
+    ) -> RetrievalPacket:
         """Run the documented retrieval pipeline and return a validated `RetrievalPacket`."""
 
         opts = options or RetrieveOptions()
@@ -104,6 +111,7 @@ class FileClerkService:
             options_max_graph_paths=opts.max_graph_paths,
             options_max_selected_indexes=opts.max_selected_indexes,
             include_alternatives=opts.include_alternatives,
+            request_actor_context=actor_context,
         )
         packet = self._builder.build(assembly)
 

@@ -28,7 +28,7 @@ todos:
     status: completed
   - id: p7-slice-7h
     content: "Slice 7H — RetrievalPacket.actor_context recording (used false/true); influences recorded-only; tests prove ActorContext does not create evidence."
-    status: pending
+    status: completed
   - id: p7-slice-7i
     content: "Slice 7I — Optional deterministic context boosting — DEFERRED until 7G/7H stable; separate approval required."
     status: pending

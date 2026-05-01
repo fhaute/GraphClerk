@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.retrieval import ActorContext
 
 PacketType = Literal["retrieval_packet"]
+
+ActorContextInfluence = Literal["none", "recorded_only_no_route_boost_applied"]
 
 IntentType = Literal["explain", "compare", "locate", "summarize", "debug", "recommend", "unknown"]
 
@@ -125,6 +127,21 @@ class RetrieveRequest(BaseModel):
     actor_context: ActorContext | None = None
 
 
+class PacketActorContextRecording(BaseModel):
+    """How request ``ActorContext`` was reflected on the packet (Phase 7 Slice 7H).
+
+    Recording-only: never evidence and must not imply retrieval influence beyond ``influence``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    used: bool
+    source: Literal["request_actor_context"] = "request_actor_context"
+    recorded_context: ActorContext | None = None
+    influence: ActorContextInfluence
+    warnings: list[str] = Field(default_factory=list)
+
+
 class RetrievalPacket(BaseModel):
     """Structured evidence routing output from the File Clerk."""
 
@@ -140,3 +157,4 @@ class RetrievalPacket(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     answer_mode: AnswerMode
     language_context: RetrievalLanguageContext | None = None
+    actor_context: PacketActorContextRecording | None = None

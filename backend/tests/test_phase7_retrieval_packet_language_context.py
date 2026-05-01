@@ -95,9 +95,9 @@ def test_retrieval_packet_accepts_explicit_language_context() -> None:
     assert packet.language_context.source == "selected_evidence_metadata"
 
 
-def test_retrieval_packet_has_no_actor_or_translation_fields() -> None:
+def test_retrieval_packet_has_no_translation_answer_language_fields() -> None:
     names = set(RetrievalPacket.model_fields.keys())
-    assert "actor_context" not in names
+    assert "actor_context" in names
     for forbidden in ("query_translation_used", "translated_evidence", "answer_language"):
         assert forbidden not in names
 

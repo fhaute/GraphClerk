@@ -36,6 +36,9 @@ def test_packet_builder_no_semantic_match_packet() -> None:
     assert packet.language_context.query_language is None
     assert packet.language_context.source == "selected_evidence_metadata"
     assert "no_language_metadata" in packet.language_context.warnings
+    assert packet.actor_context is not None
+    assert packet.actor_context.used is False
+    assert packet.actor_context.influence == "none"
 
 
 def test_packet_builder_with_primary_and_evidence() -> None:
@@ -98,3 +101,6 @@ def test_packet_builder_with_primary_and_evidence() -> None:
     assert len(packet.evidence_units) == 1
     assert packet.language_context is not None
     assert packet.language_context.query_language is None
+    assert packet.actor_context is not None
+    assert packet.actor_context.used is False
+    assert packet.actor_context.influence == "none"

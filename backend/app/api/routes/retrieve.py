@@ -26,7 +26,7 @@ def retrieve_packet(payload: RetrieveRequest) -> RetrievalPacket:
     with SessionMaker() as session:
         try:
             svc = FileClerkService(session=session)
-            return svc.retrieve(payload.question, payload.options)
+            return svc.retrieve(payload.question, payload.options, actor_context=payload.actor_context)
         except EmbeddingTextEmptyError as e:
             session.rollback()
             raise HTTPException(status_code=422, detail="embedding_text_empty") from e
