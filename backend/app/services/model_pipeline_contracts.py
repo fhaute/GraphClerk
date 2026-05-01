@@ -1,10 +1,11 @@
-"""Phase 8 — typed contracts and envelopes for future specialized model helpers.
+"""Phase 8 — typed contracts, envelopes, and adapter shells for specialized model helpers.
 
-Slices **8A–8B** in this module: task/result contracts (8A) plus request/response
-envelopes and structured errors (8B). This code does **not** invoke models, load
-weights, perform inference, touch the database, or integrate with FileClerk or
-retrieval services. Envelopes do **not** imply that inference is configured or
-successful — they only carry typed status and optional payloads.
+Slices **8A–8C** in this module: task/result contracts (8A), request/response envelopes
+(8B), and :class:`ModelPipelineAdapter` plus :class:`NotConfiguredModelPipelineAdapter`
+and **tests-only** :class:`DeterministicTestModelPipelineAdapter` (8C). This code does
+**not** invoke real models, load weights, perform remote inference, touch the database,
+or integrate with FileClerk or retrieval services. Envelopes do **not** imply that
+inference is configured or successful unless an adapter explicitly returns success.
 
 Invariants (non-negotiable):
     - **Model output is not evidence.** Contracts never declare results as
@@ -24,12 +25,15 @@ Error semantics:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any, ClassVar, Self
+from typing import Any, Callable, ClassVar, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 # Default wire format version for Phase 8 pipeline JSON envelopes (not an inference claim).
 SCHEMA_VERSION_PHASE8_V1: str = "phase8.v1"
+
+# Stable error code when no real pipeline adapter is wired (explicit, no silent fallback).
+MODEL_PIPELINE_NOT_CONFIGURED_CODE: str = "model_pipeline_not_configured"
 
 # --- Controlled vocabularies (string enums, project style) ---
 
@@ -354,6 +358,112 @@ class ModelPipelineResponseEnvelope(BaseModel):
             )
         if self.result is not None:
             raise ValueError(
-                "non-success response must have result=None in Slice 8B (no partial results).",
+                "non-success response must have result=None (no partial results).",
             )
         return self
+
+
+# --- Slice 8C — adapter protocol and explicit shells (no registry, no real inference) ---
+
+
+@runtime_checkable
+class ModelPipelineAdapter(Protocol):
+    """Pluggable boundary for a future model pipeline step.
+
+    Implementations return only :class:`ModelPipelineResponseEnvelope` values built
+    from typed contracts — never raw evidence, never silent success on failure.
+    """
+
+    def run(self, envelope: ModelPipelineRequestEnvelope) -> ModelPipelineResponseEnvelope:
+        """Execute (or simulate) the pipeline step for ``envelope`` and return a response."""
+
+
+class NotConfiguredModelPipelineAdapter:
+    """Explicit adapter placeholder: always **unavailable**, never fakes success.
+
+    Use when no real model stack is configured. Does not raise for valid envelopes;
+    returns a structured :class:`ModelPipelineError` with ``retryable=False``.
+    """
+
+    __slots__ = ()
+
+    def run(self, envelope: ModelPipelineRequestEnvelope) -> ModelPipelineResponseEnvelope:
+        err = ModelPipelineError(
+            code=MODEL_PIPELINE_NOT_CONFIGURED_CODE,
+            message="Model pipeline adapter is not configured.",
+            retryable=False,
+            details={"source": "not_configured"},
+        )
+        return ModelPipelineResponseEnvelope(
+            request_id=envelope.request_id,
+            status=ModelPipelineStatus.unavailable,
+            result=None,
+            error=err,
+            warnings=[MODEL_PIPELINE_NOT_CONFIGURED_CODE],
+            metadata={"pipeline_adapter": "not_configured"},
+            schema_version=envelope.schema_version,
+        )
+
+
+class DeterministicTestModelPipelineAdapter:
+    """**Tests-only** adapter returning a fixed success :class:`ModelPipelineResult`.
+
+    Provide exactly one of ``result=`` (template copied per call) or ``factory=``
+    (callable invoked per call). The produced/returned result must:
+
+    - have ``status == success``
+    - match ``envelope.task.role`` and ``envelope.task.output_kind``
+    - use ``provenance['source'] == 'deterministic_test'``
+
+    Raises :class:`ValueError` on misconfiguration — no hidden fallback.
+
+    Do **not** wire this adapter into production code paths.
+    """
+
+    __slots__ = ("_factory", "_template")
+
+    def __init__(
+        self,
+        *,
+        result: ModelPipelineResult | None = None,
+        factory: Callable[[ModelPipelineRequestEnvelope], ModelPipelineResult] | None = None,
+    ) -> None:
+        if (result is None) == (factory is None):
+            raise ValueError("Provide exactly one of result= or factory=.")
+        self._template = result
+        self._factory = factory
+
+    def run(self, envelope: ModelPipelineRequestEnvelope) -> ModelPipelineResponseEnvelope:
+        if self._factory is not None:
+            built = self._factory(envelope)
+        else:
+            tpl = self._template
+            if tpl is None:
+                raise ValueError("DeterministicTestModelPipelineAdapter internal state is invalid.")
+            built = tpl.model_copy(deep=True)
+
+        if built.status != ModelPipelineStatus.success:
+            raise ValueError(
+                "DeterministicTestModelPipelineAdapter requires result.status == success.",
+            )
+        if built.role != envelope.task.role or built.output_kind != envelope.task.output_kind:
+            raise ValueError(
+                "DeterministicTestModelPipelineAdapter result role/output_kind must match "
+                "envelope.task.",
+            )
+        src = built.provenance.get("source")
+        if src != "deterministic_test":
+            raise ValueError(
+                "DeterministicTestModelPipelineAdapter requires provenance['source'] "
+                "== 'deterministic_test'.",
+            )
+
+        return ModelPipelineResponseEnvelope(
+            request_id=envelope.request_id,
+            status=ModelPipelineStatus.success,
+            result=built,
+            error=None,
+            warnings=list(built.warnings),
+            metadata={"pipeline_adapter": "deterministic_test"},
+            schema_version=envelope.schema_version,
+        )

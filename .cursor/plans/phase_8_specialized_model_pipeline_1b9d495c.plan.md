@@ -14,7 +14,7 @@ todos:
     status: completed
   - id: phase8-slice-8c-not-configured
     content: "Slice 8C — NotConfigured adapter shell (protocol, explicit error, deterministic test adapter only; no real model)."
-    status: pending
+    status: completed
   - id: phase8-slice-8d-output-validation
     content: "Slice 8D — Model output validation service (typed outputs, reject prose/source-truth; deeper than top-level dict checks; no FileClerk wiring)."
     status: pending
@@ -150,7 +150,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 - [x] **8.0** — Entry gate + plan alignment (working plan created; kickoff docs‑only).
 - [x] **8A** — Boundary contracts (`backend/app/services/model_pipeline_contracts.py` + `backend/tests/test_phase8_model_pipeline_contracts.py`; contracts only, no adapters).
 - [x] **8B** — Request/response envelopes (`ModelPipelineRequestEnvelope`, `ModelPipelineResponseEnvelope`, `ModelPipelineError`; status/error semantics; no adapters).
-- [ ] **8C** — NotConfigured adapter shell.
+- [x] **8C** — Adapter shell (`ModelPipelineAdapter`, `NotConfiguredModelPipelineAdapter`, `DeterministicTestModelPipelineAdapter` tests-only; no registry, no real inference).
 - [ ] **8D** — Output validation service.
 - [ ] **8E** — Candidate seam (approval‑gated).
 - [ ] **8F** — Evaluation fixtures.

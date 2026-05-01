@@ -1,4 +1,4 @@
-"""Phase 8 Slices 8A–8B — model pipeline contracts and envelopes (no inference, no retrieval)."""
+"""Phase 8 Slices 8A–8C — model pipeline contracts, envelopes, and adapter shells (no inference)."""
 
 from __future__ import annotations
 
@@ -13,8 +13,11 @@ from pydantic import ValidationError
 
 from app.services import model_pipeline_contracts as mpc
 from app.services.model_pipeline_contracts import (
+    MODEL_PIPELINE_NOT_CONFIGURED_CODE,
     SCHEMA_VERSION_PHASE8_V1,
+    DeterministicTestModelPipelineAdapter,
     ModelOutputKind,
+    ModelPipelineAdapter,
     ModelPipelineError,
     ModelPipelineInputKind,
     ModelPipelineRequestEnvelope,
@@ -23,6 +26,7 @@ from app.services.model_pipeline_contracts import (
     ModelPipelineRole,
     ModelPipelineStatus,
     ModelPipelineTask,
+    NotConfiguredModelPipelineAdapter,
 )
 
 
@@ -49,6 +53,15 @@ def _success_result(**kwargs: Any) -> ModelPipelineResult:
     }
     d.update(kwargs)
     return ModelPipelineResult(**d)
+
+
+def _request_envelope(**kwargs: Any) -> ModelPipelineRequestEnvelope:
+    d: dict[str, Any] = {
+        "request_id": "req-default",
+        "task": _minimal_task(),
+    }
+    d.update(kwargs)
+    return ModelPipelineRequestEnvelope(**d)
 
 
 def test_contracts_import_successfully() -> None:
@@ -460,3 +473,117 @@ def test_response_metadata_rejects_top_level_truth_claims() -> None:
             result=_success_result(),
             metadata={"is_evidence": True},
         )
+
+
+# --- Slice 8C: adapter protocol + NotConfigured + deterministic test adapter ---
+
+
+def test_model_pipeline_adapter_protocol_runtime_checkable() -> None:
+    assert isinstance(NotConfiguredModelPipelineAdapter(), ModelPipelineAdapter)
+    assert isinstance(DeterministicTestModelPipelineAdapter(result=_success_result()), ModelPipelineAdapter)
+
+
+def test_not_configured_adapter_returns_unavailable_envelope() -> None:
+    req = _request_envelope(request_id="corr-1")
+    out = NotConfiguredModelPipelineAdapter().run(req)
+    assert out.status == ModelPipelineStatus.unavailable
+    assert out.result is None
+    assert out.error is not None
+    assert out.error.code == MODEL_PIPELINE_NOT_CONFIGURED_CODE
+    assert out.error.retryable is False
+    assert MODEL_PIPELINE_NOT_CONFIGURED_CODE in out.warnings
+
+
+def test_not_configured_adapter_preserves_request_id_and_schema_version() -> None:
+    req = _request_envelope(request_id="  keep-me  ", schema_version="phase8.v1")
+    out = NotConfiguredModelPipelineAdapter().run(req)
+    assert out.request_id == "keep-me"
+    assert out.schema_version == req.schema_version
+
+
+def test_not_configured_adapter_does_not_fake_success() -> None:
+    out = NotConfiguredModelPipelineAdapter().run(_request_envelope())
+    assert out.status != ModelPipelineStatus.success
+    assert out.result is None
+
+
+def test_deterministic_test_adapter_returns_success_envelope() -> None:
+    req = _request_envelope(request_id="t-1")
+    out = DeterministicTestModelPipelineAdapter(result=_success_result()).run(req)
+    assert out.status == ModelPipelineStatus.success
+    assert out.error is None
+    assert out.result is not None
+    assert out.result.status == ModelPipelineStatus.success
+
+
+def test_deterministic_test_adapter_preserves_request_id() -> None:
+    req = _request_envelope(request_id="preserve-me")
+    out = DeterministicTestModelPipelineAdapter(result=_success_result()).run(req)
+    assert out.request_id == "preserve-me"
+
+
+def test_deterministic_test_adapter_result_status_matches_envelope() -> None:
+    req = _request_envelope()
+    out = DeterministicTestModelPipelineAdapter(result=_success_result()).run(req)
+    assert out.result is not None
+    assert out.result.status == out.status == ModelPipelineStatus.success
+
+
+def test_deterministic_test_adapter_does_not_mutate_request_envelope() -> None:
+    req = _request_envelope(
+        request_id="immutable",
+        metadata={"n": 1},
+        trace={"span": "x"},
+    )
+    before = req.model_dump(mode="json")
+    DeterministicTestModelPipelineAdapter(result=_success_result()).run(req)
+    assert req.model_dump(mode="json") == before
+
+
+def test_deterministic_test_adapter_factory_mode() -> None:
+    def _factory(ev: ModelPipelineRequestEnvelope) -> ModelPipelineResult:
+        assert ev.request_id == "factory-req"
+        return _success_result()
+
+    req = _request_envelope(request_id="factory-req")
+    out = DeterministicTestModelPipelineAdapter(factory=_factory).run(req)
+    assert out.status == ModelPipelineStatus.success
+    assert out.result is not None
+
+
+def test_deterministic_test_adapter_rejects_both_result_and_factory() -> None:
+    with pytest.raises(ValueError, match="exactly one"):
+        DeterministicTestModelPipelineAdapter(
+            result=_success_result(),
+            factory=lambda e: _success_result(),
+        )
+
+
+def test_deterministic_test_adapter_rejects_neither_result_nor_factory() -> None:
+    with pytest.raises(ValueError, match="exactly one"):
+        DeterministicTestModelPipelineAdapter()
+
+
+def test_deterministic_test_adapter_rejects_non_success_result_template() -> None:
+    bad = ModelPipelineResult(
+        role=ModelPipelineRole.extraction_helper,
+        output_kind=ModelOutputKind.candidate_metadata,
+        status=ModelPipelineStatus.rejected,
+        payload={},
+        warnings=[],
+        provenance={"source": "deterministic_test"},
+    )
+    with pytest.raises(ValueError, match="success"):
+        DeterministicTestModelPipelineAdapter(result=bad).run(_request_envelope())
+
+
+def test_deterministic_test_adapter_rejects_role_mismatch() -> None:
+    bad = _success_result(role=ModelPipelineRole.artifact_classifier)
+    with pytest.raises(ValueError, match="role/output_kind"):
+        DeterministicTestModelPipelineAdapter(result=bad).run(_request_envelope())
+
+
+def test_deterministic_test_adapter_rejects_wrong_provenance_source() -> None:
+    bad = _success_result(provenance={"source": "not_configured"})
+    with pytest.raises(ValueError, match="deterministic_test"):
+        DeterministicTestModelPipelineAdapter(result=bad).run(_request_envelope())
