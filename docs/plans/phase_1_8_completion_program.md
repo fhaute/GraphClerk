@@ -81,7 +81,7 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 | **Current state** | `SemanticIndex.vector_status`: `pending | indexed | failed`. Qdrant upsert/search services exist. **Semantic index creation does not auto-populate vectors** ([`PROJECT_STATUS.md`](../status/PROJECT_STATUS.md), [`KNOWN_GAPS.md`](../status/KNOWN_GAPS.md)). **`GET /semantic-indexes/search`** returns **indexed** only. **Automatic vector backfill is not implemented today.** |
 | **Missing work** | Policy for when vectors are built; backfill/job orchestration; operator visibility; embedding production path decision; transition rules **`pending` → `indexed` | `failed`**; minimal indexed demo recipe; reduce “valid empty packet” surprise via docs + behavior. |
 | **Required design decisions** | Auto-enqueue on SI create vs **manual-first** vs operator-triggered only. Sync vs async job. How Qdrant errors surface (API, status field, logs). Whether **embedding adapter** choice blocks automation (**requires dependency research** for vendor/model). |
-| **Proposed slices** | **B1** Manual backfill CLI + documented demo path + test proving non-empty retrieval when indexed · **B2** Status API/UI surfacing · **B3** Auto policy (if approved) + idempotency · **B4** Integration test: ingest → index → retrieve |
+| **Proposed slices** | **B1** (shipped) Manual backfill + tests with stubbed search · **B2** (design) Test-safe semantic search embedding wiring for full-stack retrieve — see *Track B — Slice B2 (design)* below · **B3** Status API/UI surfacing for `vector_status` / indexing errors · **B4** Auto policy (if approved) + idempotency · **B5** Full-stack integration: ingest → backfill → search → retrieve (no FileClerk monkeypatch) |
 | **Likely files** | `backend/app/services/semantic_index_service.py`, `backend/app/api/routes/semantic_indexes.py`, embedding services, `scripts/*` **if** user later allows scripts for CLI, repositories, tests under `backend/tests/`. |
 | **Forbidden files** | For **this** docs-only delivery: no backend/scripts edits here. Implementation must not set `indexed` without successful Qdrant truth. |
 | **Tests required** | Unit + gated Qdrant integration; FileClerk retrieve with indexed SI; failure path sets `failed` explicitly. |
@@ -96,6 +96,52 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 - **Operator CLI:** [`scripts/backfill_semantic_indexes.py`](../../scripts/backfill_semantic_indexes.py) — `--semantic-index-id` or `--all-pending` (dev embeddings: `DeterministicFakeEmbeddingAdapter`, not production semantics).
 - **Tests:** [`backend/tests/test_phase1_8_track_b_indexed_retrieval.py`](../../backend/tests/test_phase1_8_track_b_indexed_retrieval.py) (requires DB-backed `db_ready` when `RUN_INTEGRATION_TESTS=1` + `DATABASE_URL`).
 - **Not in B1:** automatic indexing on `POST /semantic-indexes` create; background job system; production embedding adapter in the API default factory.
+
+### Track B — Slice B2 (design): app-configurable semantic search embeddings for full-stack tests
+
+**Problem (post-B1):** [`scripts/backfill_semantic_indexes.py`](../../scripts/backfill_semantic_indexes.py) and `SemanticIndexVectorIndexingService` use **`DeterministicFakeEmbeddingAdapter`** against Qdrant, but [`build_semantic_index_search_service`](../../backend/app/services/semantic_index_search_factory.py) always wires **`NotConfiguredEmbeddingAdapter`** ([`semantic_index_search_factory.py`](../../backend/app/services/semantic_index_search_factory.py) L29–31). Query vectors for search therefore cannot match backfilled vectors in a **single** process unless tests monkeypatch the factory (allowed today) or the app gains a **guarded** alternate embedding path for search only.
+
+**Goal of B2:** smallest change so a **gated** integration test can run **ingest → backfill → `GET /semantic-indexes/search` → `POST /retrieve` → non-empty evidence** using real Qdrant + real FileClerk route selection **without monkeypatching `FileClerkService` or route internals**. (Monkeypatching only the **factory module** remains a smaller alternative — see Option B — but does not meet a strict “zero patch” bar.)
+
+#### Design options evaluated
+
+| Option | Scope | Production risk | Hidden fallback risk | Operator clarity | Integration usefulness | No-silent-fallback alignment | Config impact |
+|--------|-------|-----------------|----------------------|------------------|-------------------------|------------------------------|---------------|
+| **A — Test-only env / settings flag** | Small–medium: `Settings` + branch in `build_semantic_index_search_service` | **Low** if `deterministic_fake` is **rejected** in `APP_ENV=prod` (validator) and ideally only when `RUN_INTEGRATION_TESTS=1` or explicit dev flag | **Low** if default remains `not_configured` and mis-set env **fails closed** in prod | Document in `TESTING_RULES.md` + demo doc; operators use real embeddings in prod | **High** — true `create_app()` + httpx, no factory monkeypatch | **Good** — explicit mode; no silent switch to fake | Adds typed field(s) + validation |
+| **B — DI / monkeypatch factory in tests only** | **Smallest** — no `config.py` change; pytest replaces `build_semantic_index_search_service` | **None** in prod | **None** | N/A (test-only) | **High** with patch; **not** “zero patch” | **Good** | None |
+| **C — Dedicated test app factory helper** | Medium: new test helper or `create_app(..., overrides=)` | Low if test-only entrypoint | Low | Test docs only | **High** if wired once; may still patch or inject | **Good** | Depends on shape |
+| **D — Production embedding first** | Large; blocks on vendor research | N/A | N/A | N/A | High eventually; **out of scope** for B2 | N/A | Large |
+| **E — Leave monkeypatch-only** | Zero | None | None | Confusing for “E2E” claims | Medium | **Good** | None |
+
+**Chosen approach for implementation (B2):** **Option A (narrow, validated)** as the **primary** path for a **documented, zero–factory-monkeypatch** full-stack test, **plus** retain **Option B** as an explicitly supported **smaller** pattern in `TESTING_RULES.md` (factory monkeypatch is **not** FileClerk internals — acceptable for unit/API tests that already use it).
+
+- **Rationale:** A guarded settings branch keeps **one** construction site ([`semantic_index_search_factory.py`](../../backend/app/services/semantic_index_search_factory.py)); Pydantic can **forbid** deterministic mode in `prod` and optionally require `RUN_INTEGRATION_TESTS=1` even in `test` to avoid accidental local misuse. Aligns with **no silent fallback**: default stays **`NotConfigured`**; deterministic is **opt-in** and **loud** (log line at startup when enabled).
+- **Why not D alone:** B2 explicitly **does not** select a production embedding provider.
+- **Why not E alone:** Fails the stated goal of full-stack retrieve **without** relying on patch discipline for “real E2E” narrative; E remains valid for **narrow** tests.
+
+#### Answers (design questions)
+
+1. **Smallest safe design for gated deterministic end-to-end:** Add a **single** settings-controlled branch in `build_semantic_index_search_service` to use `DeterministicFakeEmbeddingAdapter` + same `expected_dimension` (8) as today’s vector stack, **guarded** so `prod` cannot enable it; OR use **Option B** (factory monkeypatch) if the project accepts that as “full-stack enough.”
+2. **Config vs test factory vs DI:** **Primary:** `config.py` + factory (A). **Alternative:** test-only patch of `build_semantic_index_search_service` (B). **Avoid** large `create_app` DI (C) unless A/B prove insufficient.
+3. **Accidental production fake:** `app_env == "prod"` → **reject** deterministic at settings parse; optional: deterministic only if `RUN_INTEGRATION_TESTS=1`; startup log: `semantic_search_embedding_mode=deterministic_fake (integration test only)`.
+4. **Interaction with B1 script:** Script stays **standalone** (imports adapter directly). **Same** `DeterministicFakeEmbeddingAdapter` + dimension **8** when app is in test deterministic mode so backfill vectors and query embeddings use **identical** math — required for Qdrant cosine search to match. Document shared constant (dimension + adapter class) in one place in implementation slice.
+5. **Share adapter with B1 script?** **Behaviorally yes** (same algorithm + dimension); **code path** can stay duplicated in script vs factory **or** a tiny shared helper module later — implementation choice, not blocking.
+6. **Files implementation would likely touch:** [`backend/app/core/config.py`](../../backend/app/core/config.py), [`backend/app/services/semantic_index_search_factory.py`](../../backend/app/services/semantic_index_search_factory.py), possibly [`backend/app/main.py`](../../backend/app/main.py) only if startup logging is added there (prefer factory log). Tests: [`backend/tests/test_phase1_8_track_b_indexed_retrieval.py`](../../backend/tests/test_phase1_8_track_b_indexed_retrieval.py) or new `test_phase1_8_track_b_fullstack_integration.py`; [`docs/governance/TESTING_RULES.md`](../../docs/governance/TESTING_RULES.md). Optional: `.env.example` line (docs-only env name).
+7. **Tests to add:** Gated `RUN_INTEGRATION_TESTS=1` + `DATABASE_URL` + `QDRANT_URL`: create artifact/evidence/node link + SI with `embedding_text`, run **`SemanticIndexVectorIndexingService`** (or script subprocess — heavier), **unset** monkeypatch, set env for deterministic search mode, `create_app()` + `httpx` `POST /retrieve`, assert non-empty `evidence_units`. Separate test: **prod settings** reject deterministic mode (unit test with `pydantic.ValidationError` or equivalent).
+8. **Status/docs:** Update [`docs/status/KNOWN_GAPS.md`](../status/KNOWN_GAPS.md) / [`PROJECT_STATUS.md`](../status/PROJECT_STATUS.md) **only when behavior ships** — not for this design-only pass. Update [`TESTING_RULES.md`](../../docs/governance/TESTING_RULES.md) in the **implementation** slice.
+9. **C4 full-stack vs next slice:** Treat **true** ingest→Qdrant→search→retrieve **without** factory monkeypatch as **B2** (or **B2+B5** if split: B2 = wiring, B5 = long integration test). **C4** in the completion program referred to UI context — do not conflate; use **B5** label above for integration.
+10. **Deferred:** Production embedding adapter for **default** `prod` search; automatic indexing on create; UI surfacing (**B3**); optional **B**-only policy if team decides env-based A is unnecessary.
+
+#### Proposed implementation slice (for a follow-up coding task — not executed in this design pass)
+
+| Item | Detail |
+|------|--------|
+| **Slice name** | **B2 — Guarded deterministic semantic search embeddings** |
+| **Allowed files (indicative)** | `backend/app/core/config.py`, `backend/app/services/semantic_index_search_factory.py`, `backend/tests/test_phase1_8_track_b_*.py`, `docs/governance/TESTING_RULES.md`, optionally `.env.example` |
+| **Forbidden (B2)** | Changing **default** prod behavior beyond explicit failure for invalid combos; silent fallback to fake when `NotConfigured` was intended; `frontend/**`; production vendor SDK; Phase 9 |
+| **Test plan** | Validator tests for settings; gated integration test as in §7; existing default suite unchanged when flag off |
+| **Risks** | Env typo in CI; document clearly. Dimension drift if constant duplicated — centralize `EXPECTED_SEMANTIC_EMBEDDING_DIMENSION = 8` in one module if touched. |
+| **Final recommendation** | Implement **A (guarded)**; document **B (monkeypatch factory)** as alternate for faster tests; schedule **B5** immediately after B2 for one long integration test. |
 
 ---
 
@@ -231,6 +277,8 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 ## 13. First slice recommendation
 
 **Track B — Slice B1:** **Documented minimal indexed demo path** + **operator manual backfill** (CLI or API sequence) proving `pending → indexed | failed` with **explicit** Qdrant errors, plus automated coverage (integration or high-fidelity mock) that **`POST /retrieve`** returns **non-empty** evidence when the semantic index is **indexed** and the question matches.
+
+**Next (after B1):** **Track B Slice B2** — guarded semantic-search embedding mode for full-stack tests (see *Track B — Slice B2 (design)* above); then **B5** long integration or merge B2+B5 per implementer preference.
 
 ---
 
