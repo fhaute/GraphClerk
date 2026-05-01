@@ -1,7 +1,7 @@
 # Project Status
 
 ## Summary
-- **Current phase**: Phase 5 — Multimodal ingestion (**in progress**, **partially implemented**, **not fully complete**; Phase 5 audit **`pass_with_notes`** — see `docs/audits/PHASE_5_AUDIT.md`)
+- **Current phase**: Phase 5 — Multimodal ingestion (**in progress**, **partially implemented**, **not fully complete**; Phase 5 audit **`pass_with_notes`** — see `docs/audits/PHASE_5_AUDIT.md`). Phase 6 — Productization / UI (**in progress**, **partial**; no Phase 6 audit yet — see `docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`).
 - **Prior milestone**: Phase 4 implemented (**pass_with_notes**; structured retrieval only; no `/answer` yet; see limitations below)
 
 ## High-level status
@@ -11,7 +11,8 @@
 - **Phase 3 semantic index + graph layer**: implemented (pass_with_notes)
 - **Phase 4 File Clerk + retrieval packets**: implemented (pass_with_notes)
 - **Phase 5 multimodal ingestion**: **in progress** / **partially implemented** (see Phase 5 section below; audit **`pass_with_notes`**)
-- **Phase 6 readiness:** Per [`docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`](docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md) (**Slice 6.0**), productization/UI work may proceed without Phase 5 being fully complete, provided the documented baseline and UI honesty rules are followed.
+- **Phase 6 productization / UI**: **in progress** / **partially implemented** (React/Vite app in `frontend/`; main explorers and query playground wired to live APIs; Phase 6 audit and several phase-doc deliverables still open — see Phase 6 section below)
+- **Phase 6 readiness (Slice 6.0):** Per [`docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`](docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md) (**Slice 6.0**), productization/UI work may proceed without Phase 5 being fully complete, provided the documented baseline and UI honesty rules are followed.
 
 ## Implemented (Phase 1)
 - FastAPI skeleton with infrastructure routes (`/health`, `/version`)
@@ -42,10 +43,13 @@
 - **Image** / **audio** **validation shells** only (optional **`image`** / Pillow, **`audio`** / mutagen): bytes validated; **no** OCR, captioning, or transcription; **no** `EvidenceUnit`s from image/audio (API returns **503** after validation)
 - **Tests**: File Clerk + graph compatibility for PDF/PPTX multimodal evidence in `POST /retrieve` packets; HTTP error matrix for multimodal `POST /artifacts`
 
+## Implemented (Phase 6 — partial; not fully complete)
+- **Web UI** (`frontend/`): React/Vite/TypeScript; health check against configured API base; tabbed **query playground** (retrieval + readable/raw packet), **artifacts and evidence** explorer, **semantic indexes** explorer, **graph** explorer, **retrieval logs** explorer, **evaluation** dashboard — all against **live** backend contracts (no in-app mock corpus)
+- **Honesty**: UI copy and behavior align with Phase 5 limits (no OCR/ASR/caption/video claims; image/audio text evidence remains unavailable where the API returns shell/503 semantics)
+
 ## Not implemented (by design) — unchanged global items
 - optional packet-only answer synthesis (`POST /answer`, LocalRAGConsumer) — deferred
 - LLM calls / answer synthesis
-- UI
 
 ## Phase 5 limitations (explicit)
 - **OCR / image captioning / visual summaries**: not implemented
@@ -81,4 +85,9 @@
 - query intent + ambiguity handling are deterministic/heuristic (not ML-tuned)
 - confidence is a simple heuristic (not calibrated)
 - optional `/answer` path is intentionally not implemented in this repository state
+
+## Phase 6 limitations (explicit)
+- Phase 6 **audit** not completed; phase treated as **in progress**
+- Phase doc items still open at a high level (non-exhaustive): public demo sample data workflow in-product, onboarding/release checklist polish, optional API hardening pass, optional automated frontend/E2E test coverage
+- **`POST /answer`** / packet-grounded answer viewer remains out of scope until `/answer` is approved and implemented
 

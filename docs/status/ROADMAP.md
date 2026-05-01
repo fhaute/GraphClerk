@@ -102,7 +102,16 @@
   - demo corpus + loader
   - API hardening pass (consistent errors, clear failures)
   - onboarding docs + release checklist + Phase 6 audit
-- **Status**: not_started
+- **Status**: **in_progress** / **partially implemented** (**not fully complete**)
+- **Delivered so far (implementation truth)**:
+  - `frontend/` app shell with live API client, health banner, and tabbed navigation
+  - Query playground + retrieval packet panel (human-readable + raw JSON)
+  - Artifacts/evidence, semantic indexes, graph, retrieval logs, and evaluation dashboard surfaces (live data only; no in-app mock corpus)
+- **Remaining / not done** (non-exhaustive; see phase doc):
+  - Phase 6 **audit**
+  - In-product **demo corpus + loader** and remaining onboarding/release checklist items from the phase doc
+  - Optional **API hardening** pass and **automated frontend/E2E** coverage
+  - **`POST /answer`** / packet-grounded answer viewer (blocked on `/answer` implementation)
 
 ## Guardrails (apply to all phases)
 - Do not overclaim in README/status docs.
@@ -114,5 +123,5 @@
 - Semantic index **vector population** (auto-index on create, backfill jobs) — indexing/search APIs exist; population workflow remains a gap.
 - **Embedding production adapter** wiring and calibration (Phase 3 placeholder today).
 - **Optional** packet-only **`POST /answer`** / consumer (strictly separate from retrieval; not implemented).
-- **UI** and demo tooling (Phase 6).
+- **Phase 6 completion** (audit, demo workflow in-product, remaining hardening/docs) — UI shell is **in progress**; see Phase 6 section above.
 
