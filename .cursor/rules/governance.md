@@ -16,6 +16,8 @@ Sub-agent Cursor rules (same charters, file-targeted where applicable):
 - `.cursor/rules/graphclerk-subagent-audits.mdc`
 - `.cursor/rules/graphclerk-subagent-code-quality.mdc`
 
+Delegated **Dedicated sub-agents** (for example Cursor **Task**) must end with a **Primary handoff** to the parent—see `docs/governance/AGENT_ROLES.md` → **Dedicated sub-agents** → **Handoff to primary / parent**.
+
 ## Non-negotiables
 - Do not rename protected terms: Artifact, EvidenceUnit, GraphNode, GraphEdge, SemanticIndex, FileClerk, RetrievalPacket, SourceFidelity, ModelAdapter, IngestionPipeline, ContextBudget.
 - Do not implement future phases early.

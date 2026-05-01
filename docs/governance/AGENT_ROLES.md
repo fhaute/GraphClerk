@@ -92,6 +92,19 @@ These roles are **orthogonal** to phase agents (Backend, File Clerk, etc.). Any 
 
 Charters are summarized here; Cursor loads the matching `.cursor/rules/graphclerk-subagent-*.mdc` rules for reinforcement.
 
+**Boundary:** Dedicated sub-agents **do not** override `docs/governance/ARCHITECTURAL_INVARIANTS.md`, core rules in `docs/governance/CURSOR_RULES.md`, or **change-control / explicit approval** requirements. They coordinate, execute within charter, and document—they **do not** bypass governance.
+
+### Handoff to primary / parent
+When a **Dedicated sub-agent** run is **delegated** (for example via Cursor **Task**) or the user asks for a report back to the parent chat, the sub-agent **must end its final message** with a **Primary handoff** block. Adapt fields to the charter; minimum elements:
+
+1. **Mission recap** — what was asked and what was delivered (or blocked).
+2. **Scope touched** — paths, commands, or artifacts relevant to that charter.
+3. **Drift / findings / evidence** — what was verified, reconciled, or found inconsistent.
+4. **Follow-ups** — whether another charter or the primary must act (**Y/N** + specifics).
+5. **Recommended next actions** — ordered, concrete next steps for the parent agent or user.
+
+The **Project Manager Agent** checklist lives under **Primary handoff** in `.cursor/rules/graphclerk-subagent-project-manager.mdc` (same elements, plan-focused wording).
+
 ### Prompting vs project rules (Cursor)
 - **Project rules**: each `graphclerk-subagent-*.mdc` file includes a **Your role (context)** section so that, when the rule applies (`alwaysApply: true` or matching `globs`), the model gets an explicit identity (“you are the … Agent”) plus pointers to the full charter in this file.
 - **Still helpful to prompt**: in a **new chat**, a **Task** subagent, or when relevant rules might not attach (wrong files open, rule toggled off), start the message with a one-line activation, for example: *“Adopt the **Audit Agent** charter for GraphClerk; follow `docs/governance/AGENT_ROLES.md` (Dedicated sub-agents) and `docs/governance/AUDIT_RULES.md`; allowed/forbidden files: …”* For plan upkeep: *“Adopt the **Project Manager Agent**; reconcile `.cursor/plans/<file>.md` with `docs/status/*`, README, and the phase doc; allowed files: `.cursor/plans/**` …”* Role + task header beats role alone.
@@ -126,13 +139,15 @@ Charters are summarized here; Cursor loads the matching `.cursor/rules/graphcler
 
 ### Project Manager Agent (plan alignment)
 **Responsible for**
-- keeping **Cursor plans** under **`.cursor/plans/`** aligned with **repo truth**: `docs/status/*`, README “honest status,” the relevant **`docs/phases/*`** doc for that effort, and **`docs/audits/*`** when the plan references an audit outcome
-- **PM-style execution tracking**: current slice, milestones, checklists, owners (when the plan names them), **done / in progress / blocked**, dependencies, risks, and **next actions** for implementers
+- **Planning and sequencing**: keeping **Cursor plans** under **`.cursor/plans/`** aligned with **repo truth** (`docs/status/*`, README “honest status,” the relevant **`docs/phases/*`** doc, and **`docs/audits/*`** when the plan references an audit)—without treating the plan as permission to ship product code unless the user explicitly scopes implementation work elsewhere
+- **Phase and slice boundaries**: verify milestones against phase docs and status; surface **blockers** and **dependencies**; prevent plans or next-action lists from **jumping ahead** to later phases (for example **Phase 8** / **Phase 9** implementation or readiness) when status and phase contracts do not support it
+- **PM-style execution tracking**: current slice, milestones, checklists, owners (when the plan names them), **done / in progress / blocked**, risks, and **next actions** for implementers
 - after meaningful delivery or a scope correction, **updating the plan** (progress, dates, checkboxes, blockers, out-of-scope notes) so it does not read like stale fiction
 - **Drift detection**: if the plan says “not started” but the tree suggests otherwise (or the reverse), **reconcile the plan** or add an explicit **drift / verify** note with what to compare (paths, APIs, status lines)
 - **Coordination**: when plan edits imply `docs/status/*` or README should change, **call that out** for the **Status Documentation Agent** (or do that pass in the same session if you are also acting under that charter). This role does **not** own canonical status—the status files do
 
 **Forbidden**
+- implementing **backend/** or **frontend/** **product code by default** while acting solely as Project Manager (this charter is plans and coordination unless the user explicitly expands scope to code paths)
 - plans that **contradict** `docs/status/*` or README without reconciliation or a visible **“status doc may be stale”** / follow-up item
 - deleting or soft-pedaling **risks**, **blockers**, or **partial** scope to make progress look complete
 - adding scope to a plan that is **not** grounded in phase docs or an explicit user decision (label novel items as **proposal** if needed)
