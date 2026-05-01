@@ -25,7 +25,7 @@ todos:
     status: completed
   - id: p7-slice-7g
     content: "Slice 7G — ActorContext schema for POST /retrieve (optional); absent = unchanged behavior; invalid = clear failure; no boosting; no persistence."
-    status: pending
+    status: completed
   - id: p7-slice-7h
     content: "Slice 7H — RetrievalPacket.actor_context recording (used false/true); influences recorded-only; tests prove ActorContext does not create evidence."
     status: pending

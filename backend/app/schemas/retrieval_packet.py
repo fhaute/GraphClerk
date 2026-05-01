@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from app.schemas.retrieval import ActorContext
+
 PacketType = Literal["retrieval_packet"]
 
 IntentType = Literal["explain", "compare", "locate", "summarize", "debug", "recommend", "unknown"]
@@ -120,6 +122,7 @@ class RetrieveRequest(BaseModel):
 
     question: str
     options: RetrieveOptions | None = None
+    actor_context: ActorContext | None = None
 
 
 class RetrievalPacket(BaseModel):
