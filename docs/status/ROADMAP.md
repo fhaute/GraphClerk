@@ -123,11 +123,11 @@
 - **Completion program (decisions only):** Phase 7 **full-completion path** recorded pre-implementation — [`docs/decisions/phase_7_context_intelligence_completion_decisions.md`](../decisions/phase_7_context_intelligence_completion_decisions.md) (**Track C Slice C1**; does **not** claim detector, boosting, or translation are implemented).
 - **Language detector dependency (research only):** Track **C Slice C2** — [`docs/decisions/phase_7_language_detector_dependency_decision.md`](../decisions/phase_7_language_detector_dependency_decision.md) (**recommended** optional **`lingua-language-detector`** for **C3**; **not** installed by default).
 - **Delivered so far (implementation truth)**:
-  - `EvidenceEnrichmentService` no-op shell; language **`metadata_json`** candidate contract; `LanguageDetectionService` adapter shell; enrichment seam on text + multimodal paths (**no-op** default)
-  - `ArtifactLanguageAggregationService` pure helper; **`RetrievalPacket.language_context`**; **`POST /retrieve`** **`actor_context`** request + **`RetrievalPacket.actor_context`** recording (**no** boost)
-  - Tests: `backend/tests/test_phase7_*.py`; working plan `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`; audit artifact above
+  - `EvidenceEnrichmentService` + optional **`LanguageDetectionService`** injection; **`POST /artifacts`** product wiring when **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER=lingua`** (**Completion Program Track C8**); default **`not_configured`**
+  - **`Artifact.metadata_json.graphclerk_language_aggregation`** after ingest (**Track C5**); **`RetrievalPacket.language_context`**; **`POST /retrieve`** **`actor_context`** recording (**no** boost)
+  - Dedicated Phase 7 language visibility in UI (**Track C7**); tests: `backend/tests/test_phase7_*.py`; audit artifact above (**baseline** **`pass_with_notes`**)
 - **Remaining / deferred** (non-exhaustive; see audit notes):
-  - Production language detector **policy/wiring** by default; translation / query translation; actor/language **boosting** (**7I**); artifact aggregation **ingest persistence** wiring; dedicated Phase 7 **UI** surfaces (beyond raw packet JSON where shown today)
+  - **Completion Program Track C9** — Phase 7 **full-completion audit** / closure updates; translation / query translation; actor/language **boosting** (**7I**)
 
 ## Phase 8 — Specialized Model Pipeline
 - **Defined in**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md)

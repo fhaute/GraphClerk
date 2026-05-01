@@ -39,7 +39,7 @@ For **integration tests** that need the API’s semantic search path to embed qu
 
 **Clearing settings cache:** tests that toggle these variables must call `app.core.config.get_settings.cache_clear()` before `get_settings()` / `create_app()` so the process does not reuse a stale `lru_cache` entry.
 
-## Phase 7 — optional language detection adapter (Track C Slice C3)
+## Phase 7 — optional language detection adapter (Track C Slice C3) + product wiring (**Track C Slice C8**)
 
 **Optional extra:** install the backend optional dependency group **`language-detector`** (declares [`lingua-language-detector`](https://pypi.org/project/lingua-language-detector/) **≥ 2.2.0**). It is **not** part of the default GraphClerk backend install.
 
@@ -47,10 +47,11 @@ For **integration tests** that need the API’s semantic search path to embed qu
 |----------|--------|---------|
 | `GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER` | `not_configured` \| `lingua` | **`not_configured`** |
 
-- **No silent fallback:** unknown values fail at settings parse time. If `lingua` is selected but the extra is not installed, constructing the Lingua adapter raises **`LanguageDetectionUnavailableError`** with message **`language_detection_lingua_extra_not_installed`** (fail loud; no downgrade to a fake detector).
-- **Default CI / `python -m pytest`:** the full suite passes **without** the extra. Tests use injected fake detectors or stubs; **`test_lingua_smoke_if_extra_installed`** skips unless `import lingua` succeeds.
-- **Not wired to ingestion:** automatic language metadata on ingest is **Track C4** — Slice C3 only adds settings + `LinguaLanguageDetectionAdapter` + `build_language_detection_adapter` / `build_language_detection_service`.
-- **Not translation** and **not** `actor_context` boosting; retrieval packets unchanged.
+- **Default:** **`not_configured`** — **`POST /artifacts`** uses identity enrichment (no detector calls). **`pytest`** passes without installing **`language-detector`** (tests monkeypatch **`build_language_detection_service`** on **`app.api.routes.artifacts`** when simulating **`lingua`**).
+- **Configured `lingua`:** **`POST /artifacts`** builds **`LanguageDetectionService`** via **`build_language_detection_service`** and passes it into **`EvidenceEnrichmentService`** for **both** text/markdown and multimodal ingestion (**`build_evidence_enrichment_service`** in **`artifacts.py`**). **`EvidenceUnit.metadata_json`** may gain **`language`** keys; **`Artifact.metadata_json.graphclerk_language_aggregation`** follows ingest aggregation (**Track C5**). **`RetrievalPacket.language_context`** still aggregates **only** from **selected** evidence **`metadata_json`** — **not** translation, **not** actor boosting.
+- **No silent fallback:** unknown adapter values fail at settings parse time. If **`lingua`** is set but the Lingua adapter cannot be constructed (e.g. optional extra missing), **`LanguageDetectionUnavailableError`** is raised (**`language_detection_lingua_extra_not_installed`**) and **`POST /artifacts`** responds **503** — **no** downgrade to **`not_configured`**.
+- **Per-candidate failures:** when a detector is wired, **`EvidenceEnrichmentService`** continues ingestion and records **`language_warnings`** per **Track C4** (runtime detection errors do **not** abort the whole ingest).
+- **Slice C3 scope:** settings + **`LinguaLanguageDetectionAdapter`** + **`build_language_detection_adapter`** / **`build_language_detection_service`** (tests include **`test_lingua_smoke_if_extra_installed`** when `import lingua` succeeds).
 
 **Clearing settings cache:** same as semantic search — call `get_settings.cache_clear()` when tests change `GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER`.
 

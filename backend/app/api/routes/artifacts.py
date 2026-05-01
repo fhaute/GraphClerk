@@ -1,9 +1,36 @@
 from __future__ import annotations
 
-"""Artifact ingestion and inspection APIs (Phase 2 + Phase 5 shell).
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+
+from app.core.config import Settings, get_settings
+from app.db.session import get_sessionmaker
+from app.models.artifact import Artifact
+from app.models.enums import Modality
+from app.repositories.artifact_repository import ArtifactRepository
+from app.schemas.artifact import (
+    ArtifactCreateInlineRequest,
+    ArtifactCreateResponse,
+    ArtifactListResponse,
+    ArtifactResponse,
+)
+from app.schemas.evidence_unit_candidate import EvidenceUnitCandidate
+from app.services.errors import (
+    ExtractorUnavailableError,
+    GraphClerkError,
+    LanguageDetectionUnavailableError,
+    UnsupportedArtifactTypeError,
+)
+from app.services.evidence_enrichment_service import EvidenceEnrichmentService
+from app.services.extraction import ExtractorRegistry
+from app.services.ingestion.artifact_type_resolver import resolve_from_filename_and_mime
+from app.services.language_detection_service import build_language_detection_service
+from app.services.multimodal_ingestion_service import MultimodalIngestionService
+from app.services.text_ingestion_service import TextIngestionService
+
+__doc__ = """Artifact ingestion and inspection APIs (Phase 2 + Phase 5 shell).
 
 Multipart uploads:
-- **text** and **markdown** delegate to ``TextIngestionService`` (unchanged Phase 2).
+- **text** and **markdown** delegate to ``TextIngestionService``.
 - Known **multimodal** types (pdf, pptx, image, audio) delegate to
   ``MultimodalIngestionService`` with ``ExtractorRegistry``. **PDF:** ``PdfExtractor``
   when optional ``pdf`` extra is installed; else **503** with install hint.
@@ -21,33 +48,35 @@ Error semantics at ``POST /artifacts``:
 - ``UnsupportedArtifactTypeError``, ``ExtractorNotRegisteredError``,
   ``ExtractionReturnedNoEvidenceError``, and most ``GraphClerkError`` → **400**.
 - ``ExtractorUnavailableError`` → **503**.
+- ``LanguageDetectionUnavailableError`` when ``GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER=lingua``
+  but Lingua cannot be constructed (e.g. optional extra missing) → **503** (fail loud).
 """
-
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile
-
-from app.core.config import get_settings
-from app.db.session import get_sessionmaker
-from app.repositories.artifact_repository import ArtifactRepository
-from app.schemas.artifact import (
-    ArtifactCreateInlineRequest,
-    ArtifactCreateResponse,
-    ArtifactListResponse,
-    ArtifactResponse,
-)
-from app.models.artifact import Artifact
-from app.models.enums import Modality
-from app.schemas.evidence_unit_candidate import EvidenceUnitCandidate
-from app.services.errors import ExtractorUnavailableError, GraphClerkError, UnsupportedArtifactTypeError
-from app.services.extraction import ExtractorRegistry
-from app.services.ingestion.artifact_type_resolver import resolve_from_filename_and_mime
-from app.services.multimodal_ingestion_service import MultimodalIngestionService
-from app.services.text_ingestion_service import TextIngestionService
 
 router = APIRouter(prefix="", tags=["artifacts"])
 
 
+def build_evidence_enrichment_service(settings: Settings) -> EvidenceEnrichmentService:
+    """Build enrichment for ``POST /artifacts`` from ``language_detection_adapter`` settings.
+
+    - ``not_configured``: identity enrichment (no language detector calls).
+    - ``lingua``: ``LanguageDetectionService`` from ``build_language_detection_service``.
+      Raises ``LanguageDetectionUnavailableError`` if the optional ``language-detector``
+      extra is missing — **no** silent fallback to ``not_configured``.
+
+    The same instance should be passed to both text and multimodal ingestion services
+    within a single request.
+    """
+
+    if settings.language_detection_adapter == "not_configured":
+        return EvidenceEnrichmentService()
+    if settings.language_detection_adapter == "lingua":
+        ld = build_language_detection_service(settings)
+        return EvidenceEnrichmentService(language_detection=ld)
+    raise AssertionError("unexpected language_detection_adapter")
+
+
 class _PdfDependencyPlaceholder:
-    """Registers for ``Modality.pdf`` when pypdf is not installed so uploads fail with 503, not fake success."""
+    """Registers ``Modality.pdf`` when pypdf is missing — uploads fail with 503."""
 
     def extract(self, artifact: Artifact) -> list[EvidenceUnitCandidate]:
         raise ExtractorUnavailableError(
@@ -60,7 +89,8 @@ class _PptxDependencyPlaceholder:
 
     def extract(self, artifact: Artifact) -> list[EvidenceUnitCandidate]:
         raise ExtractorUnavailableError(
-            "PPTX extraction requires the optional `pptx` dependency (e.g. pip install -e '.[pptx]').",
+            "PPTX extraction requires the optional `pptx` dependency "
+            "(e.g. pip install -e '.[pptx]').",
         )
 
 
@@ -69,7 +99,8 @@ class _ImageDependencyPlaceholder:
 
     def extract(self, artifact: Artifact) -> list[EvidenceUnitCandidate]:
         raise ExtractorUnavailableError(
-            "Image handling requires the optional `image` dependency (e.g. pip install -e '.[image]').",
+            "Image handling requires the optional `image` dependency "
+            "(e.g. pip install -e '.[image]').",
         )
 
 
@@ -78,7 +109,8 @@ class _AudioDependencyPlaceholder:
 
     def extract(self, artifact: Artifact) -> list[EvidenceUnitCandidate]:
         raise ExtractorUnavailableError(
-            "Audio handling requires the optional `audio` dependency (e.g. pip install -e '.[audio]').",
+            "Audio handling requires the optional `audio` dependency "
+            "(e.g. pip install -e '.[audio]').",
         )
 
 
@@ -145,12 +177,17 @@ def _artifact_to_response(a) -> ArtifactResponse:
 @router.post("/artifacts", response_model=ArtifactCreateResponse)
 async def create_artifact(
     request: Request,
-    file: UploadFile | None = File(default=None),
+    file: UploadFile | None = File(default=None),  # noqa: B008
 ) -> ArtifactCreateResponse:
     """Create an artifact and ingest it into Evidence Units."""
 
     settings = get_settings()
     SessionMaker = get_sessionmaker()
+
+    try:
+        enrichment = build_evidence_enrichment_service(settings)
+    except LanguageDetectionUnavailableError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
 
     if file is not None:
         content_bytes = await file.read()
@@ -168,7 +205,10 @@ async def create_artifact(
         try:
             payload = await request.json()
         except Exception as e:
-            raise HTTPException(status_code=400, detail="Provide either multipart file upload or JSON inline payload.") from e
+            raise HTTPException(
+                status_code=400,
+                detail="Provide either multipart file upload or JSON inline payload.",
+            ) from e
 
         inline = ArtifactCreateInlineRequest.model_validate(payload)
         content_bytes = inline.text.encode("utf-8")
@@ -180,7 +220,7 @@ async def create_artifact(
     with SessionMaker() as session:
         try:
             if artifact_type in {"text", "markdown"}:
-                svc = TextIngestionService(settings=settings)
+                svc = TextIngestionService(settings=settings, enrichment=enrichment)
                 result = svc.ingest(
                     session=session,
                     filename=filename,
@@ -191,7 +231,11 @@ async def create_artifact(
                     metadata={"ingestion_phase": "phase_2_text_first_ingestion"},
                 )
             else:
-                mm = MultimodalIngestionService(settings=settings, registry=get_multimodal_extractor_registry())
+                mm = MultimodalIngestionService(
+                    settings=settings,
+                    registry=get_multimodal_extractor_registry(),
+                    enrichment=enrichment,
+                )
                 result = mm.ingest(
                     session=session,
                     filename=filename,

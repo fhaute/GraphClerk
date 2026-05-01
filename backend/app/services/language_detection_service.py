@@ -3,13 +3,11 @@
 Provides ``LanguageDetectionService`` plus explicit adapters. Detection output is
 **routing metadata only** — not evidence — and must never mutate input text.
 
-Slice 7C does **not** wire detection into ingestion or retrieval; it only defines
-the boundary where a future implementation can plug in (still without remote
-services or third-party language-ID libraries in-repo unless separately scoped).
-
 Track C Slice C3: optional **Lingua** adapter behind
 ``GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER=lingua`` (install ``language-detector`` extra).
-Default ``not_configured`` — no detector until ``lingua``. Ingestion = **Track C4**.
+Default ``not_configured``. **Track C Slice C8:** when ``lingua`` is configured,
+``POST /artifacts`` builds this adapter/service and passes it into
+``EvidenceEnrichmentService`` (fail loud if the extra is missing).
 
 Error semantics:
     ``LanguageDetectionUnavailableError`` — adapter explicitly not configured.

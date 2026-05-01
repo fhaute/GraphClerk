@@ -96,6 +96,12 @@ Structured JSON from **`POST /retrieve`**: intent, route, **`evidence_units`**, 
 
 After ingest, **`Artifact.metadata_json`** may include **`graphclerk_language_aggregation`**: a **summary of persisted evidence-unit language metadata** on that artifact for operators. It is **separate** from **`RetrievalPacket.language_context`** (which is built only from **evidence included in that retrieve**). Treat as **artifact-level metadata**, not packet evidence and not translation.
 
+### Language detection during ingestion (optional)
+
+Default **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER`** is **`not_configured`** — **`POST /artifacts`** does **not** call a language detector.
+
+When set to **`lingua`** and the optional **`language-detector`** extra is installed: each **`POST /artifacts`** request builds **`LanguageDetectionService`** and passes it into **`EvidenceEnrichmentService`** for **text**, **markdown**, and **multimodal** ingest paths. **`EvidenceUnit.metadata_json`** may gain **`language`** (and related) keys before persistence; aggregation (**above**) reflects those rows. **Per-candidate** detector failures still record warnings and continue (**no** mutation of **`EvidenceUnit.text`** or **`source_fidelity`**). If **`lingua`** is configured but Lingua cannot be constructed (missing extra), the API responds **503** — **no** silent fallback to **`not_configured`**. **Not** translation; **not** retrieval ranking; **`actor_context`** remains recording-only on **`POST /retrieve`**.
+
 ### `actor_context`
 
 **Optional** request-supplied context on **`POST /retrieve`**, **recording only** on the packet — **not** used for boosting in the current baseline; do not treat as hidden personalization.

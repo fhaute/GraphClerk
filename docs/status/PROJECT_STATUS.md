@@ -48,15 +48,15 @@
 - **Tests**: File Clerk + graph compatibility for PDF/PPTX multimodal evidence in `POST /retrieve` packets; HTTP error matrix for multimodal `POST /artifacts`
 
 ## Implemented (Phase 7 — baseline; audit `pass_with_notes`)
-- **`EvidenceEnrichmentService`** no-op shell (candidates unchanged unless a future adapter is wired)
+- **`EvidenceEnrichmentService`** — **default** identity enrichment; optional injected **`LanguageDetectionService`** (**Track C4**)
 - Language metadata on **`EvidenceUnitCandidate`** / EU persistence via **`metadata_json`** (contract path)
-- **`LanguageDetectionService`** adapter shell (**NotConfigured** / deterministic test adapters)
-- Enrichment seam in **text** and **multimodal** ingest paths with **no-op** default enrichment
-- **`ArtifactLanguageAggregationService`** pure aggregation helper (artifact **`metadata_json`** persistence / ingestion merge deferred)
-- **`RetrievalPacket.language_context`** from **selected** evidence **`metadata_json`** only (no translation / no detection in packet assembly)
+- **`LanguageDetectionService`** — **`NotConfigured`** default adapter; optional **Lingua** when configured (**Track C3**)
+- Enrichment seam in **text** and **multimodal** ingest paths; **`POST /artifacts`** wires **`build_evidence_enrichment_service`** — **`not_configured`** (default) vs **`lingua`** + optional extra (**Track C8**; **503** if **`lingua`** set but Lingua cannot be constructed)
+- **`ArtifactLanguageAggregationService`** — ingest persists **`graphclerk_language_aggregation`** on **`Artifact.metadata_json`** (**Track C5**)
+- **`RetrievalPacket.language_context`** from **selected** evidence **`metadata_json`** only (no translation / no detection inside packet assembly)
 - Optional **`actor_context`** on **`POST /retrieve`** request schema; **`RetrievalPacket.actor_context`** recording (**`PacketActorContextRecording`**) with explicit **`influence`** — **no** route or evidence boost in this baseline
 - Phase 7 tests under `backend/tests/test_phase7_*.py` (see `docs/status/PHASE_STATUS.md`)
-- **Audit**: [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) — **`pass_with_notes`** (2026-05-02); explicit notes: no production detector-by-default, no translation, no boosting (**7I**), aggregation ingest wiring deferred
+- **Audit**: [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) — **`pass_with_notes`** (2026-05-02); **Completion Program Track C9** (full-completion audit / closure updates) **not** started; no translation, no boosting (**7I**)
 
 ## Implemented (Phase 8 — baseline; audit **`pass_with_notes`**)
 - **8A — Model pipeline contracts**: typed roles/tasks/results; role ↔ output matrix — [`backend/app/services/model_pipeline_contracts.py`](../../backend/app/services/model_pipeline_contracts.py)

@@ -33,11 +33,10 @@
 - **Onboarding**: README + `docs/api/API_OVERVIEW.md` + `docs/release/RELEASE_CHECKLIST.md` + `docs/evaluation/EVALUATION_METHOD.md` + demo corpus doc (Slice K); release checklist records verification commands/results (Slice L).
 
 ## Phase 7 (context intelligence — baseline; audit `pass_with_notes`)
-- **Phase 7 audit**: [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) — **`pass_with_notes`** (2026-05-02); deferred items below remain honest debt/gaps.
-- **No production language detector selected/configured by default**: `LanguageDetectionService` remains a shell / placeholder wiring pattern until an approved adapter and policy exist.
-- **Artifact language aggregation persistence**: `ArtifactLanguageAggregationService` is pure; automatic merge into **`Artifact.metadata_json`** on ingest is **not** wired as debt-free completion.
-- **No boosting evaluation fixtures**: Slice **7I** deferred — no in-repo deterministic boosting harness until separately approved.
-- **Frontend**: Phase 6 UI does **not** add dedicated Phase 7 actor/language panels; operators may see **`language_context`** / **`actor_context`** in **raw packet JSON** where the playground exposes it — not a substitute for productized context UX.
+- **Phase 7 audit**: [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) — **`pass_with_notes`** (2026-05-02); **Completion Program Track C9** (full-completion audit) **not** closed against that baseline yet.
+- **Default remains no detector**: **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER`** defaults to **`not_configured`**; optional **`lingua`** requires explicit env + **`language-detector`** extra (**503** if misconfigured — **no** silent fallback).
+- **No boosting evaluation fixtures**: Slice **7I** deferred — no in-repo deterministic **`actor_context`** boosting harness until separately approved.
+- **Frontend**: Query Playground / panels may lag newest operator copy (e.g. optional Lingua ingest path vs default); **`language_context`** / **`actor_context`** remain inspectable in packet JSON.
 
 ## Phase 8 (specialized model pipeline — baseline; audit `pass_with_notes`)
 - **Slice 8I audit**: delivered — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**, **`pass_with_notes`**).

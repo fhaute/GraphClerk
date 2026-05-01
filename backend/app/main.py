@@ -32,6 +32,9 @@ def create_app() -> FastAPI:
 
     It exposes Phase 4 `POST /retrieve` (structured packets only) and Phase 6 read-only
     retrieval log inspection (`GET /retrieval-logs`, `GET /retrieval-logs/{id}`).
+    Phase 7 optional language detection for ingestion is wired in ``POST /artifacts``
+    (see ``app.api.routes.artifacts``) when ``GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER`` is set;
+    default remains ``not_configured``.
     It must not expose LLM calls/answer synthesis, UI behavior, or automatic graph extraction.
     """
 
