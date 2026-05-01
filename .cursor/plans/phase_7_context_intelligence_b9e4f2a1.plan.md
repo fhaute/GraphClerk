@@ -158,6 +158,54 @@ Additionally for sequencing and honesty:
 - Aggregate detected languages into **Artifact** `metadata_json` if scoped.
 - **No** first-class DB columns unless separately approved.
 
+#### Slice 7E — Design notes (artifact aggregation, design-only)
+
+**Recommended option:** **D — minimal sequencing (“A now, wire later”)** — ship **`ArtifactLanguageAggregationService`** (+ focused unit tests) as a **pure, DB-free** function over evidence-level language projections **before** coupling ingestion. **Do not choose C** (ingestion wiring) in the same slice as first implementation: default enrichment is still no-op and persisted **`EvidenceUnit.metadata_json`** rarely carries **`language`** today, so transactional aggregation would mostly emit empty/warning shapes and blur ownership with caller-supplied artifact metadata. **B** (defer all code) is weaker than **A** because the aggregation contract and tests stabilize **`metadata_json`** merge rules early.
+
+**Rationale (PM / sequencing):** Avoid silent “aggregation” that looks authoritative while EU language fields are absent; avoid overwriting **`Artifact.metadata_json`** keys supplied at **`create_from_bytes`**. A standalone service proves merge semantics and numeric summaries without API or migration churn; ingestion wiring becomes a **follow-up** slice once enrichment reliably sets EU language metadata (or explicitly-approved manual metadata paths exist).
+
+**1 — Aggregation output shape (proposal)** — Store under a **single namespaced sub-key** on **`artifact.metadata_json`** (sibling keys preserved), e.g. **`graphclerk_language_aggregation`** (avoids collision with user **`language_context`** / retrieval naming):
+
+```json
+{
+  "graphclerk_language_aggregation": {
+    "version": 1,
+    "source": "evidence_unit_metadata_json",
+    "languages": [
+      {
+        "language": "en",
+        "evidence_unit_count": 4,
+        "average_confidence": 0.91,
+        "min_confidence": 0.8,
+        "max_confidence": 0.95
+      }
+    ],
+    "primary_language": "en",
+    "distinct_language_count": 1,
+    "evidence_units_without_language_metadata_count": 0,
+    "warnings": []
+  }
+}
+```
+
+**2 — Unknown / null language entries:** Prefer **counts, not fake ISO rows**: bucket only EUs where **`metadata_json.language`** is a **non-null string**. Track **`evidence_units_without_language_metadata_count`** separately (covers missing key, **`language: null`**, or empty-string policy if later tightened). Optionally include **`warnings`** such as **`partial_evidence_language_metadata`** when that count &gt; 0. Do **not** infer language from absence.
+
+**3 — Low-confidence representation:** Carry **per-language** **`min_confidence`**, **`max_confidence`**, **`average_confidence`** from EU **`language_confidence`** when present; when confidence absent for some units in a bucket, document rule explicitly (**e.g.** exclude from average denominator or treat as **null** contribution — choose one in implementation; no guessing). Add **`warnings`** like **`low_average_confidence`** only if product wants a threshold **without** inventing new detection.
+
+**4 — Transaction vs recompute:** **Phase 1 implementation:** pure **`aggregate_for_evidence_metadata(rows: list[dict[str, Any]]) -> dict[str, Any]`** (or equivalent) — **no DB inside service**. Callers may invoke **after** EU persistence in the **same transaction** once wired, passing **`metadata_json`** snapshots read from created rows—**separate approval** for wiring. Optional future: **`recompute_artifact_language_metadata(session, artifact_id)`** batch job—out of scope for minimal 7E.
+
+**5 — Avoid overwriting user artifact metadata:** **Never replace** entire **`metadata_json`**. **Deep-merge only** the **`graphclerk_language_aggregation`** key (replace subtree wholesale when recomputing that subtree). Preserve **`title`**, **`pages`**, or any user-supplied keys from ingest request metadata.
+
+**6 — Traceability:** **`source": "evidence_unit_metadata_json"`** + **`version`**. **v1** omit per-EU IDs in aggregate to limit packet size and PII surface; if IDs are needed later, add **`evidence_unit_ids_by_language`** behind an explicit flag/version bump—not default.
+
+**7 — No EU language metadata:** Emit subtree with **`languages": []`**, **`primary_language": null`**, **`distinct_language_count": 0`**, **`warnings": ["no_evidence_language_metadata"]`** **or** omit **`graphclerk_language_aggregation`** entirely—pick one policy in implementation (**explicit-empty subtree** preferred for honesty vs silent omission).
+
+**8 — Wire now?** **No for first merge** — implement **service + tests** only (**A**). Re-evaluate wiring (**C-like**) once enrichment populates EU language fields routinely (**after** detection-backed enrichment is approved and scoped).
+
+**9 — Tests required:** Empty EU list; all EUs missing language keys; mixed **`language`** codes; mixed confidence / missing confidence; multiple langs → **`primary_language`** tie-break rule (**document**: e.g. highest **count**, then highest **average_confidence**); merge preserves unrelated artifact metadata keys; **never** mutates EU text/**`source_fidelity`** (service receives dicts only).
+
+**10 — Allowed files (when implemented):** Likely **`backend/app/services/artifact_language_aggregation_service.py`**, **`backend/tests/test_phase7_artifact_language_aggregation_service.py`**. **Forbidden until separately scoped:** **`backend/app/api/**`**, retrieval schemas, **`Artifact` model columns**, migrations. **Wiring** touchpoints (**`text_ingestion_service.py`**, **`multimodal_ingestion_service.py`**, **`artifact_service.py`**) require **explicit follow-up approval**.
+
 ### Slice 7F — RetrievalPacket `language_context`
 
 - Optional packet section; **backward-compatible**.
