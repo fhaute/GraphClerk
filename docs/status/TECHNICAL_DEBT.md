@@ -27,6 +27,9 @@
 - **Image/audio validation shells** returning **503**: explicit product choice for now; must stay honest in docs and APIs until extractors emit `EvidenceUnit`s.
 - **Optional dependency install + test matrix** (`pdf`, `pptx`, `image`, `audio` extras vs CI): may need a documented/standardized CI job later so regressions in placeholder vs real extractor paths are caught consistently.
 
+## Phase 7 (context intelligence — baseline)
+- **Deterministic context boosting**: intentionally **not implemented** (Slice **7I** deferred / cancelled pending separate approval). ActorContext remains request + **`RetrievalPacket`** recording only until evaluation fixtures, deterministic rule set, and audit criteria exist.
+
 ## Phase 6 (`pass_with_notes` baseline)
 - **No automated frontend tests yet** (`frontend/` has no `*.test.*` / `*.spec.*` harness wired in-repo): consider Vitest/Playwright (or equivalent) once UI contracts stabilize.
 - **Phase 6 audit** completed **`pass_with_notes`** — `docs/audits/PHASE_6_AUDIT.md` (2026-05-01); remaining items called out in audit + this section (not production-ready; script-only demo; optional E2E/hardening).

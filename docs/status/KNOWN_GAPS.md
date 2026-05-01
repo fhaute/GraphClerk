@@ -35,6 +35,10 @@ This file tracks known missing pieces so they are explicit and not hidden.
 - **Context budget uses simple ranking rules** (fidelity + confidence + dedupe + optional token cap).
 - **LocalRAGConsumer / answer synthesis** is not implemented (packet-only `/answer` remains deferred).
 
+## Known limitations (Phase 7 — context intelligence, baseline)
+- **ActorContext**: accepted on `POST /retrieve` and recorded on `RetrievalPacket` (`PacketActorContextRecording`); it **does not** influence route selection or evidence ranking in the current baseline.
+- **Deterministic context boosting** (historical Slice **7I**): **not implemented** — deferred / requires **separate approval**, plus evaluation fixtures and audit-ready rules proving ActorContext cannot override evidence or bypass source grounding; any future influence must stay explicit on the packet and must not personalize hidden retrieval or bypass access control.
+
 ## Known limitations (Phase 5 — in progress)
 - **Phase 5 audit** is **`pass_with_notes`** (`docs/audits/PHASE_5_AUDIT.md`): partial implementation is accepted; **full** multimodal completion (OCR, ASR, image/audio EUs, etc.) remains **not done**.
 - **Optional dependency matrix**: local/CI coverage for all combinations of extras + integration tests may need hardening later.

@@ -30,8 +30,8 @@ todos:
     content: "Slice 7H — RetrievalPacket.actor_context recording (used false/true); influences recorded-only; tests prove ActorContext does not create evidence."
     status: completed
   - id: p7-slice-7i
-    content: "Slice 7I — Optional deterministic context boosting — DEFERRED until 7G/7H stable; separate approval required."
-    status: pending
+    content: "Slice 7I — Deterministic context boosting: cancelled/deferred for Phase 7 baseline; separate approval + evaluation fixtures + audit criteria required (see plan § Slice 7I)."
+    status: cancelled
   - id: p7-slice-7j
     content: "Slice 7J — Docs/status: language metadata vs translation; ActorContext vs evidence; no translation-engine or memory-agent claims."
     status: pending
@@ -226,8 +226,19 @@ Additionally for sequencing and honesty:
 
 ### Slice 7I — Optional deterministic context boosting
 
-- **Deferred** until **7G/7H** are stable; requires separate approval.
-- Must remain visible in packet; must not bypass authorization; must not invent evidence.
+**Status: deferred / cancelled for the current Phase 7 baseline** (no implementation in-tree now). **7G** and **7H** are complete: **ActorContext** is accepted on requests and recorded on **`RetrievalPacket`** with explicit **`influence`** metadata, but it **must not** affect retrieval until boosting is re-approved.
+
+**Why not implement boosting in Phase 7 now**
+
+- **ActorContext** is wired for transparency only; using it to rerank routes or evidence without **evaluation fixtures**, **deterministic rules**, and **audit criteria** risks silent overrides of evidence-grounded behavior.
+- Any future boosting work requires **separate approval** and must:
+  - ship **evaluation fixtures** (reproducible inputs/expected boundaries);
+  - **prove** ActorContext cannot override evidence or bypass **source grounding**;
+  - **record influence** on **`RetrievalPacket`** (no hidden retrieval);
+  - **not** bypass **access control**;
+  - **not** personalize or trigger **hidden retrieval** paths.
+
+**Slices 7J and 7K** remain **pending** (docs/status honesty and Phase 7 audit), not complete.
 
 ### Slice 7J — Docs / status update
 
