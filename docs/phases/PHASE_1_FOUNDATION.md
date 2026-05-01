@@ -43,8 +43,8 @@ This is intentional and enforced by governance.
 1. Start services:
    - `docker compose up -d --build`
 2. Call endpoints:
-   - `GET http://localhost:8000/health`
-   - `GET http://localhost:8000/version`
+   - `GET http://localhost:8010/health` (Docker Compose host port; container listens on 8000)
+   - `GET http://localhost:8010/version`
 
 ## Tests
 - Unit/API tests run without external services.\n- Integration tests for DB/models/Qdrant are gated behind `RUN_INTEGRATION_TESTS=1` and require `DATABASE_URL` / `QDRANT_URL`.

@@ -46,7 +46,13 @@ Start API + Postgres + Qdrant:
 docker compose up -d --build
 ```
 
-API runs on `http://localhost:8000`.
+With the default Compose mapping, the API is on the host at **`http://localhost:8010`**. The **`api`** container still listens on **8000** inside the network; **`8010:8000`** publishes it on the host.
+
+If **`vite`** logs **`connect ECONNREFUSED 127.0.0.1:8010`**, nothing is listening on that host port yet: run **`docker compose up -d --build`** from the repo root (and **`docker compose ps`** to confirm **`api`** is **Up**). After changing Compose port mappings, recreate containers so the new bind is applied.
+
+**Frontend + API in dev:** the default **`frontend/.env.development`** uses **`VITE_API_BASE_URL=/api`**. Vite proxies **`/api`** to the backend; the proxy target defaults to **`http://127.0.0.1:8010`**. Override with **`GRAPHCLERK_API_PROXY_TARGET`** in **`frontend/.env.local`** if the API is elsewhere (for example **`http://127.0.0.1:8000`** when running **`uvicorn`** on port **8000**). You can also set **`VITE_API_BASE_URL=http://localhost:8010`** to call the API directly (ensure CORS allows the UI origin).
+
+If you run **`uvicorn`** directly on **8010** to match Docker’s host URL, **`--port 8010`** is enough with the default proxy target.
 
 ## Quickstart (local dev)
 From `backend/`:
@@ -63,7 +69,7 @@ python -m pip install -e ".[dev,pdf,pptx,image,audio]"
 
 ```bash
 python -m pytest
-python -m uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload --port 8010
 ```
 
 ## Running tests
