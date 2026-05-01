@@ -81,9 +81,22 @@
   - `backend/tests/test_phase7_*.py`
 - **Remaining (honest)**: Optional future work per audit notes / gaps — production detector policy, translation (not baseline), artifact aggregation ingest wiring, Phase 7 UI surfaces, **7I** boosting (**not** in baseline).
 
-## Phase 8 — Specialized Model Pipeline (future)
-- **Status**: **`not_started`** — specification only: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md); **no** Phase 8 implementation claimed in `docs/status/*`.
-- **Working plan (Cursor):** [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md) — planning / slice tracker; product implementation remains **`not_started`** until approved slices ship.
+## Phase 8 — Specialized Model Pipeline
+- **Status**: **baseline implemented** — slices **8A–8F** code + **8G design-only** delivered per working plan; **Slice 8I** (**Phase 8 audit**) **pending**. **Not** full specialized-model production (no production inference adapter, no registry, no pipeline merge into ingestion/FileClerk).
+- **Audit**: **pending** — no `docs/audits/PHASE_8_AUDIT.md` claim in this slice set.
+- **Defined in**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md) — see **Implementation status (current)** for shipped baseline vs broader phase objectives.
+- **Working plan (Cursor):** [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md)
+- **Evidence** (representative paths):
+  - [`backend/app/services/model_pipeline_contracts.py`](../../backend/app/services/model_pipeline_contracts.py)
+  - [`backend/app/services/model_pipeline_output_validation_service.py`](../../backend/app/services/model_pipeline_output_validation_service.py)
+  - [`backend/app/services/model_pipeline_candidate_projection_service.py`](../../backend/app/services/model_pipeline_candidate_projection_service.py)
+  - `backend/tests/test_phase8_model_pipeline_contracts.py`
+  - `backend/tests/test_phase8_model_pipeline_output_validation_service.py`
+  - `backend/tests/test_phase8_model_pipeline_candidate_projection_service.py`
+  - `backend/tests/test_phase8_model_pipeline_evaluation_fixtures.py`
+  - [`backend/tests/fixtures/phase8_model_pipeline_cases.py`](../../backend/tests/fixtures/phase8_model_pipeline_cases.py)
+  - [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md)
+- **Honesty constraints**: **`NotConfigured`** remains the **default** adapter story; **deterministic** adapter is **tests-only**; **no** Ollama/vLLM dependency added; **no** model calls in default app paths; **no** `/answer`; model output **not** evidence; projection **metadata-only** under **`graphclerk_model_pipeline`**; **no** retrieval/FileClerk/ingestion integration.
 
 ## Phase 9 — IDE Integration / Developer Evidence Orchestration (future)
 - **Status**: **`not_started`** — specification only: [`docs/phases/graph_clerk_phase_9_ide_integration_developer_evidence_orchestration.md`](../phases/graph_clerk_phase_9_ide_integration_developer_evidence_orchestration.md); **no** Phase 9 implementation claimed in `docs/status/*`.

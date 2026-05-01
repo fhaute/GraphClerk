@@ -2,7 +2,18 @@
 
 ## Status
 
-Draft / proposed
+Draft / proposed — this document remains the **north-star** narrative for specialized models and governance (registry, routing, evaluation, UI, etc.). **Shipped baseline** is narrower; see **Implementation status (current)** below.
+
+## Implementation status (current)
+
+As recorded in **`docs/status/*` (Phase 8 Slice 8H)**:
+
+- **Delivered (baseline):** Slices **8A–8F** — typed **`model_pipeline_contracts`** (tasks, results, envelopes, errors), **`ModelPipelineAdapter`** with **`NotConfiguredModelPipelineAdapter`** as the explicit default and a **`DeterministicTestModelPipelineAdapter` limited to tests**, **`ModelPipelineOutputValidationService`**, standalone **`ModelPipelineCandidateMetadataProjectionService`** (metadata subtree **`graphclerk_model_pipeline` only**; **not** wired into ingestion, enrichment, FileClerk, or retrieval), and **deterministic evaluation fixtures** under `backend/tests/fixtures/` plus tests.
+- **Design-only:** Slice **8G** — optional future **local HTTP** inference adapters (e.g. Ollama / vLLM narrative in the working plan); **no** adapter implementation, **no** Ollama/vLLM dependencies added to the repo.
+- **Not delivered:** Production inference adapter, adapter registry, settings-driven model configuration, persistence of model outputs, UI surfaces, **`POST /answer`**, and integration of pipeline output into **`RetrievalPacket`** / **`EvidenceUnit`** flows. **Model output is not evidence**; projection output is **metadata-only**.
+- **Audit:** Phase **8** audit (**Slice 8I**) is **pending** — baseline honesty does not substitute for `docs/audits/` closure.
+
+Working plan: `.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`.
 
 ## Phase Dependency
 
@@ -28,13 +39,14 @@ Prerequisites before **starting Phase 8 implementation** (gated on prior phases;
 - Multimodal ingestion works at the **documented Phase 5** level (honest partials per status)
 - Graph layer, semantic index search, FileClerk retrieval packets, context budget, and retrieval logs exist per their phase docs
 - Phase 6 — **baseline accepted** per `docs/status/*` (e.g. audit **`pass_with_notes`** on record); **not** full enterprise or stretch closure; until that baseline exists Phase 8 remains **not_started**
-- Phase 7 — **baseline accepted** per `docs/status/*` and [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) (**`pass_with_notes`**): LanguageContext / ActorContext as **recording/metadata** without retrieval routing influence; **does not** require translation, production detector-by-default, or **Slice 7I** boosting (deferred/cancelled pending separate approval); this satisfies the **Phase 8 planning / dependency gate**; **Phase 8 implementation** stays **`not_started`** until explicitly kicked off and scoped
+- Phase 7 — **baseline accepted** per `docs/status/*` and [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) (**`pass_with_notes`**): LanguageContext / ActorContext as **recording/metadata** without retrieval routing influence; **does not** require translation, production detector-by-default, or **Slice 7I** boosting (deferred/cancelled pending separate approval); this satisfies the **Phase 8 planning / dependency gate**
+- Phase 8 — **narrow baseline** (contracts / validation / standalone projection / fixtures / **8G design**) may exist per **`docs/status/PHASE_STATUS.md`**; **full** Phase 8 objectives in this doc (registry, production inference, UI, etc.) remain **largely future work** unless separately tracked
 - Where Phase 7 implemented them: EvidenceUnits may carry language metadata; RetrievalPackets may record language_context and/or actor_context
 - ActorContext remains a routing prior, not evidence
 - LanguageContext remains metadata/routing context, not source truth
 ```
 
-Cursor or any coding agent must not implement **Phase 8 product code** until Phase 7 **baseline** is **accepted** per `docs/status/*` and audits as above **and** Phase 8 receives an explicit implementation kickoff; **Phase 8** remains **`not_started`** until then.
+Broader **Phase 8 product scope** (registry, routing layer, production inference fleet, drift tooling, UI as described later in this doc) must remain **approval-gated** and **honest** in `docs/status/*`. A **narrow contract baseline** (see **Implementation status (current)**) does **not** imply completion of this phase document’s full objectives.
 
 ---
 

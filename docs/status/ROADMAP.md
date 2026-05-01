@@ -125,8 +125,21 @@
 - **Remaining / deferred** (non-exhaustive; see audit notes):
   - Production language detector **policy/wiring** by default; translation / query translation; actor/language **boosting** (**7I**); artifact aggregation **ingest persistence** wiring; dedicated Phase 7 **UI** surfaces (beyond raw packet JSON where shown today)
 
-## Phase 8 — Specialized Model Pipeline (future)
-- **Status**: **not_started** — specification may exist under `docs/phases/`; **no** Phase 8 implementation claimed in status docs.
+## Phase 8 — Specialized Model Pipeline
+- **Defined in**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md)
+- **Working plan**: [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md)
+- **Status**: **baseline delivered** — slices **8A–8F** + **8G** (**design-only**); **Slice 8I** (**audit**) **pending**. This is a **contract / validation / projection** baseline only — **not** the full phase-doc product (registry, production inference fleet, UI, etc.).
+- **Delivered so far (implementation truth)**:
+  - **8A–8B**: `model_pipeline_contracts` — tasks, results, request/response envelopes, errors
+  - **8C**: `ModelPipelineAdapter`; **`NotConfiguredModelPipelineAdapter`**; **`DeterministicTestModelPipelineAdapter`** (tests-only)
+  - **8D**: `ModelPipelineOutputValidationService` — semantic validation without FileClerk/retrieval
+  - **8E**: `ModelPipelineCandidateMetadataProjectionService` — **`graphclerk_model_pipeline`** subtree **only**; **not** wired into ingestion/enrichment
+  - **8F**: `backend/tests/fixtures/phase8_model_pipeline_cases.py` + evaluation fixture tests
+  - **8G**: optional local inference adapter **design** (Ollama/vLLM-first narrative); **no** runtime adapter code
+- **Remaining / deferred** (non-exhaustive):
+  - **Slice 8I** — Phase 8 **audit** artifact under `docs/audits/`
+  - Production **HTTP inference adapter** (if approved), mocked adapter tests, timeouts/registry/settings
+  - Merge/persist model-assisted metadata into candidates (**not** done); **`POST /answer`** remains **out of scope**
 
 ## Phase 9 — IDE Integration / Developer Evidence Orchestration (future)
 - **Status**: **not_started** — specification may exist under `docs/phases/`; **no** Phase 9 implementation claimed in status docs.

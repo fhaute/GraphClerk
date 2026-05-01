@@ -1,7 +1,7 @@
 # Project Status
 
 ## Summary
-- **Current phase**: Phase 7 — Context Intelligence (**baseline implemented**; audit **`pass_with_notes`** — [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md), **2026-05-02**). Phase 5 — Multimodal ingestion remains **in progress** / **partial** (audit **`pass_with_notes`** — `docs/audits/PHASE_5_AUDIT.md`). Phase 6 — Productization / UI remains **`pass_with_notes`** (`docs/audits/PHASE_6_AUDIT.md`). **`POST /answer`** remains **deferred**. Phases **8** / **9**: **not_started** (spec-only).
+- **Current phase**: Phase 7 — Context Intelligence (**baseline implemented**; audit **`pass_with_notes`** — [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md), **2026-05-02**). Phase 5 — Multimodal ingestion remains **in progress** / **partial** (audit **`pass_with_notes`** — `docs/audits/PHASE_5_AUDIT.md`). Phase 6 — Productization / UI remains **`pass_with_notes`** (`docs/audits/PHASE_6_AUDIT.md`). **`POST /answer`** remains **deferred**. **Phase 8** — specialized model pipeline: **baseline implemented** through slices **8A–8G** (**8I Phase 8 audit pending**); **not** full specialized-model production (no production inference adapter, no registry). **Phase 9**: **`not_started`** (spec-only).
 - **Prior milestones**: Phase 4 File Clerk (**pass_with_notes**); Phase 7 baseline builds on Phases 4–6 without replacing evidence-grounded retrieval.
 
 ## High-level status
@@ -12,7 +12,9 @@
 - **Phase 4 File Clerk + retrieval packets**: implemented (pass_with_notes)
 - **Phase 5 multimodal ingestion**: **in progress** / **partially implemented** (see Phase 5 section below; audit **`pass_with_notes`**)
 - **Phase 6 productization / UI**: **implemented (`pass_with_notes`)** — React/Vite app in `frontend/`; explorers and query playground wired to **live** APIs; audit `docs/audits/PHASE_6_AUDIT.md` records accepted gaps (no production SLA, no frontend test harness, script-only demo loader, optional hardening). **Not** a claim of full phase-doc closure.
-- **Phase 7 — Context Intelligence**: **baseline implemented (`pass_with_notes`)** — [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md); Slices **7A–7H** + **7J** (docs/status honesty per working plan) shipped; **Slice 7K** (audit) complete; **Slice 7I** boosting remains **deferred / cancelled** pending separate approval. Working plan: `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`; phase contract: [`docs/phases/graph_clerk_phase_7_context_intelligence.md`](../phases/graph_clerk_phase_7_context_intelligence.md). **Phase 8** / **Phase 9**: **not_started** (phase docs only; no implementation claimed).
+- **Phase 7 — Context Intelligence**: **baseline implemented (`pass_with_notes`)** — [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md); Slices **7A–7H** + **7J** (docs/status honesty per working plan) shipped; **Slice 7K** (audit) complete; **Slice 7I** boosting remains **deferred / cancelled** pending separate approval. Working plan: `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`; phase contract: [`docs/phases/graph_clerk_phase_7_context_intelligence.md`](../phases/graph_clerk_phase_7_context_intelligence.md).
+- **Phase 8 — Specialized Model Pipeline**: **baseline implemented** (**Slice 8I audit pending**) — contracts/envelopes/validation/projection/fixtures + **8G design-only**; **`NotConfigured`** default; **no** production inference, **no** `/answer`, **no** ingestion/enrichment/FileClerk wiring for model output. Working plan: [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md); phase contract: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md).
+- **Phase 9 — IDE integration**: **`not_started`** (spec-only).
 - **Phase 6 readiness (Slice 6.0):** Per [`docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`](docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md) (**Slice 6.0**), productization/UI work may proceed without Phase 5 being fully complete, provided the documented baseline and UI honesty rules are followed.
 
 ## Implemented (Phase 1)
@@ -54,6 +56,27 @@
 - Optional **`actor_context`** on **`POST /retrieve`** request schema; **`RetrievalPacket.actor_context`** recording (**`PacketActorContextRecording`**) with explicit **`influence`** — **no** route or evidence boost in this baseline
 - Phase 7 tests under `backend/tests/test_phase7_*.py` (see `docs/status/PHASE_STATUS.md`)
 - **Audit**: [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) — **`pass_with_notes`** (2026-05-02); explicit notes: no production detector-by-default, no translation, no boosting (**7I**), aggregation ingest wiring deferred
+
+## Implemented (Phase 8 — baseline; Slice **8I** audit pending)
+- **8A — Model pipeline contracts**: typed roles/tasks/results; role ↔ output matrix — [`backend/app/services/model_pipeline_contracts.py`](../../backend/app/services/model_pipeline_contracts.py)
+- **8B — Request/response envelopes**: `ModelPipelineRequestEnvelope`, `ModelPipelineResponseEnvelope`, `ModelPipelineError`; success vs failure shape rules — same module
+- **8C — Adapters**: `ModelPipelineAdapter` protocol; **`NotConfiguredModelPipelineAdapter`** (default explicit unavailable semantics); **`DeterministicTestModelPipelineAdapter`** (**tests only**)
+- **8D — Output validation**: `ModelPipelineOutputValidationService` — recursive semantic checks (no FileClerk/retrieval) — [`backend/app/services/model_pipeline_output_validation_service.py`](../../backend/app/services/model_pipeline_output_validation_service.py)
+- **8E — Projection (standalone)**: `ModelPipelineCandidateMetadataProjectionService` → metadata subtree **`graphclerk_model_pipeline`** only; **not** wired to ingestion/enrichment — [`backend/app/services/model_pipeline_candidate_projection_service.py`](../../backend/app/services/model_pipeline_candidate_projection_service.py)
+- **8F — Evaluation fixtures**: deterministic builders + tests — [`backend/tests/fixtures/phase8_model_pipeline_cases.py`](../../backend/tests/fixtures/phase8_model_pipeline_cases.py), `backend/tests/test_phase8_model_pipeline_evaluation_fixtures.py`
+- **8G — Local inference adapter**: **design-only** in working plan (optional future Ollama/vLLM HTTP adapters); **no** implementation, **no** new dependencies
+- **Tests**: `backend/tests/test_phase8_*.py` (contracts, validation, projection, evaluation fixtures)
+- **Honesty**: **No** real model adapter in app code; **no** inference by default; **no** model calls on core paths; **model output is not evidence**; projection is **metadata-only** under **`graphclerk_model_pipeline`**.
+
+## Phase 8 limitations (explicit)
+- **Not** full Phase 8 phase-doc “north star” (e.g. registry, production routing UI, specialized inference fleet) — only the **contract / validation / projection baseline** above.
+- **Slice 8I** — Phase **8** audit artifact: **pending** (`docs/audits/` not updated in this slice).
+- **No** production local inference adapter (Ollama/vLLM/etc.); **8G** is recommendations only.
+- **No** adapter registry; **no** model settings in product config for pipeline inference.
+- **No** wiring of model pipeline into **`POST /retrieve`**, FileClerk, text/multimodal ingestion, or **`EvidenceEnrichmentService`** for merge/persist.
+- **No** **`POST /answer`** / answer synthesis; **no** LLM calls in ingestion/retrieval paths.
+- **No** mutation of **`EvidenceUnit`** / **`EvidenceUnitCandidate.text`** / **`source_fidelity`** from model pipeline code.
+- **No** **`RetrievalPacket`** selected-source evidence mutation via model output.
 
 ## Implemented (Phase 6 — baseline; `pass_with_notes`)
 - **Web UI** (`frontend/`): React/Vite/TypeScript; health + optional **`GET /version`** line; tabbed **query playground** (retrieval + readable/raw packet), **artifacts and evidence**, **semantic indexes**, **graph**, **retrieval logs**, **evaluation** — all against **live** backend contracts (no in-app mock corpus)

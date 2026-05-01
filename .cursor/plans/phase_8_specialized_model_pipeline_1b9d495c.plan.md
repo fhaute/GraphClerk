@@ -29,7 +29,7 @@ todos:
     status: completed
   - id: phase8-slice-8h-docs-status
     content: "Slice 8H — Docs/status honesty (what Phase 8 is/is not; no overclaim of models or /answer)."
-    status: pending
+    status: completed
   - id: phase8-slice-8i-audit
     content: "Slice 8I — Phase 8 audit artifact under docs/audits/ after implementation slices warrant it."
     status: pending
@@ -77,7 +77,8 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 - **Phase 6:** **`pass_with_notes`** baseline accepted per `docs/status/*` and Phase 6 audit.
 - **Phase 7:** baseline **implemented** / audit **`pass_with_notes`** on record; **Slice 7I** (deterministic context boosting) **deferred/cancelled** pending separate approval.
 - **Pre‑Phase‑8:** structural verification report exists; follow‑up remediation referenced there; code cleanliness sweep shows **no Severity A** blockers; language metadata key duplication remediated (e.g. commit `a0b9e20` or equivalent).
-- **Phase 8 / 9:** **`not_started`** for product implementation until each slice is explicitly approved and delivered.
+- **Phase 8:** **baseline** slices **8A–8G** may be **delivered** per `docs/status/*` (**not** full phase-doc product); **Slice 8I audit pending**.
+- **Phase 9:** **`not_started`** unless/until explicitly kicked off.
 - **Honesty:** status docs and README must not claim Phase 8 product features (registry, routing, inference) until implemented and tested.
 
 ---
@@ -119,8 +120,8 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 
 - Keep **Phase 5** partial / **`pass_with_notes`**; **Phase 6** **`pass_with_notes`**; **Phase 7** **`pass_with_notes`**; **Phase 9** **`not_started`**.
 - Keep **`POST /answer`** deferred; keep **OCR/ASR/caption/video** absent as today.
-- **Phase 8** remains **`not_started`** for implementation until code lands; only add **traceability** (e.g. pointer to this plan) if useful.
-- Do **not** mark Phase 8 “implemented” or claim registry/routing/inference until true.
+- **Phase 8:** document **`baseline implemented`** (8A–8F + **8G design**) vs **full phase-doc scope** (registry, production inference, UI) — **Slice 8I audit pending**; do **not** claim **`pass`** audit closure until **`docs/audits/`** records it.
+- Do **not** claim production inference, registry, or **`/answer`** from Phase 8 baseline alone.
 
 ---
 
@@ -142,7 +143,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 | **8E** | Candidate‑only integration seam | **Approval‑gated:** helpers may produce **candidate metadata only**; **no** `EvidenceUnit` text mutation; **no** `RetrievalPacket` source evidence mutation; **no** route/evidence ranking change. **Slice 8E (projection-only):** `ModelPipelineCandidateMetadataProjectionService` landed — validated envelope → `graphclerk_model_pipeline` subtree only; **no** ingestion/enrichment wiring yet. |
 | **8F** | Evaluation fixtures | Deterministic fixtures + failure cases; **no** production inference. **Implemented:** `backend/tests/fixtures/phase8_model_pipeline_cases.py` + `backend/tests/test_phase8_model_pipeline_evaluation_fixtures.py`. |
 | **8G** | Optional local inference adapter design | Design only (Ollama/vLLM/etc.); **no** dependency add without approval. **Design delivered (2026‑05‑01):** § Slice 8G below — default **E** until use case; first optional implementations **A** then **B**; **C/D** deferred. |
-| **8H** | Docs/status update | Document what Phase 8 **is / is not**; no claim of model implementation or answer synthesis until true. |
+| **8H** | Docs/status update | Document what Phase 8 **is / is not**; no claim of model implementation or answer synthesis until true. **Done:** README + `docs/status/*` + phase doc **Implementation status** + honesty constraints (**2026‑05‑01**). |
 | **8I** | Phase 8 audit | After implementation slices; artifact under `docs/audits/` per project audit rules. |
 
 ### Slice progress (planning tracker)
@@ -155,8 +156,8 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 - [x] **8E** — Candidate seam (**projection-only Option A** — `model_pipeline_candidate_projection_service.py` + tests; merge into candidates / enrichment deferred per § Slice 8E).
 - [x] **8F** — Evaluation fixtures (`tests/fixtures/phase8_model_pipeline_cases.py`, `test_phase8_model_pipeline_evaluation_fixtures.py`; no adapter execution in fixtures).
 - [x] **8G** — Local inference design only (§ Slice 8G — optional **A/B** adapters; **E** default; **no** code in this slice).
-- [ ] **8H** — Docs/status alignment post‑implementation.
-- [ ] **8I** — Phase 8 audit.
+- [x] **8H** — Docs/status alignment (`README.md`, `docs/status/*`, phase doc baseline vs north-star; **no** Phase 8 audited claim).
+- [ ] **8I** — Phase 8 audit (`docs/audits/` — pending).
 
 ---
 
