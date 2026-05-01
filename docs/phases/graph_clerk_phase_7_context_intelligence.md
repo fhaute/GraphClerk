@@ -44,7 +44,7 @@ Cursor must not implement this phase unless Phase 6 is complete and status docs 
 
 ## Implementation status (current)
 
-**Slices 7A–7H are implemented** in the backend with targeted tests; **Slice 7K** is complete — [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) records **`pass_with_notes`** (2026-05-02). Remaining items are **explicit audit notes** (e.g. no production detector-by-default, no translation, **Slice 7I** boosting deferred), not unconditional “green” closure.
+**Slices 7A–7H are implemented** in the backend with targeted tests; **Slice 7J** (docs/status honesty alignment per the Phase 7 working plan) and **Slice 7K** (audit) are complete — [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) records **`pass_with_notes`** (2026-05-02). Remaining items are **explicit audit notes** (e.g. no production detector-by-default, no translation, **Slice 7I** boosting deferred), not unconditional “green” closure.
 
 ### Shipped baseline (honest)
 
@@ -64,6 +64,8 @@ Cursor must not implement this phase unless Phase 6 is complete and status docs 
 - **Persisted actor memory**; ActorContext-driven **access-control** changes; **LLM** calls for context; **Phase 7**-specific UI productization (see **`docs/status/TECHNICAL_DEBT.md`**).
 
 ### Retrieval influence vs recording
+
+**North-star (design principle — future approved capability only; not the shipped Phase 7 baseline):**
 
 > Context can influence retrieval routes, but it must not become evidence.
 
@@ -95,7 +97,7 @@ It is about helping the File Clerk understand two things more explicitly:
 
 The goal is to improve retrieval orientation while preserving GraphClerk’s core evidence discipline.
 
-The key principle is:
+The key principle (**north-star for future approved routing influence — not a claim about today’s recording-only baseline**) is:
 
 > Context can influence retrieval routes, but it must not become evidence.
 
@@ -948,16 +950,22 @@ Phase 7 is not complete if audit result is `needs_fix` or `blocked`.
 
 # Implementation Tasks
 
-## Task 1 — Add Phase 7 planning and status docs
+## Task 1 — Add Phase 7 planning and status docs *(historical kickoff — superseded)*
 
-Create this phase document and add Phase 7 to the roadmap as `not_started`.
+Original kickoff text asked to add Phase 7 to the roadmap as **`not_started`**. **Today:** Phase 7 **baseline is implemented** with audit **`pass_with_notes`** ([`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md), 2026-05-02); `docs/status/*` and the roadmap reflect delivery — **do not** regress Phase 7 to **`not_started`**.
 
-Acceptance:
+Archived kickoff acceptance:
 
 ```text
 - Phase 7 doc exists
 - roadmap mentions Phase 7 after Phase 6
-- no implementation is claimed
+```
+
+Current baseline truth:
+
+```text
+- Slices 7A–7H shipped; 7J (docs/status honesty) and 7K (audit) complete per plan/status
+- audit pass_with_notes on record; boosting (7I) deferred/cancelled pending separate approval
 ```
 
 ## Task 2 — Add EvidenceEnrichmentService shell
@@ -1296,6 +1304,8 @@ A fast version should prioritize:
 
 # Phase Completion Definition
 
-Phase 7 is complete when GraphClerk can represent language and actor context explicitly, preserve source fidelity, record context influence in RetrievalPackets, and prove through tests and audit that context improves retrieval orientation without becoming source truth.
+**Baseline closure (shipped and audited in this repository):** Phase 7 **baseline** is satisfied when GraphClerk represents language and actor **routing/interpretation metadata** explicitly (including on `EvidenceUnitCandidate` / `metadata_json` and on `RetrievalPacket`), preserves source fidelity, records **`language_context`** and request **`actor_context`** on packets **without** using them to alter route selection, evidence selection/ranking, traversal, budget, warnings, confidence, or answer mode — as verified by tests and [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) (**`pass_with_notes`**). **Slice 7I** (deterministic context boosting) is **deferred / cancelled** pending **separate approval** and must not be assumed from baseline closure. This baseline does **not** require empirical proof that context **improves** retrieval ranks or routes; it requires **honest recording and traceability**, not behavioral uplift.
 
-The output of this phase is controlled context intelligence.
+**Product / north-star (not required for baseline closure):** Future work might seek context that **influences** retrieval under explicit packet-visible rules; that is **out of scope** for the audited **`pass_with_notes`** baseline above.
+
+The **delivered** output is **controlled context metadata and recording**, not a personalization, translation, or boosting product.

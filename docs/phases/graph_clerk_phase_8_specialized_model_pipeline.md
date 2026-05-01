@@ -27,14 +27,14 @@ Prerequisites before **starting Phase 8 implementation** (gated on prior phases;
 - Artifact and EvidenceUnit models exist; text/Markdown ingestion works
 - Multimodal ingestion works at the **documented Phase 5** level (honest partials per status)
 - Graph layer, semantic index search, FileClerk retrieval packets, context budget, and retrieval logs exist per their phase docs
-- Phase 6 — **complete per** `docs/status/*` and Phase 6 governance (including audit when required); until then Phase 8 stays **not_started**
-- Phase 7 — Context intelligence (LanguageContext / ActorContext) — **complete per** `docs/status/*` and its phase doc; Phase 8 does **not** start until this gate clears
+- Phase 6 — **baseline accepted** per `docs/status/*` (e.g. audit **`pass_with_notes`** on record); **not** full enterprise or stretch closure; until that baseline exists Phase 8 remains **not_started**
+- Phase 7 — **baseline accepted** per `docs/status/*` and [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) (**`pass_with_notes`**): LanguageContext / ActorContext as **recording/metadata** without retrieval routing influence; **does not** require translation, production detector-by-default, or **Slice 7I** boosting (deferred/cancelled pending separate approval); this satisfies the **Phase 8 planning / dependency gate**; **Phase 8 implementation** stays **`not_started`** until explicitly kicked off and scoped
 - Where Phase 7 implemented them: EvidenceUnits may carry language metadata; RetrievalPackets may record language_context and/or actor_context
 - ActorContext remains a routing prior, not evidence
 - LanguageContext remains metadata/routing context, not source truth
 ```
 
-Cursor or any coding agent must not implement Phase 8 unless Phase 7 is complete and status docs confirm it.
+Cursor or any coding agent must not implement **Phase 8 product code** until Phase 7 **baseline** is **accepted** per `docs/status/*` and audits as above **and** Phase 8 receives an explicit implementation kickoff; **Phase 8** remains **`not_started`** until then.
 
 ---
 
