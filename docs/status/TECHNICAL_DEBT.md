@@ -27,11 +27,15 @@
 - **Image/audio validation shells** returning **503**: explicit product choice for now; must stay honest in docs and APIs until extractors emit `EvidenceUnit`s.
 - **Optional dependency install + test matrix** (`pdf`, `pptx`, `image`, `audio` extras vs CI): may need a documented/standardized CI job later so regressions in placeholder vs real extractor paths are caught consistently.
 
-## Phase 7 (context intelligence — baseline)
-- **Deterministic context boosting**: intentionally **not implemented** (Slice **7I** deferred / cancelled pending separate approval). ActorContext remains request + **`RetrievalPacket`** recording only until evaluation fixtures, deterministic rule set, and audit criteria exist.
-
 ## Phase 6 (`pass_with_notes` baseline)
 - **No automated frontend tests yet** (`frontend/` has no `*.test.*` / `*.spec.*` harness wired in-repo): consider Vitest/Playwright (or equivalent) once UI contracts stabilize.
 - **Phase 6 audit** completed **`pass_with_notes`** — `docs/audits/PHASE_6_AUDIT.md` (2026-05-01); remaining items called out in audit + this section (not production-ready; script-only demo; optional E2E/hardening).
 - **Onboarding**: README + `docs/api/API_OVERVIEW.md` + `docs/release/RELEASE_CHECKLIST.md` + `docs/evaluation/EVALUATION_METHOD.md` + demo corpus doc (Slice K); release checklist records verification commands/results (Slice L).
+
+## Phase 7 (context intelligence — baseline; audit pending)
+- **Phase 7 audit artifact missing**: implement **`docs/audits/PHASE_7_AUDIT.md`** (Slice **7K**) before claiming audited Phase 7 closure.
+- **No production language detector selected/configured by default**: `LanguageDetectionService` remains a shell / placeholder wiring pattern until an approved adapter and policy exist.
+- **Artifact language aggregation persistence**: `ArtifactLanguageAggregationService` is pure; automatic merge into **`Artifact.metadata_json`** on ingest is **not** wired as debt-free completion.
+- **No boosting evaluation fixtures**: Slice **7I** deferred — no in-repo deterministic boosting harness until separately approved.
+- **Frontend**: Phase 6 UI does **not** add dedicated Phase 7 actor/language panels; operators may see **`language_context`** / **`actor_context`** in **raw packet JSON** where the playground exposes it — not a substitute for productized context UX.
 

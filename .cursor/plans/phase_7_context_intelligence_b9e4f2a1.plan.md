@@ -1,6 +1,6 @@
 ---
 name: Phase 7 Context Intelligence plan
-overview: "Working plan for [docs/phases/graph_clerk_phase_7_context_intelligence.md](docs/phases/graph_clerk_phase_7_context_intelligence.md): language metadata + ActorContext as routing/interpretation metadata only — **not** evidence or translation product. First coding slice: **7A** (`EvidenceEnrichmentService` no-op pass-through). Phase 8 model pipeline and Phase 9 IDE integration remain out of scope."
+overview: "Working plan for [docs/phases/graph_clerk_phase_7_context_intelligence.md](docs/phases/graph_clerk_phase_7_context_intelligence.md): language metadata + ActorContext as routing/interpretation metadata only — **not** evidence or translation product. Baseline slices **7A–7H** implemented; **7I** boosting deferred; **7J** docs/status complete; **7K** audit pending. Phase 8 / Phase 9 remain out of scope."
 todos:
   - id: p7-slice-70
     content: "Slice 7.0 — Entry gate + plan alignment (Phase 6 pass_with_notes; Phase 5 partial; no backend code)."
@@ -34,7 +34,7 @@ todos:
     status: cancelled
   - id: p7-slice-7j
     content: "Slice 7J — Docs/status: language metadata vs translation; ActorContext vs evidence; no translation-engine or memory-agent claims."
-    status: pending
+    status: completed
   - id: p7-slice-7k
     content: "Slice 7K — Phase 7 audit: docs/audits/PHASE_7_AUDIT.md after implementation slices."
     status: pending
@@ -238,9 +238,11 @@ Additionally for sequencing and honesty:
   - **not** bypass **access control**;
   - **not** personalize or trigger **hidden retrieval** paths.
 
-**Slices 7J and 7K** remain **pending** (docs/status honesty and Phase 7 audit), not complete.
+**Slice 7J** (**docs/status**) is **complete** for the Phase 7 baseline honesty pass; **Slice 7K** (Phase 7 audit artifact) remains **pending**.
 
 ### Slice 7J — Docs / status update
+
+**Done for baseline:** README, `docs/status/*` (incl. `PROJECT_STATUS`, `PHASE_STATUS`, `ROADMAP`, `KNOWN_GAPS`, `TECHNICAL_DEBT`), and phase doc **Implementation status (current)** aligned — Phase **7** baseline implemented; audit pending; **7I** boosting deferred.
 
 - Distinguish **language metadata** from **translation**.
 - Distinguish **ActorContext** from **evidence**.

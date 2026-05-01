@@ -116,9 +116,16 @@
 
 ## Phase 7 — Context Intelligence: Language and Actor Context
 - **Defined in**: `docs/phases/graph_clerk_phase_7_context_intelligence.md`
-- **Goal**: explicit **language** and **actor** routing/interpretation metadata (not source truth); optional `RetrievalPacket` extensions; tests proving context does not alter evidence text or bypass access control.
-- **Status**: **not_started** — slice plan recorded under `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`; backend behavior **not** implemented in this planning milestone.
-- **First implementation slice (recommended)**: **7A** — `EvidenceEnrichmentService` no-op pass-through + unit tests.
+- **Goal**: explicit **language** and **actor** routing/interpretation metadata (**not** source truth); optional **`RetrievalPacket`** extensions; tests proving baseline context recording does **not** alter evidence text, rankings, or bypass access control from ActorContext in this slice set.
+- **Status**: **baseline delivered (implementation)** — Slices **7A–7H** complete in backend; **Phase 7 audit pending** (**7K** — no `PHASE_7_AUDIT.md` yet). **Slice 7I** deterministic context boosting: **deferred / cancelled** pending separate approval + evaluation fixtures (see working plan § 7I).
+- **Delivered so far (implementation truth)**:
+  - `EvidenceEnrichmentService` no-op shell; language **`metadata_json`** candidate contract; `LanguageDetectionService` adapter shell; enrichment seam on text + multimodal paths (**no-op** default)
+  - `ArtifactLanguageAggregationService` pure helper; **`RetrievalPacket.language_context`**; **`POST /retrieve`** **`actor_context`** request + **`RetrievalPacket.actor_context`** recording (**no** boost)
+  - Tests: `backend/tests/test_phase7_*.py`; working plan `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`
+- **Remaining / not done** (non-exhaustive):
+  - **`PHASE_7_AUDIT.md`** and status transition to audited baseline when ready
+  - Real automatic detection-by-default, translation, query translation, actor/language boosting (**not** in current baseline)
+  - Phase 7-specific UI surfaces (beyond raw packet JSON where shown today)
 
 ## Phase 8 — Specialized Model Pipeline (future)
 - **Status**: **not_started** — specification may exist under `docs/phases/`; **no** Phase 8 implementation claimed in status docs.

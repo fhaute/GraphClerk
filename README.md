@@ -25,6 +25,7 @@ GraphClerk is a **local-first, graph-guided evidence-routing layer for RAG syste
 - **Phase 4**: File Clerk **`POST /retrieve`**, structured `RetrievalPacket`, deterministic intent/route/evidence selection, context budgeting, `RetrievalLog.retrieval_packet` snapshots.
 - **Phase 5** (**in progress**, **partial**; audit **`pass_with_notes`** — `docs/audits/PHASE_5_AUDIT.md`): multimodal routing, PDF/PPTX text to evidence when optional extras installed; image/audio **validation only** (no EU from image/audio; **503** where documented); **no** OCR/ASR/caption/video pipeline.
 - **Phase 6** (**implemented `pass_with_notes`** — `docs/audits/PHASE_6_AUDIT.md`, `docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`): React/Vite UI in `frontend/` against **live** APIs; **demo/inspection productization**, **not** production enterprise software. See [Web UI](#web-ui-phase-6). **Onboarding**: this README, `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`.
+- **Phase 7** (**baseline implemented**; **Phase 7 audit pending** — no `PHASE_7_AUDIT.md` yet): **context intelligence** layer — language **`metadata_json`** plumbing, optional **`RetrievalPacket.language_context`** from selected evidence metadata, optional **`actor_context`** on **`POST /retrieve`** recorded on **`RetrievalPacket`** (**recording only**; **no** retrieval boosting). This is **not** a full personalization or translation product; **routing/interpretation metadata is not evidence** (see `docs/phases/graph_clerk_phase_7_context_intelligence.md`). **Deterministic context boosting** (historical Slice **7I**) is **deferred / cancelled** pending separate approval (`docs/status/KNOWN_GAPS.md`).
 
 ## What is explicitly not implemented yet
 
@@ -33,12 +34,13 @@ GraphClerk is a **local-first, graph-guided evidence-routing layer for RAG syste
 - **Full** Phase 5 multimodal (OCR, transcription, captions, video; image/audio as full evidence producers).
 - **Automatic semantic index vector population** after create (indexing job/backfill).
 - **Phase 6 stretch items** from the phase doc (e.g. in-product demo loader vs script-only, automated UI tests, further hardening) — baseline + audit are **`pass_with_notes`**; see `docs/audits/PHASE_6_AUDIT.md`.
+- **Phase 7 audit** and production-grade language detection / translation / ActorContext-driven routing (**Slice 7I** boosting and similar) — baseline code exists; audit and those capabilities are **not** claimed complete (see `docs/status/PROJECT_STATUS.md`).
 
 ## Governance and phase docs
 
 - `docs/graph_clerk_phase_0_governance_baseline.md` — Phase 0 source narrative.
 - `docs/governance/` — guardrails for assistants and humans.
-- `docs/phases/PHASE_1_FOUNDATION.md`, `PHASE_2_*`, `graph_clerk_phase_3_*`, `graph_clerk_phase_4_*`, `graph_clerk_phase_5_*`, `graph_clerk_phase_6_*`.
+- `docs/phases/PHASE_1_FOUNDATION.md`, `PHASE_2_*`, `graph_clerk_phase_3_*`, `graph_clerk_phase_4_*`, `graph_clerk_phase_5_*`, `graph_clerk_phase_6_*`, `graph_clerk_phase_7_context_intelligence.md`.
 - `docs/status/` — required honesty tables.
 - `docs/api/API_OVERVIEW.md` — HTTP surface summary.
 - `docs/adr/` — ADRs.

@@ -42,6 +42,35 @@ Cursor must not implement this phase unless Phase 6 is complete and status docs 
 
 ---
 
+## Implementation status (current)
+
+**Slices 7A–7H are implemented** in the backend with targeted tests; **Phase 7 is not audited yet** — there is **no** `docs/audits/PHASE_7_AUDIT.md` at this milestone (Slice **7K** pending).
+
+### Shipped baseline (honest)
+
+- **`EvidenceEnrichmentService`** no-op shell (pass-through; preserves **`text`** / **`source_fidelity`**).
+- **Language metadata contract** on **`EvidenceUnitCandidate`** / persistence via **`metadata_json`** (no mandatory migration for Phase 7 baseline).
+- **`LanguageDetectionService`** adapter shell (**NotConfigured** / deterministic test adapters); **not** wired as automatic production detection on ingest by default.
+- **Enrichment seam** wired into **text/Markdown** and **multimodal** candidate persistence paths using the **no-op** default enrichment.
+- **`ArtifactLanguageAggregationService`** as a **pure** merge helper over evidence metadata projections (callers persist separately; ingestion artifact aggregation wiring remains deferred).
+- **`RetrievalPacket.language_context`** derived from **selected evidence `metadata_json` only** (no detection / translation in packet assembly for this slice).
+- **Optional `actor_context`** on **`POST /retrieve`** (`RetrieveRequest`) validated by API/schema.
+- **`RetrievalPacket.actor_context`** (**`PacketActorContextRecording`**) — **`used`** / **`recorded_context`** / explicit **`influence`**; **no** route or evidence boost from ActorContext in this baseline.
+
+### Explicitly not implemented (baseline gaps; non-exhaustive)
+
+- **Real** automatic language detection in ingestion by default; **translation**; **query translation**.
+- **Language-based** or **actor-based** boosting / personalization of retrieval ranks or routes (**Slice 7I** boosting is **deferred / cancelled** pending separate approval — see working plan).
+- **Persisted actor memory**; ActorContext-driven **access-control** changes; **LLM** calls for context; **Phase 7**-specific UI productization (see **`docs/status/TECHNICAL_DEBT.md`**).
+
+### Retrieval influence vs recording
+
+> Context can influence retrieval routes, but it must not become evidence.
+
+In the **current** codebase baseline, **`language_context`** and request **`actor_context`** are **recorded on `RetrievalPacket`** for traceability; they **do not** alter route selection, evidence selection/ranking, graph traversal, context budget, warnings, confidence, or answer mode. Any **future** approved routing influence must remain **explicit** on the packet, respect evidence grounding, and must **not** introduce hidden retrieval or bypass access control.
+
+---
+
 ## Purpose
 
 Add a controlled context-intelligence layer to GraphClerk.

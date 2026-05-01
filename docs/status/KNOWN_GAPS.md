@@ -36,8 +36,12 @@ This file tracks known missing pieces so they are explicit and not hidden.
 - **LocalRAGConsumer / answer synthesis** is not implemented (packet-only `/answer` remains deferred).
 
 ## Known limitations (Phase 7 — context intelligence, baseline)
-- **ActorContext**: accepted on `POST /retrieve` and recorded on `RetrievalPacket` (`PacketActorContextRecording`); it **does not** influence route selection or evidence ranking in the current baseline.
-- **Deterministic context boosting** (historical Slice **7I**): **not implemented** — deferred / requires **separate approval**, plus evaluation fixtures and audit-ready rules proving ActorContext cannot override evidence or bypass source grounding; any future influence must stay explicit on the packet and must not personalize hidden retrieval or bypass access control.
+- **Phase 7 audit**: **not done** — baseline code ships without **`PHASE_7_AUDIT.md`** until Slice **7K**.
+- **`LanguageDetectionService`**: adapter shell exists (**NotConfigured** / test adapters); **not** wired as automatic production language detection on ingest **by default**; **no** “always-on” remote detector claimed.
+- **`language_context`**: derived from **selected evidence `metadata_json`** only when language fields exist — **not** from silent text guessing or mandatory detection in packet assembly.
+- **Translation / query translation**: **not implemented**; GraphClerk is **not** a translation engine in this baseline.
+- **ActorContext**: accepted on `POST /retrieve` and recorded on `RetrievalPacket` (`PacketActorContextRecording`); **does not** influence route selection, evidence ranking, traversal, budget, warnings, confidence, or **`answer_mode`**.
+- **Deterministic context boosting** (Slice **7I**): **not implemented** — **deferred / cancelled** pending **separate approval**, evaluation fixtures, and audit-ready rules; must prove ActorContext cannot override evidence or bypass source grounding; any future influence must remain explicit on the packet (no hidden retrieval).
 
 ## Known limitations (Phase 5 — in progress)
 - **Phase 5 audit** is **`pass_with_notes`** (`docs/audits/PHASE_5_AUDIT.md`): partial implementation is accepted; **full** multimodal completion (OCR, ASR, image/audio EUs, etc.) remains **not done**.

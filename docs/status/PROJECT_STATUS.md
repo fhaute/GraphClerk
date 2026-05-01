@@ -1,8 +1,8 @@
 # Project Status
 
 ## Summary
-- **Current phase**: Phase 5 — Multimodal ingestion (**in progress**, **partially implemented**, **not fully complete**; Phase 5 audit **`pass_with_notes`** — see `docs/audits/PHASE_5_AUDIT.md`). Phase 6 — Productization / UI: **baseline delivered** with audit **`pass_with_notes`** (`docs/audits/PHASE_6_AUDIT.md`); **not** production-enterprise complete; optional phase-doc items (in-product demo UX, E2E harness, further hardening) remain open — see `docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`.
-- **Prior milestone**: Phase 4 implemented (**pass_with_notes**; structured retrieval only; no `/answer` yet; see limitations below)
+- **Current phase**: Phase 7 — Context Intelligence (**baseline implemented in code**; **Phase 7 audit not done yet** — no `docs/audits/PHASE_7_AUDIT.md`; treat as **audit pending**, not `pass` / `pass_with_notes`). Phase 5 — Multimodal ingestion remains **in progress** / **partial** (audit **`pass_with_notes`** — `docs/audits/PHASE_5_AUDIT.md`). Phase 6 — Productization / UI remains **`pass_with_notes`** (`docs/audits/PHASE_6_AUDIT.md`). **`POST /answer`** remains **deferred**. Phases **8** / **9**: **not_started** (spec-only).
+- **Prior milestones**: Phase 4 File Clerk (**pass_with_notes**); Phase 7 baseline builds on Phases 4–6 without replacing evidence-grounded retrieval.
 
 ## High-level status
 - **Governance baseline**: implemented
@@ -12,7 +12,7 @@
 - **Phase 4 File Clerk + retrieval packets**: implemented (pass_with_notes)
 - **Phase 5 multimodal ingestion**: **in progress** / **partially implemented** (see Phase 5 section below; audit **`pass_with_notes`**)
 - **Phase 6 productization / UI**: **implemented (`pass_with_notes`)** — React/Vite app in `frontend/`; explorers and query playground wired to **live** APIs; audit `docs/audits/PHASE_6_AUDIT.md` records accepted gaps (no production SLA, no frontend test harness, script-only demo loader, optional hardening). **Not** a claim of full phase-doc closure.
-- **Phase 7 — Context Intelligence** (language + actor context): **not_started** — implementation **not** begun; working slice plan in `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md` (see [`docs/phases/graph_clerk_phase_7_context_intelligence.md`](../phases/graph_clerk_phase_7_context_intelligence.md)). **Phase 8** / **Phase 9**: **not_started** (phase docs exist only; no implementation claimed).
+- **Phase 7 — Context Intelligence**: **baseline implemented** (Slices **7A–7H**); **audit pending** (Slice **7K** — no `PHASE_7_AUDIT.md` yet). Working plan: `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`; phase contract: [`docs/phases/graph_clerk_phase_7_context_intelligence.md`](../phases/graph_clerk_phase_7_context_intelligence.md). **Slice 7I** deterministic context boosting: **deferred / cancelled** pending separate approval. **Phase 8** / **Phase 9**: **not_started** (phase docs only; no implementation claimed).
 - **Phase 6 readiness (Slice 6.0):** Per [`docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`](docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md) (**Slice 6.0**), productization/UI work may proceed without Phase 5 being fully complete, provided the documented baseline and UI honesty rules are followed.
 
 ## Implemented (Phase 1)
@@ -43,6 +43,16 @@
 - **PPTX** basic slide text via optional **`pptx`** extra (python-pptx) → `EvidenceUnit`s
 - **Image** / **audio** **validation shells** only (optional **`image`** / Pillow, **`audio`** / mutagen): bytes validated; **no** OCR, captioning, or transcription; **no** `EvidenceUnit`s from image/audio (API returns **503** after validation)
 - **Tests**: File Clerk + graph compatibility for PDF/PPTX multimodal evidence in `POST /retrieve` packets; HTTP error matrix for multimodal `POST /artifacts`
+
+## Implemented (Phase 7 — baseline; audit pending)
+- **`EvidenceEnrichmentService`** no-op shell (candidates unchanged unless a future adapter is wired)
+- Language metadata on **`EvidenceUnitCandidate`** / EU persistence via **`metadata_json`** (contract path)
+- **`LanguageDetectionService`** adapter shell (**NotConfigured** / deterministic test adapters)
+- Enrichment seam in **text** and **multimodal** ingest paths with **no-op** default enrichment
+- **`ArtifactLanguageAggregationService`** pure aggregation helper (artifact **`metadata_json`** persistence / ingestion merge deferred)
+- **`RetrievalPacket.language_context`** from **selected** evidence **`metadata_json`** only (no translation / no detection in packet assembly)
+- Optional **`actor_context`** on **`POST /retrieve`** request schema; **`RetrievalPacket.actor_context`** recording (**`PacketActorContextRecording`**) with explicit **`influence`** — **no** route or evidence boost in this baseline
+- Phase 7 tests under `backend/tests/test_phase7_*.py` (see `docs/status/PHASE_STATUS.md`)
 
 ## Implemented (Phase 6 — baseline; `pass_with_notes`)
 - **Web UI** (`frontend/`): React/Vite/TypeScript; health + optional **`GET /version`** line; tabbed **query playground** (retrieval + readable/raw packet), **artifacts and evidence**, **semantic indexes**, **graph**, **retrieval logs**, **evaluation** — all against **live** backend contracts (no in-app mock corpus)
@@ -82,6 +92,14 @@
 - SemanticIndex creation does not auto-index vectors into Qdrant
 - no indexing job/backfill
 - integration tests are opt-in/gated (`RUN_INTEGRATION_TESTS=1` + env vars)
+
+## Phase 7 limitations (explicit)
+- **Not audited yet**: Phase 7 **`pass` / `pass_with_notes`** requires **`PHASE_7_AUDIT.md`** (Slice **7K**).
+- **Language detection**: adapter shell exists; **no** automatic production detector wired by default on ingest.
+- **Translation / query translation**: **not implemented**.
+- **ActorContext**: recorded on **`RetrievalPacket`** only; **does not** change route selection, evidence ranking, traversal, budget, warnings, confidence, or **`answer_mode`**.
+- **Deterministic context boosting** (**Slice 7I**): **not implemented** — deferred / separate approval.
+- **UI**: Phase 6 playground may show new packet JSON fields where exposed; **no** dedicated Phase 7 context product surfaces claimed.
 
 ## Phase 4 limitations (explicit)
 - query intent + ambiguity handling are deterministic/heuristic (not ML-tuned)

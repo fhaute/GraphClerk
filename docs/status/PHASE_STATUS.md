@@ -66,8 +66,17 @@
   - **Slice K — onboarding / docs**: `README.md`, `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`
 
 ## Phase 7 — Context Intelligence: Language and Actor Context
-- **Status**: **not_started** — planning / slice sequencing only; **no** Phase 7 implementation claimed yet.
-- **Defined in**: [`docs/phases/graph_clerk_phase_7_context_intelligence.md`](../phases/graph_clerk_phase_7_context_intelligence.md)
+- **Status**: **implemented (baseline)** — Slices **7A–7H** shipped in backend + tests; **audit pending** (no **`docs/audits/PHASE_7_AUDIT.md`** yet — **not** `pass` / `pass_with_notes` until Slice **7K** completes). **Slice 7I** (deterministic context boosting): **cancelled / deferred** pending separate approval.
+- **Defined in**: [`docs/phases/graph_clerk_phase_7_context_intelligence.md`](../phases/graph_clerk_phase_7_context_intelligence.md) (**Implementation status (current)** section)
 - **Working plan**: `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`
-- **Next coding slice (when approved)**: **7A** — `EvidenceEnrichmentService` no-op shell (see working plan).
+- **Evidence** (representative):
+  - `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`
+  - `backend/app/services/evidence_enrichment_service.py`
+  - `backend/app/services/language_detection_service.py`
+  - `backend/app/services/artifact_language_aggregation_service.py`
+  - `backend/app/schemas/evidence_unit_candidate.py`
+  - `backend/app/schemas/retrieval_packet.py`
+  - `backend/app/schemas/retrieval.py`
+  - `backend/tests/test_phase7_*.py`
+- **Remaining (honest)**: Phase **7** audit artifact (**7K**); optional future work per phase doc / gaps (**no** boosting baseline).
 
