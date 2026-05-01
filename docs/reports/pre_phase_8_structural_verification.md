@@ -10,6 +10,13 @@
 | **Scope** | Read-only verification: **Sweep 1** — module/class docstrings and comments in `backend/app/**/*.py` and explanatory text in `backend/tests/**/*.py` where relevant; **Sweep 2** — structural honesty across `docs/phases/**/*.md`, `docs/status/**/*.md`, `docs/audits/**/*.md`, `README.md`, and `.cursor/plans/*.plan.md` (referenced for slice **7J** definition). No backend/frontend behavior changes; no Phase 8 implementation. |
 | **Whether files were modified during this report generation** | **Yes** — only this report file was added under `docs/reports/`. No code, status docs, phase docs, or plans were edited for verification fixes. |
 
+## Historical snapshot & remediation (post-sweep)
+
+- This report preserves **pre-fix** verification findings from the baseline captured in **Metadata** (tables and executive summary describe that point in time).
+- **Sweep 1** docstring corrections were applied afterward in commit **`fe68101`** (`docs: correct retrieval docstrings after phase 7`).
+- **Sweep 2** phase/status structural corrections were applied afterward in commit **`1700966`** (`docs: align phase documents before phase 8`).
+- Severity **A** / **B** / **C** rows below are **historical findings** unless **re-confirmed** by a fresh sweep.
+
 ## Executive summary
 
 | Sweep | Severity A | Severity B | Severity C |
