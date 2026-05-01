@@ -66,20 +66,18 @@
   - **Slice K — onboarding / docs**: `README.md`, `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`
 
 ## Phase 7 — Context Intelligence: Language and Actor Context
-- **Status**: **implemented (baseline; `pass_with_notes`)** — Slices **7A–7H** + **7J** (docs/status honesty per working plan) + Slice **7K** audit complete; audit **[`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md)** (**2026-05-02**). **Slice 7I** (deterministic context boosting): **cancelled / deferred** pending separate approval.
+- **Status**: **implemented for the agreed Phase 1–8 completion scope** — full-completion audit **[`docs/audits/PHASE_7_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_7_FULL_COMPLETION_AUDIT.md)** (**`pass`**, **Track C Slice C9**, 2026-05-01). **Completion Program Track C** (**C1–C9**) **complete** for this scope. **Baseline history:** [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) (**`pass_with_notes`**, 2026-05-02) — **unchanged**. **Slice 7I** (deterministic context boosting): **not implemented** — deferred / cancelled pending separate approval.
 - **Defined in**: [`docs/phases/graph_clerk_phase_7_context_intelligence.md`](../phases/graph_clerk_phase_7_context_intelligence.md) (**Implementation status (current)** section)
 - **Working plan**: `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`
 - **Evidence** (representative):
-  - [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md)
-  - `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`
-  - `backend/app/services/evidence_enrichment_service.py`
-  - `backend/app/services/language_detection_service.py`
-  - `backend/app/services/artifact_language_aggregation_service.py`
-  - `backend/app/schemas/evidence_unit_candidate.py`
-  - `backend/app/schemas/retrieval_packet.py`
-  - `backend/app/schemas/retrieval.py`
+  - [`docs/audits/PHASE_7_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_7_FULL_COMPLETION_AUDIT.md) (closure)
+  - [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) (historical baseline)
+  - [`docs/decisions/phase_7_context_intelligence_completion_decisions.md`](../decisions/phase_7_context_intelligence_completion_decisions.md), [`docs/decisions/phase_7_language_detector_dependency_decision.md`](../decisions/phase_7_language_detector_dependency_decision.md)
+  - `backend/app/api/routes/artifacts.py`, `backend/app/services/evidence_enrichment_service.py`, `backend/app/services/language_detection_service.py`, `backend/app/services/artifact_language_aggregation_service.py`, `backend/app/services/retrieval_packet_builder.py`
+  - `backend/app/schemas/evidence_unit_candidate.py`, `backend/app/schemas/retrieval_packet.py`, `backend/app/schemas/retrieval.py`
   - `backend/tests/test_phase7_*.py`
-- **Remaining (honest)**: Optional future work per audit notes / gaps — production detector policy, translation (not baseline), artifact aggregation ingest wiring, Phase 7 UI surfaces, **7I** boosting (**not** in baseline).
+  - `frontend/src/components/ArtifactsExplorer.tsx`, `RetrievalPacketPanel.tsx`, `QueryPlayground.tsx`
+- **Explicitly not in this closure**: translation; **7I** boosting; Phase **9**; OCR/ASR/video completion; **`POST /answer`** — see **`PHASE_7_FULL_COMPLETION_AUDIT.md`** non-goals.
 
 ## Phase 8 — Specialized Model Pipeline
 - **Status**: **baseline implemented** (**`pass_with_notes`**) — slices **8A–8F** code + **8G design-only** + **8H** honesty + **8I** audit artifact. **Not** full specialized-model production (no production inference adapter, no registry, no pipeline merge into ingestion/FileClerk).

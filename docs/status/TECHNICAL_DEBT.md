@@ -32,11 +32,10 @@
 - **Phase 6 audit** completed **`pass_with_notes`** — `docs/audits/PHASE_6_AUDIT.md` (2026-05-01); remaining items called out in audit + this section (not production-ready; script-only demo; optional E2E/hardening).
 - **Onboarding**: README + `docs/api/API_OVERVIEW.md` + `docs/release/RELEASE_CHECKLIST.md` + `docs/evaluation/EVALUATION_METHOD.md` + demo corpus doc (Slice K); release checklist records verification commands/results (Slice L).
 
-## Phase 7 (context intelligence — baseline; audit `pass_with_notes`)
-- **Phase 7 audit**: [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) — **`pass_with_notes`** (2026-05-02); **Completion Program Track C9** (full-completion audit) **not** closed against that baseline yet.
-- **Default remains no detector**: **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER`** defaults to **`not_configured`**; optional **`lingua`** requires explicit env + **`language-detector`** extra (**503** if misconfigured — **no** silent fallback).
-- **No boosting evaluation fixtures**: Slice **7I** deferred — no in-repo deterministic **`actor_context`** boosting harness until separately approved.
-- **Frontend**: Query Playground / panels may lag newest operator copy (e.g. optional Lingua ingest path vs default); **`language_context`** / **`actor_context`** remain inspectable in packet JSON.
+## Phase 7 (context intelligence — agreed Phase 1–8 scope closed)
+- **Full-completion audit**: [`docs/audits/PHASE_7_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_7_FULL_COMPLETION_AUDIT.md) — **`pass`** (**Track C Slice C9**, 2026-05-01). **Baseline history:** [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) — **`pass_with_notes`** (2026-05-02).
+- **Operational caveats (not debt against closure):** **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER`** defaults to **`not_configured`**; **`lingua`** requires explicit env + **`language-detector`** extra (**503** if misconfigured). Lingua **accuracy** is operator/library responsibility.
+- **Deferred product scope**: Slice **7I** boosting — no deterministic **`actor_context`** harness until separately approved; translation — **not implemented**.
 
 ## Phase 8 (specialized model pipeline — baseline; audit `pass_with_notes`)
 - **Slice 8I audit**: delivered — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**, **`pass_with_notes`**).

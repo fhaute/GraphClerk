@@ -118,16 +118,15 @@
 
 ## Phase 7 — Context Intelligence: Language and Actor Context
 - **Defined in**: `docs/phases/graph_clerk_phase_7_context_intelligence.md`
-- **Goal**: explicit **language** and **actor** routing/interpretation metadata (**not** source truth); optional **`RetrievalPacket`** extensions; tests proving baseline context recording does **not** alter evidence text, rankings, or bypass access control from ActorContext in this slice set.
-- **Status**: **baseline delivered + audited (`pass_with_notes`)** — **`docs/audits/PHASE_7_AUDIT.md`** (2026-05-02). Slices **7A–7H** + **7J** + **7K** complete per working plan; **Slice 7I** deterministic context boosting remains **deferred / cancelled** pending separate approval + evaluation fixtures (see working plan § 7I).
-- **Completion program (decisions only):** Phase 7 **full-completion path** recorded pre-implementation — [`docs/decisions/phase_7_context_intelligence_completion_decisions.md`](../decisions/phase_7_context_intelligence_completion_decisions.md) (**Track C Slice C1**; does **not** claim detector, boosting, or translation are implemented).
-- **Language detector dependency (research only):** Track **C Slice C2** — [`docs/decisions/phase_7_language_detector_dependency_decision.md`](../decisions/phase_7_language_detector_dependency_decision.md) (**recommended** optional **`lingua-language-detector`** for **C3**; **not** installed by default).
-- **Delivered so far (implementation truth)**:
-  - `EvidenceEnrichmentService` + optional **`LanguageDetectionService`** injection; **`POST /artifacts`** product wiring when **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER=lingua`** (**Completion Program Track C8**); default **`not_configured`**
-  - **`Artifact.metadata_json.graphclerk_language_aggregation`** after ingest (**Track C5**); **`RetrievalPacket.language_context`**; **`POST /retrieve`** **`actor_context`** recording (**no** boost)
-  - Dedicated Phase 7 language visibility in UI (**Track C7**); tests: `backend/tests/test_phase7_*.py`; audit artifact above (**baseline** **`pass_with_notes`**)
-- **Remaining / deferred** (non-exhaustive; see audit notes):
-  - **Completion Program Track C9** — Phase 7 **full-completion audit** / closure updates; translation / query translation; actor/language **boosting** (**7I**)
+- **Goal**: explicit **language** and **actor** routing/interpretation metadata (**not** source truth); optional **`RetrievalPacket`** extensions; tests proving context recording does **not** alter evidence text, rankings, or bypass access control from **`actor_context`** in agreed scope.
+- **Status**: **implemented for the agreed Phase 1–8 completion scope** — **[`docs/audits/PHASE_7_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_7_FULL_COMPLETION_AUDIT.md)** (**`pass`**, **Track C Slice C9**, 2026-05-01). **Completion Program Track C** (**C1–C9**) **complete** for Phase 7 agreed scope. **Historical baseline:** [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) (**`pass_with_notes`**, 2026-05-02). **Slice 7I** boosting — **not implemented** (deferred / cancelled pending separate approval).
+- **Decisions / research**: [`docs/decisions/phase_7_context_intelligence_completion_decisions.md`](../decisions/phase_7_context_intelligence_completion_decisions.md), [`docs/decisions/phase_7_language_detector_dependency_decision.md`](../decisions/phase_7_language_detector_dependency_decision.md)
+- **Delivered (implementation truth)**:
+  - Optional **Lingua** local detection path + **`POST /artifacts`** wiring (**Track C8**); default **`not_configured`**; fail-loud **503** when **`lingua`** misconfigured
+  - **`EvidenceEnrichmentService`** + **`LanguageDetectionService`**; EU **`metadata_json`** language keys; **`graphclerk_language_aggregation`** (**Track C5**)
+  - **`RetrievalPacket.language_context`** (selected EU metadata); **`actor_context`** recording-only
+  - UI visibility (**Track C7**); `backend/tests/test_phase7_*.py`
+- **Future / explicitly outside agreed closure**: translation; **7I** boosting; Phase **9**; broader phase-doc objectives not in Completion Program — see **`PHASE_7_FULL_COMPLETION_AUDIT.md`** non-goals.
 
 ## Phase 8 — Specialized Model Pipeline
 - **Defined in**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md)

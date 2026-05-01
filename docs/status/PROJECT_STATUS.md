@@ -47,16 +47,17 @@
 - **Image** / **audio** **validation shells** only (optional **`image`** / Pillow, **`audio`** / mutagen): bytes validated; **no** OCR, captioning, or transcription; **no** `EvidenceUnit`s from image/audio (API returns **503** after validation)
 - **Tests**: File Clerk + graph compatibility for PDF/PPTX multimodal evidence in `POST /retrieve` packets; HTTP error matrix for multimodal `POST /artifacts`
 
-## Implemented (Phase 7 — baseline; audit `pass_with_notes`)
+## Implemented (Phase 7 — agreed Phase 1–8 completion scope; full-completion audit **`pass`**)
 - **`EvidenceEnrichmentService`** — **default** identity enrichment; optional injected **`LanguageDetectionService`** (**Track C4**)
 - Language metadata on **`EvidenceUnitCandidate`** / EU persistence via **`metadata_json`** (contract path)
-- **`LanguageDetectionService`** — **`NotConfigured`** default adapter; optional **Lingua** when configured (**Track C3**)
-- Enrichment seam in **text** and **multimodal** ingest paths; **`POST /artifacts`** wires **`build_evidence_enrichment_service`** — **`not_configured`** (default) vs **`lingua`** + optional extra (**Track C8**; **503** if **`lingua`** set but Lingua cannot be constructed)
+- **`LanguageDetectionService`** — **`NotConfigured`** default adapter; optional **Lingua** when **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER=lingua`** + **`language-detector`** extra (**Track C3**)
+- **`POST /artifacts`** wires **`build_evidence_enrichment_service`** — **`not_configured`** (default) vs **`lingua`** (**Track C8**; **503** if **`lingua`** set but Lingua cannot be constructed — **no** silent fallback); same enrichment instance for **text/markdown** and **multimodal** ingest
 - **`ArtifactLanguageAggregationService`** — ingest persists **`graphclerk_language_aggregation`** on **`Artifact.metadata_json`** (**Track C5**)
-- **`RetrievalPacket.language_context`** from **selected** evidence **`metadata_json`** only (no translation / no detection inside packet assembly)
-- Optional **`actor_context`** on **`POST /retrieve`** request schema; **`RetrievalPacket.actor_context`** recording (**`PacketActorContextRecording`**) with explicit **`influence`** — **no** route or evidence boost in this baseline
-- Phase 7 tests under `backend/tests/test_phase7_*.py` (see `docs/status/PHASE_STATUS.md`)
-- **Audit**: [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) — **`pass_with_notes`** (2026-05-02); **Completion Program Track C9** (full-completion audit / closure updates) **not** started; no translation, no boosting (**7I**)
+- **`RetrievalPacket.language_context`** from **selected** evidence **`metadata_json`** only (**not** translation; **not** detection inside packet assembly)
+- Optional **`actor_context`** on **`POST /retrieve`**; **`RetrievalPacket.actor_context`** recording (**`PacketActorContextRecording`**) — **no** route or evidence boost (**7I** not implemented)
+- Phase 7 UI: artifact **Language aggregation** readout + packet **`language_context`** / **`actor_context`** copy (**Track C7** + minor Query Playground honesty)
+- Phase 7 tests: `backend/tests/test_phase7_*.py` (see `docs/status/PHASE_STATUS.md`)
+- **Audits**: **[`docs/audits/PHASE_7_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_7_FULL_COMPLETION_AUDIT.md)** — **`pass`** (**Track C Slice C9**, 2026-05-01) — **closure** for agreed Phase 1–8 scope. **Baseline history:** [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) — **`pass_with_notes`** (2026-05-02); **not** erased.
 
 ## Implemented (Phase 8 — baseline; audit **`pass_with_notes`**)
 - **8A — Model pipeline contracts**: typed roles/tasks/results; role ↔ output matrix — [`backend/app/services/model_pipeline_contracts.py`](../../backend/app/services/model_pipeline_contracts.py)

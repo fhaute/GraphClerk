@@ -35,15 +35,17 @@ This file tracks known missing pieces so they are explicit and not hidden.
 - **Context budget uses simple ranking rules** (fidelity + confidence + dedupe + optional token cap).
 - **LocalRAGConsumer / answer synthesis** is not implemented (packet-only `/answer` remains deferred).
 
-## Known limitations (Phase 7 — context intelligence, baseline)
-- **Phase 7 audit**: **`pass_with_notes`** — [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) (2026-05-02); remaining gaps are **notes**, not a claim of full phase-doc/product closure.
-- **`LanguageDetectionService`**: optional **Lingua** adapter behind `GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER=lingua` (requires **`language-detector`** extra); **default remains `not_configured`**. **Track C8:** when **`lingua`** is set, **`POST /artifacts`** builds the detector service and injects it into **`EvidenceEnrichmentService`** for normal ingestion (**503** if the adapter cannot be constructed — **no** silent fallback). **`Track C4`** semantics still apply for per-candidate failures (**warnings**, no **`text`** / **`source_fidelity`** mutation). **No** “always-on” remote detector.
-- **Artifact language aggregation (Track C5):** after text/multimodal ingest creates `EvidenceUnit`s, **`Artifact.metadata_json["graphclerk_language_aggregation"]`** is written from each EU’s persisted **`metadata_json`** (honest empty/absence when no language keys); unrelated artifact metadata keys are preserved. **Optional** per-EU language metadata still depends on enrichment/detector wiring — default ingest does **not** imply production language IDs on every EU.
-- **`language_context`**: derived from **selected evidence `metadata_json`** only when language fields exist — **not** from silent text guessing or mandatory detection in packet assembly.
-- **Translation / query translation**: **not implemented**; GraphClerk is **not** a translation engine in this baseline.
-- **ActorContext**: accepted on `POST /retrieve` and recorded on `RetrievalPacket` (`PacketActorContextRecording`); **does not** influence route selection, evidence ranking, traversal, budget, warnings, confidence, or **`answer_mode`**.
-- **Deterministic context boosting** (Slice **7I**): **not implemented** — **deferred / cancelled** pending **separate approval**, evaluation fixtures, and audit-ready rules; must prove ActorContext cannot override evidence or bypass source grounding; any future influence must remain explicit on the packet (no hidden retrieval).
-- **Phase 7 full-completion audit (Completion Program Track C9):** **not** delivered in **Track C8**; baseline **`PHASE_7_AUDIT.md`** remains **`pass_with_notes`** history until **C9** updates closure terminology.
+## Phase 7 — context intelligence (Completion Program Track C; agreed Phase 1–8 scope)
+
+- **Full completion (agreed Phase 1–8 scope):** **`pass`** — [`docs/audits/PHASE_7_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_7_FULL_COMPLETION_AUDIT.md) (**Track C Slice C9**, 2026-05-01). Optional **Lingua** path when **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER=lingua`** + **`language-detector`** extra; **default `not_configured`**; **`POST /artifacts`** product wiring; EU **`metadata_json`** language keys; **`graphclerk_language_aggregation`** on artifact; **`language_context`** from **selected** EU metadata; **`actor_context`** recording-only; UI visibility — see audit checklist.
+- **Baseline audit (historical):** [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) — **`pass_with_notes`** (2026-05-02); **not rewritten**; superseded for **closure claims** by **`PHASE_7_FULL_COMPLETION_AUDIT.md`** above.
+
+### Still out of scope / future (not Phase 7 completion defects)
+
+- **Translation / query translation**: **not implemented**.
+- **Deterministic context boosting** (Slice **7I**) / **`actor_context`**-driven retrieval influence: **not implemented** — **deferred / cancelled** pending separate approval + fixtures + audit rules.
+- **Always-on / remote** third-party language detectors: **not** in baseline product boundary (**explicit** env + optional extra only).
+- **Phase-doc “north star”** items not mapped into the Completion Program remain future work.
 
 ## Known limitations (Phase 5 — in progress)
 - **Phase 5 audit** is **`pass_with_notes`** (`docs/audits/PHASE_5_AUDIT.md`): partial implementation is accepted; **full** multimodal completion (OCR, ASR, image/audio EUs, etc.) remains **not done**.
