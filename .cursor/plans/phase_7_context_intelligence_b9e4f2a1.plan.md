@@ -18,8 +18,8 @@ todos:
     content: "Slice 7D — Wire enrichment into text/Markdown + Phase 5 extractor persistence path after 7A–7C stable; preserve source_fidelity; regression tests Phase 2 + Phase 5 paths."
     status: completed
   - id: p7-slice-7e
-    content: "Slice 7E — Artifact language aggregation into metadata_json if scoped; no first-class DB columns unless approved."
-    status: pending
+    content: "Slice 7E — ArtifactLanguageAggregationService implemented (pure merge helper over EU metadata projections); Artifact.metadata_json persistence / ingestion wiring deferred."
+    status: completed
   - id: p7-slice-7f
     content: "Slice 7F — RetrievalPacket.language_context optional section; backward-compatible; query/evidence languages only; no translation."
     status: pending
@@ -157,6 +157,7 @@ Additionally for sequencing and honesty:
 
 - Aggregate detected languages into **Artifact** `metadata_json` if scoped.
 - **No** first-class DB columns unless separately approved.
+- **Implementation (service-only):** `ArtifactLanguageAggregationService` in `backend/app/services/artifact_language_aggregation_service.py` returns a **new** metadata dict with `graphclerk_language_aggregation`; callers persist separately — **not** wired into ingestion in this slice.
 
 #### Slice 7E — Design notes (artifact aggregation, design-only)
 
