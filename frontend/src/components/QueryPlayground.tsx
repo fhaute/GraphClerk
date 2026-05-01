@@ -1,7 +1,11 @@
 import { useCallback, useState, type FormEvent } from "react";
 import { ApiError } from "../api/client";
 import { postRetrieve } from "../api/retrieval";
-import type { RetrievalPacket } from "../types/retrievalPacket";
+import type {
+  ActorContext,
+  RetrievalPacket,
+  RetrieveRequestPayload,
+} from "../types/retrievalPacket";
 import { RetrievalPacketPanel } from "./RetrievalPacketPanel";
 
 type SubmitState =
@@ -19,11 +23,32 @@ function parseBoundedInt(raw: string, fallback: number, min: number, max: number
   return Math.min(max, Math.max(min, n));
 }
 
+/** Empty string → omit. Non-empty must be valid JSON object (not array, not null). */
+function parseActorContextJson(raw: string): { ok: true; value: ActorContext } | { ok: false; message: string } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { ok: true, value: {} };
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed) as unknown;
+  } catch {
+    return { ok: false, message: "Advanced context: invalid JSON — fix the JSON or clear the field before retrieving." };
+  }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return {
+      ok: false,
+      message: "Advanced context: enter a JSON object only (not an array, string, or primitive).",
+    };
+  }
+  return { ok: true, value: parsed as ActorContext };
+}
+
 export function QueryPlayground() {
   const [question, setQuestion] = useState("");
   const [maxEvidenceUnits, setMaxEvidenceUnits] = useState(String(DEFAULT_MAX_EVIDENCE));
   const [maxGraphDepth, setMaxGraphDepth] = useState(String(DEFAULT_MAX_DEPTH));
   const [includeAlternatives, setIncludeAlternatives] = useState(true);
+  const [actorContextJson, setActorContextJson] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>({ kind: "idle" });
 
   const onSubmit = useCallback(
@@ -41,16 +66,27 @@ export function QueryPlayground() {
       const maxEu = parseBoundedInt(maxEvidenceUnits, DEFAULT_MAX_EVIDENCE, 1, 64);
       const maxDepth = parseBoundedInt(maxGraphDepth, DEFAULT_MAX_DEPTH, 0, 5);
 
+      const actorParsed = parseActorContextJson(actorContextJson);
+      if (!actorParsed.ok) {
+        setSubmitState({ kind: "error", message: actorParsed.message });
+        return;
+      }
+
       setSubmitState({ kind: "loading" });
       try {
-        const packet = await postRetrieve({
+        const payload: RetrieveRequestPayload = {
           question: q,
           options: {
             max_evidence_units: maxEu,
             max_graph_depth: maxDepth,
             include_alternatives: includeAlternatives,
           },
-        });
+        };
+        const trimmedActor = actorContextJson.trim();
+        if (trimmedActor) {
+          payload.actor_context = actorParsed.value;
+        }
+        const packet = await postRetrieve(payload);
         setSubmitState({ kind: "ok", packet });
       } catch (err: unknown) {
         if (err instanceof ApiError) {
@@ -65,7 +101,7 @@ export function QueryPlayground() {
         }
       }
     },
-    [question, maxEvidenceUnits, maxGraphDepth, includeAlternatives],
+    [question, maxEvidenceUnits, maxGraphDepth, includeAlternatives, actorContextJson],
   );
 
   return (
@@ -135,6 +171,30 @@ export function QueryPlayground() {
             </label>
           </div>
         </div>
+
+        <details className="rounded border border-neutral-200 bg-neutral-50/80 p-3 text-sm">
+          <summary className="cursor-pointer select-none font-medium text-neutral-700">
+            Advanced context (optional)
+          </summary>
+          <p className="mt-2 text-xs text-neutral-600">
+            Optional JSON object for <code className="font-mono">actor_context</code>. Recorded on the packet only.
+            Does not change retrieval ranking or evidence selection in the current baseline. Leave empty to omit{" "}
+            <code className="font-mono">actor_context</code>.
+          </p>
+          <label htmlFor="gc-actor-context" className="mt-2 block text-xs font-medium text-neutral-600">
+            actor_context (JSON object)
+          </label>
+          <textarea
+            id="gc-actor-context"
+            className="mt-1 w-full rounded border border-neutral-300 bg-white px-3 py-2 font-mono text-xs text-neutral-900 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+            rows={5}
+            value={actorContextJson}
+            onChange={(ev) => setActorContextJson(ev.target.value)}
+            placeholder='{}'
+            spellCheck={false}
+            disabled={submitState.kind === "loading"}
+          />
+        </details>
 
         <button
           type="submit"

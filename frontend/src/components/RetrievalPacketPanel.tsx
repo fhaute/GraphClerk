@@ -30,6 +30,11 @@ function Mono({ children }: { children: ReactNode }) {
   return <span className="font-mono text-xs text-neutral-800">{children}</span>;
 }
 
+function fmtOptionalNumber(n: number | null | undefined): string {
+  if (n == null || Number.isNaN(n)) return "—";
+  return String(n);
+}
+
 export function RetrievalPacketPanel({ packet }: { packet: RetrievalPacket }) {
   const json = JSON.stringify(packet, null, 2);
   const noEvidence = packet.evidence_units.length === 0;
@@ -190,6 +195,166 @@ export function RetrievalPacketPanel({ packet }: { packet: RetrievalPacket }) {
           <dt className="text-neutral-500">max_selected_indexes</dt>
           <dd>{packet.context_budget.max_selected_indexes ?? "(default)"}</dd>
         </dl>
+
+        <SectionTitle>Language context (metadata)</SectionTitle>
+        <p className="mt-2 text-xs text-neutral-600">
+          Language context is metadata aggregated from selected evidence metadata. It is not
+          translation, not personalization, and not evidence by itself.
+        </p>
+        {packet.language_context == null ? (
+          <p className="mt-2 text-sm text-neutral-600">No language context recorded.</p>
+        ) : (
+          <div className="mt-2 space-y-3 text-sm">
+            <dl className="grid gap-1 sm:grid-cols-[minmax(10rem,auto)_1fr]">
+              <dt className="text-neutral-500">source</dt>
+              <dd>
+                <Mono>{packet.language_context.source}</Mono>
+              </dd>
+              <dt className="text-neutral-500">primary_evidence_language</dt>
+              <dd>
+                {packet.language_context.primary_evidence_language ?? "—"}
+              </dd>
+              <dt className="text-neutral-500">distinct_evidence_language_count</dt>
+              <dd>
+                <Mono>{packet.language_context.distinct_evidence_language_count}</Mono>
+              </dd>
+              <dt className="text-neutral-500">evidence_units_without_language_metadata_count</dt>
+              <dd>
+                <Mono>{packet.language_context.evidence_units_without_language_metadata_count}</Mono>
+              </dd>
+              <dt className="text-neutral-500">query_language</dt>
+              <dd>{packet.language_context.query_language ?? "—"}</dd>
+              <dt className="text-neutral-500">version</dt>
+              <dd>
+                <Mono>{packet.language_context.version}</Mono>
+              </dd>
+            </dl>
+            <div>
+              <div className="text-xs font-medium text-neutral-600">Evidence languages</div>
+              {packet.language_context.evidence_languages.length === 0 ? (
+                <p className="mt-1 text-sm text-neutral-600">(none)</p>
+              ) : (
+                <div className="mt-2 overflow-x-auto rounded border border-neutral-200">
+                  <table className="w-full min-w-[28rem] border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-neutral-200 bg-neutral-50 text-left text-neutral-600">
+                        <th className="px-2 py-1.5 font-medium">language</th>
+                        <th className="px-2 py-1.5 font-medium">units</th>
+                        <th className="px-2 py-1.5 font-medium">avg conf.</th>
+                        <th className="px-2 py-1.5 font-medium">min</th>
+                        <th className="px-2 py-1.5 font-medium">max</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {packet.language_context.evidence_languages.map((row, i) => (
+                        <tr
+                          key={`${row.language}-${i}`}
+                          className="border-b border-neutral-100 last:border-0"
+                        >
+                          <td className="px-2 py-1.5 font-mono text-neutral-900">{row.language}</td>
+                          <td className="px-2 py-1.5 font-mono">{row.evidence_unit_count}</td>
+                          <td className="px-2 py-1.5 font-mono">
+                            {fmtOptionalNumber(row.average_confidence ?? undefined)}
+                          </td>
+                          <td className="px-2 py-1.5 font-mono">
+                            {fmtOptionalNumber(row.min_confidence ?? undefined)}
+                          </td>
+                          <td className="px-2 py-1.5 font-mono">
+                            {fmtOptionalNumber(row.max_confidence ?? undefined)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+            {packet.language_context.warnings.length > 0 && (
+              <div>
+                <div className="text-xs font-medium text-neutral-600">Warnings</div>
+                <ul className="mt-1 list-disc space-y-1 border border-amber-200 bg-amber-50 px-5 py-2 text-xs text-amber-950">
+                  {packet.language_context.warnings.map((w, i) => (
+                    <li key={i} className="whitespace-pre-wrap">
+                      {w}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        <SectionTitle>Actor context (recording)</SectionTitle>
+        <p className="mt-2 text-xs text-neutral-600">
+          Actor context is recording-only on the packet and does not influence retrieval in the
+          current baseline (no ranking or evidence selection changes from this field).
+        </p>
+        {packet.actor_context == null ? (
+          <p className="mt-2 text-sm text-neutral-600">No actor context recording.</p>
+        ) : (
+          <div className="mt-2 space-y-3 text-sm">
+            <dl className="grid gap-1 sm:grid-cols-[minmax(10rem,auto)_1fr]">
+              <dt className="text-neutral-500">used</dt>
+              <dd>{packet.actor_context.used ? "yes" : "no"}</dd>
+              <dt className="text-neutral-500">source</dt>
+              <dd>
+                <Mono>{packet.actor_context.source}</Mono>
+              </dd>
+              <dt className="text-neutral-500">influence</dt>
+              <dd>
+                <Mono>{packet.actor_context.influence}</Mono>
+              </dd>
+            </dl>
+            {packet.actor_context.warnings.length > 0 && (
+              <div>
+                <div className="text-xs font-medium text-neutral-600">Warnings</div>
+                <ul className="mt-1 list-disc space-y-1 border border-amber-200 bg-amber-50 px-5 py-2 text-xs text-amber-950">
+                  {packet.actor_context.warnings.map((w, i) => (
+                    <li key={i} className="whitespace-pre-wrap">
+                      {w}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {packet.actor_context.recorded_context == null ? (
+              <p className="text-sm text-neutral-600">(no recorded_context on packet)</p>
+            ) : (
+              <div>
+                <div className="text-xs font-medium text-neutral-600">recorded_context</div>
+                <dl className="mt-1 grid gap-1 rounded border border-neutral-100 bg-neutral-50 p-3 sm:grid-cols-[minmax(10rem,auto)_1fr]">
+                  <dt className="text-neutral-500">actor_id</dt>
+                  <dd className="font-mono text-xs">
+                    {packet.actor_context.recorded_context.actor_id ?? "—"}
+                  </dd>
+                  <dt className="text-neutral-500">actor_type</dt>
+                  <dd className="font-mono text-xs">
+                    {packet.actor_context.recorded_context.actor_type ?? "—"}
+                  </dd>
+                  <dt className="text-neutral-500">role</dt>
+                  <dd>{packet.actor_context.recorded_context.role ?? "—"}</dd>
+                  <dt className="text-neutral-500">expertise_level</dt>
+                  <dd>{packet.actor_context.recorded_context.expertise_level ?? "—"}</dd>
+                  <dt className="text-neutral-500">preferred_language</dt>
+                  <dd className="font-mono text-xs">
+                    {packet.actor_context.recorded_context.preferred_language ?? "—"}
+                  </dd>
+                  <dt className="text-neutral-500">purpose</dt>
+                  <dd className="whitespace-pre-wrap">
+                    {packet.actor_context.recorded_context.purpose ?? "—"}
+                  </dd>
+                  <dt className="text-neutral-500">metadata</dt>
+                  <dd className="whitespace-pre-wrap font-mono text-xs text-neutral-800">
+                    {packet.actor_context.recorded_context.metadata == null ||
+                    Object.keys(packet.actor_context.recorded_context.metadata).length === 0
+                      ? "—"
+                      : JSON.stringify(packet.actor_context.recorded_context.metadata, null, 2)}
+                  </dd>
+                </dl>
+              </div>
+            )}
+          </div>
+        )}
 
         <SectionTitle>Warnings</SectionTitle>
         {packet.warnings.length === 0 ? (
