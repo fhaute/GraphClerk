@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ApiError, getApiBaseUrl } from "./api/client";
 import { fetchHealth } from "./api/health";
+import { fetchVersion } from "./api/version";
 import { ArtifactsExplorer } from "./components/ArtifactsExplorer";
 import { QueryPlayground } from "./components/QueryPlayground";
 import { EvaluationDashboard } from "./components/EvaluationDashboard";
@@ -8,6 +9,7 @@ import { GraphExplorer } from "./components/GraphExplorer";
 import { RetrievalLogsExplorer } from "./components/RetrievalLogsExplorer";
 import { SemanticIndexesExplorer } from "./components/SemanticIndexesExplorer";
 import type { HealthResponse } from "./types/health";
+import type { VersionResponse } from "./types/version";
 
 type LoadState =
   | { kind: "loading" }
@@ -19,6 +21,7 @@ type MainTab = "playground" | "artifacts" | "semantic" | "graph" | "logs" | "eva
 export default function App() {
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [tab, setTab] = useState<MainTab>("playground");
+  const [backendVersion, setBackendVersion] = useState<VersionResponse | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,6 +42,20 @@ export default function App() {
         } else {
           setState({ kind: "error", message: String(e) });
         }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchVersion()
+      .then((v) => {
+        if (!cancelled) setBackendVersion(v);
+      })
+      .catch(() => {
+        if (!cancelled) setBackendVersion(null);
       });
     return () => {
       cancelled = true;
@@ -152,6 +169,19 @@ export default function App() {
         {tab === "logs" && <RetrievalLogsExplorer />}
         {tab === "eval" && <EvaluationDashboard />}
       </div>
+
+      {backendVersion ? (
+        <p
+          className="mt-12 border-t border-neutral-100 pt-4 text-xs text-neutral-500"
+          aria-live="polite"
+        >
+          Backend{" "}
+          <span className="font-mono">
+            {backendVersion.name} {backendVersion.version}
+          </span>{" "}
+          · <span className="font-mono">{backendVersion.phase}</span>
+        </p>
+      ) : null}
     </div>
   );
 }
