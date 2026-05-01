@@ -1,9 +1,12 @@
 """Evidence enrichment pipeline for ingestion candidates (Phase 7).
 
 Slice 7A introduces ``EvidenceEnrichmentService`` as a **no-op shell**: callers
-receive the same candidate instances in order without mutation. Future slices may
-attach routing metadata (for example language hints on ``metadata_json``) while
-preserving evidence text and ``source_fidelity`` invariants.
+receive the same candidate instances in order without mutation. Slice 7D wires
+this service into ``TextIngestionService`` and ``MultimodalIngestionService``
+immediately before ``EvidenceUnitService.create_from_candidates`` (default:
+no-op). Future slices may attach routing metadata (for example language hints on
+``metadata_json``) while preserving evidence text and ``source_fidelity``
+invariants.
 
 Ownership:
     Extractors produce candidates; enrichment annotates; persistence layers own
@@ -20,7 +23,14 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TypeVar
 
+from app.services.errors import GraphClerkError
+
 T = TypeVar("T")
+
+
+class EvidenceEnrichmentEmptiedCandidatesError(GraphClerkError):
+    """Raised when enrichment drops every candidate while the input list was non-empty."""
+
 
 
 class EvidenceEnrichmentService:

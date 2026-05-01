@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: p7-slice-7d
     content: "Slice 7D — Wire enrichment into text/Markdown + Phase 5 extractor persistence path after 7A–7C stable; preserve source_fidelity; regression tests Phase 2 + Phase 5 paths."
-    status: pending
+    status: completed
   - id: p7-slice-7e
     content: "Slice 7E — Artifact language aggregation into metadata_json if scoped; no first-class DB columns unless approved."
     status: pending

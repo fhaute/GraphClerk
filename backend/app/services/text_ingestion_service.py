@@ -9,8 +9,12 @@ from app.core.config import Settings
 from app.models.artifact import Artifact
 from app.schemas.evidence_unit_candidate import EvidenceUnitCandidate
 from app.services.artifact_service import ArtifactService
-from app.services.evidence_unit_service import EvidenceUnitService
 from app.services.errors import IngestionParseError
+from app.services.evidence_enrichment_service import (
+    EvidenceEnrichmentEmptiedCandidatesError,
+    EvidenceEnrichmentService,
+)
+from app.services.evidence_unit_service import EvidenceUnitService
 from app.services.parsers.markdown_parser import MarkdownParser
 from app.services.parsers.plain_text_parser import PlainTextParser
 from app.services.raw_source_store import RawSourceStore
@@ -23,10 +27,20 @@ class IngestResult:
 
 
 class TextIngestionService:
-    """Orchestrate Phase 2 ingestion for text and Markdown artifacts."""
+    """Orchestrate Phase 2 ingestion for text and Markdown artifacts.
 
-    def __init__(self, *, settings: Settings) -> None:
+    Phase 7: optional ``enrichment`` (defaults to no-op ``EvidenceEnrichmentService``)
+    runs on parsed candidates immediately before ``EvidenceUnitService.create_from_candidates``.
+    """
+
+    def __init__(
+        self,
+        *,
+        settings: Settings,
+        enrichment: EvidenceEnrichmentService | None = None,
+    ) -> None:
         self._settings = settings
+        self._enrichment = enrichment if enrichment is not None else EvidenceEnrichmentService()
 
     def ingest(
         self,
@@ -70,10 +84,13 @@ class TextIngestionService:
                     raise IngestionParseError("Artifact content is not valid UTF-8 text.") from e
 
                 candidates = self._parse(artifact_type=artifact_type, text=text)
-                evidence_service.create_from_candidates(artifact_id=artifact.id, candidates=candidates)
+                enriched = self._enrichment.enrich(candidates)
+                if candidates and not enriched:
+                    raise EvidenceEnrichmentEmptiedCandidatesError("enrichment_removed_all_candidates")
+                evidence_service.create_from_candidates(artifact_id=artifact.id, candidates=enriched)
 
             # committed
-            return IngestResult(artifact=artifact, evidence_unit_count=len(candidates))
+            return IngestResult(artifact=artifact, evidence_unit_count=len(enriched))
         except Exception:
             # best-effort cleanup if disk write happened but DB failed
             if disk_path_str:

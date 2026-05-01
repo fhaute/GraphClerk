@@ -7,6 +7,10 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings
 from app.services.artifact_service import ArtifactService
 from app.services.errors import ExtractionReturnedNoEvidenceError, UnsupportedArtifactTypeError
+from app.services.evidence_enrichment_service import (
+    EvidenceEnrichmentEmptiedCandidatesError,
+    EvidenceEnrichmentService,
+)
 from app.services.evidence_unit_service import EvidenceUnitService
 from app.services.extraction import ExtractorRegistry
 from app.services.ingestion.artifact_type_resolver import (
@@ -24,11 +28,21 @@ class MultimodalIngestionService:
 
     Text and Markdown remain on ``TextIngestionService``; this service handles
     only registered multimodal extractors. Does not implement extraction itself.
+
+    Phase 7: optional ``enrichment`` (defaults to no-op ``EvidenceEnrichmentService``)
+    runs on extractor output immediately before ``EvidenceUnitService.create_from_candidates``.
     """
 
-    def __init__(self, *, settings: Settings, registry: ExtractorRegistry) -> None:
+    def __init__(
+        self,
+        *,
+        settings: Settings,
+        registry: ExtractorRegistry,
+        enrichment: EvidenceEnrichmentService | None = None,
+    ) -> None:
         self._settings = settings
         self._registry = registry
+        self._enrichment = enrichment if enrichment is not None else EvidenceEnrichmentService()
 
     def ingest(
         self,
@@ -69,12 +83,16 @@ class MultimodalIngestionService:
                 if not candidates:
                     raise ExtractionReturnedNoEvidenceError()
 
+                enriched = self._enrichment.enrich(candidates)
+                if candidates and not enriched:
+                    raise EvidenceEnrichmentEmptiedCandidatesError("enrichment_removed_all_candidates")
+
                 evidence_service.create_from_candidates(
                     artifact_id=artifact.id,
-                    candidates=candidates,
+                    candidates=enriched,
                 )
 
-            return IngestResult(artifact=artifact, evidence_unit_count=len(candidates))
+            return IngestResult(artifact=artifact, evidence_unit_count=len(enriched))
         except Exception:
             if disk_path_str:
                 from pathlib import Path
