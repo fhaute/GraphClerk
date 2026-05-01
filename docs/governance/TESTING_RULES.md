@@ -39,6 +39,21 @@ For **integration tests** that need the API’s semantic search path to embed qu
 
 **Clearing settings cache:** tests that toggle these variables must call `app.core.config.get_settings.cache_clear()` before `get_settings()` / `create_app()` so the process does not reuse a stale `lru_cache` entry.
 
+## Phase 7 — optional language detection adapter (Track C Slice C3)
+
+**Optional extra:** install the backend optional dependency group **`language-detector`** (declares [`lingua-language-detector`](https://pypi.org/project/lingua-language-detector/) **≥ 2.2.0**). It is **not** part of the default GraphClerk backend install.
+
+| Variable | Values | Default |
+|----------|--------|---------|
+| `GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER` | `not_configured` \| `lingua` | **`not_configured`** |
+
+- **No silent fallback:** unknown values fail at settings parse time. If `lingua` is selected but the extra is not installed, constructing the Lingua adapter raises **`LanguageDetectionUnavailableError`** with message **`language_detection_lingua_extra_not_installed`** (fail loud; no downgrade to a fake detector).
+- **Default CI / `python -m pytest`:** the full suite passes **without** the extra. Tests use injected fake detectors or stubs; **`test_lingua_smoke_if_extra_installed`** skips unless `import lingua` succeeds.
+- **Not wired to ingestion:** automatic language metadata on ingest is **Track C4** — Slice C3 only adds settings + `LinguaLanguageDetectionAdapter` + `build_language_detection_adapter` / `build_language_detection_service`.
+- **Not translation** and **not** `actor_context` boosting; retrieval packets unchanged.
+
+**Clearing settings cache:** same as semantic search — call `get_settings.cache_clear()` when tests change `GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER`.
+
 ## Track B Slice B5 — gated full-stack indexed retrieve (no factory / FileClerk monkeypatch)
 
 [`backend/tests/test_phase1_8_track_b_full_stack_retrieve.py`](../../backend/tests/test_phase1_8_track_b_full_stack_retrieve.py) exercises **HTTP ingest → evidence → graph link → semantic index → in-process `SemanticIndexVectorIndexingService` → `POST /retrieve`** with **`create_app()`** and **no** monkeypatch of `FileClerkService` or `build_semantic_index_search_service`. It **skips** unless **all** of the following are satisfied (read from the real process environment; the test does not inject `GRAPHCLERK_*` for the gate):

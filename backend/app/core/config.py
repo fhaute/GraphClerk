@@ -8,6 +8,7 @@ from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SemanticSearchEmbeddingAdapter = Literal["not_configured", "deterministic_fake"]
+LanguageDetectionAdapterName = Literal["not_configured", "lingua"]
 
 
 class Settings(BaseSettings):
@@ -35,6 +36,11 @@ class Settings(BaseSettings):
         alias="GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER",
     )
 
+    language_detection_adapter: LanguageDetectionAdapterName = Field(
+        default="not_configured",
+        alias="GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER",
+    )
+
     @model_validator(mode="after")
     def _validate_semantic_search_embedding_adapter(self) -> Settings:
         """``deterministic_fake`` is integration-test-only and must never load in production."""
@@ -42,7 +48,10 @@ class Settings(BaseSettings):
         if self.semantic_search_embedding_adapter != "deterministic_fake":
             return self
         if self.app_env == "prod":
-            msg = "GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake is not allowed when APP_ENV=prod"
+            msg = (
+                "GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake is not allowed "
+                "when APP_ENV=prod"
+            )
             raise ValueError(msg)
         if os.environ.get("RUN_INTEGRATION_TESTS") != "1":
             msg = (

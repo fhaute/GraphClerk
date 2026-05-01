@@ -29,6 +29,9 @@ image = [
 audio = [
   "mutagen>=1.47",
 ]
+language-detector = [
+  "lingua-language-detector>=2.2.0",
+]
 
 [dependency-groups]
 dev = [

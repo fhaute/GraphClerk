@@ -262,7 +262,15 @@ Sources are cited inline in [Candidate notes](#candidate-notes) and summarized i
 
 ## Final recommendation
 
-Adopt **`lingua-language-detector`** as the **first** production-capable, **optional**, **locally executed** language detector for Phase 7 completion, keeping **`NotConfigured`** as the **default** and **fail-closed** configuration semantics. Proceed to **C3** implementation planning with this dependency; keep **`cld3-py`** documented as the **first alternate** if wheel size or ops constraints dominate.
+Adopt **`lingua-language-detector`** as the **first** production-capable, **optional**, **locally executed** language detector for Phase 7 completion, keeping **`NotConfigured`** as the **default** and **fail-closed** configuration semantics. Proceed to **C3** implementation with this dependency; keep **`cld3-py`** documented as the **first alternate** if wheel size or ops constraints dominate.
+
+---
+
+## Addendum — Track C Slice C3 (implementation)
+
+- **Shipped:** [`backend/pyproject.toml`](../../backend/pyproject.toml) optional extra **`language-detector`** (`lingua-language-detector>=2.2.0`); [`config.py`](../../backend/app/core/config.py) field **`language_detection_adapter`** / env **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER`** (`not_configured` \| `lingua`, default **`not_configured`**); **`LinguaLanguageDetectionAdapter`**, **`build_language_detection_adapter`**, **`build_language_detection_service`** in [`language_detection_service.py`](../../backend/app/services/language_detection_service.py); tests and [`TESTING_RULES.md`](../governance/TESTING_RULES.md).
+- **Default runtime unchanged** when the env var is absent or set to **`not_configured`**.
+- **Not shipped here:** ingestion / enrichment wiring (**Track C4**); artifact aggregation persistence (**C5**).
 
 ---
 

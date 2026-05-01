@@ -37,7 +37,7 @@ This file tracks known missing pieces so they are explicit and not hidden.
 
 ## Known limitations (Phase 7 — context intelligence, baseline)
 - **Phase 7 audit**: **`pass_with_notes`** — [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) (2026-05-02); remaining gaps are **notes**, not a claim of full phase-doc/product closure.
-- **`LanguageDetectionService`**: adapter shell exists (**NotConfigured** / test adapters); **not** wired as automatic production language detection on ingest **by default**; **no** “always-on” remote detector claimed.
+- **`LanguageDetectionService`**: adapter shell plus optional **Lingua** adapter behind `GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER=lingua` (requires **`language-detector`** extra); **default remains `not_configured`** — **not** wired as automatic language detection on ingest until **Track C4**; **no** “always-on” remote detector.
 - **`language_context`**: derived from **selected evidence `metadata_json`** only when language fields exist — **not** from silent text guessing or mandatory detection in packet assembly.
 - **Translation / query translation**: **not implemented**; GraphClerk is **not** a translation engine in this baseline.
 - **ActorContext**: accepted on `POST /retrieve` and recorded on `RetrievalPacket` (`PacketActorContextRecording`); **does not** influence route selection, evidence ranking, traversal, budget, warnings, confidence, or **`answer_mode`**.

@@ -7,6 +7,10 @@ Slice 7C does **not** wire detection into ingestion or retrieval; it only define
 the boundary where a future implementation can plug in (still without remote
 services or third-party language-ID libraries in-repo unless separately scoped).
 
+Track C Slice C3: optional **Lingua** adapter behind
+``GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER=lingua`` (install ``language-detector`` extra).
+Default ``not_configured`` — no detector until ``lingua``. Ingestion = **Track C4**.
+
 Error semantics:
     ``LanguageDetectionUnavailableError`` — adapter explicitly not configured.
     ``LanguageDetectionError`` — invalid adapter result after ``detect`` returns.
@@ -16,9 +20,12 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
+from app.core.config import Settings
 from app.services.errors import LanguageDetectionError, LanguageDetectionUnavailableError
+
+LINGUA_DETECTION_METHOD = "lingua_language_detector"
 
 
 @dataclass(frozen=True)
@@ -50,7 +57,8 @@ def _validate_detection_result(result: LanguageDetectionResult) -> None:
 
     if not isinstance(result.method, str) or result.method.strip() == "":
         raise LanguageDetectionError("language_detection_invalid_method")
-    if not isinstance(result.warnings, list) or any(not isinstance(w, str) for w in result.warnings):
+    warns = result.warnings
+    if not isinstance(warns, list) or any(not isinstance(w, str) for w in warns):
         raise LanguageDetectionError("language_detection_invalid_warnings")
     if result.language is not None and not isinstance(result.language, str):
         raise LanguageDetectionError("language_detection_invalid_language_type")
@@ -113,6 +121,137 @@ class DeterministicTestLanguageDetectionAdapter:
         )
 
 
+def _import_lingua_and_build_detector() -> Any:
+    """Import Lingua and build a default detector (heavy). Used only for ``lingua`` adapter."""
+
+    try:
+        from lingua import LanguageDetectorBuilder
+    except ImportError as e:
+        raise LanguageDetectionUnavailableError(
+            "language_detection_lingua_extra_not_installed",
+        ) from e
+    return LanguageDetectorBuilder.from_all_languages().build()
+
+
+def _language_to_language_code(detected: Any) -> str | None:
+    """Map Lingua ``Language`` to a lowercase code for ``language``."""
+
+    iso1 = getattr(detected, "iso_code_639_1", None)
+    name = getattr(iso1, "name", None) if iso1 is not None else None
+    if isinstance(name, str) and name.strip():
+        return name.strip().lower()
+    iso3 = getattr(detected, "iso_code_639_3", None)
+    name3 = getattr(iso3, "name", None) if iso3 is not None else None
+    if isinstance(name3, str) and name3.strip():
+        return name3.strip().lower()
+    return None
+
+
+class LinguaLanguageDetectionAdapter:
+    """Lingua-backed local language detection (optional ``language-detector`` extra).
+
+    Does not mutate input text. No network I/O. Constructing this class imports
+    and builds a ``LanguageDetector`` unless ``detector=`` is injected (tests).
+    """
+
+    __slots__ = ("_detector", "_low_confidence_threshold", "_short_text_max_chars")
+
+    def __init__(
+        self,
+        *,
+        detector: Any | None = None,
+        short_text_max_chars: int = 3,
+        low_confidence_threshold: float = 0.5,
+    ) -> None:
+        self._short_text_max_chars = short_text_max_chars
+        self._low_confidence_threshold = low_confidence_threshold
+        self._detector = detector if detector is not None else _import_lingua_and_build_detector()
+
+    def detect(self, text: str) -> LanguageDetectionResult:
+        stripped = text.strip()
+        method = LINGUA_DETECTION_METHOD
+        if not stripped:
+            return LanguageDetectionResult(
+                language=None,
+                confidence=0.0,
+                method=method,
+                warnings=["language_text_empty"],
+            )
+        if len(stripped) <= self._short_text_max_chars:
+            return LanguageDetectionResult(
+                language=None,
+                confidence=0.15,
+                method=method,
+                warnings=["language_text_too_short"],
+            )
+        sample = stripped
+        try:
+            detected = self._detector.detect_language_of(sample)
+        except Exception as e:  # noqa: BLE001 — surface as explicit detection failure
+            raise LanguageDetectionError("language_detection_lingua_runtime_error") from e
+
+        if detected is None:
+            return LanguageDetectionResult(
+                language=None,
+                confidence=0.0,
+                method=method,
+                warnings=[],
+            )
+
+        try:
+            confidences = list(self._detector.compute_language_confidence_values(sample))
+        except Exception as e:  # noqa: BLE001
+            raise LanguageDetectionError("language_detection_lingua_runtime_error") from e
+
+        top_conf: float | None = None
+        for entry in confidences:
+            if getattr(entry, "language", None) == detected:
+                val = getattr(entry, "value", None)
+                if isinstance(val, (int, float)) and not isinstance(val, bool):
+                    xf = float(val)
+                    if math.isfinite(xf):
+                        top_conf = xf
+                break
+        if top_conf is None and confidences:
+            val0 = getattr(confidences[0], "value", None)
+            if isinstance(val0, (int, float)) and not isinstance(val0, bool):
+                xf0 = float(val0)
+                if math.isfinite(xf0):
+                    top_conf = xf0
+
+        if top_conf is not None:
+            top_conf = max(0.0, min(1.0, top_conf))
+
+        warnings: list[str] = []
+        if top_conf is not None and top_conf < self._low_confidence_threshold:
+            warnings.append("language_detector_low_confidence")
+
+        lang_code = _language_to_language_code(detected)
+
+        return LanguageDetectionResult(
+            language=lang_code,
+            confidence=top_conf,
+            method=method,
+            warnings=warnings,
+        )
+
+
+def build_language_detection_adapter(settings: Settings) -> LanguageDetectionAdapter:
+    """Construct the configured ``LanguageDetectionAdapter`` (no global singleton)."""
+
+    if settings.language_detection_adapter == "not_configured":
+        return NotConfiguredLanguageDetectionAdapter()
+    if settings.language_detection_adapter == "lingua":
+        return LinguaLanguageDetectionAdapter()
+    raise AssertionError("unexpected language_detection_adapter value")
+
+
+def build_language_detection_service(settings: Settings) -> LanguageDetectionService:
+    """Convenience: ``LanguageDetectionService`` using ``build_language_detection_adapter``."""
+
+    return LanguageDetectionService(adapter=build_language_detection_adapter(settings))
+
+
 class LanguageDetectionService:
     """Facade over ``LanguageDetectionAdapter`` with result validation."""
 
@@ -123,8 +262,8 @@ class LanguageDetectionService:
         """Run detection without mutating ``text``.
 
         Raises:
-            LanguageDetectionUnavailableError: When the adapter is not configured.
-            LanguageDetectionError: When ``text`` is not a str or the adapter returns an invalid result.
+            LanguageDetectionUnavailableError: Adapter not configured.
+            LanguageDetectionError: Bad ``text`` type or invalid adapter output.
         """
 
         if not isinstance(text, str):

@@ -3,18 +3,22 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from app.core import config as config_module
 from app.core.config import Settings
 
 
 def test_config_loads_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     """Settings should parse from environment variables."""
 
+    config_module.get_settings.cache_clear()
     monkeypatch.setenv("APP_NAME", "GraphClerk")
     monkeypatch.setenv("APP_ENV", "test")
     monkeypatch.setenv("LOG_LEVEL", "INFO")
     monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://user:pass@localhost:5432/db")
     monkeypatch.setenv("QDRANT_URL", "http://localhost:6333")
     monkeypatch.setenv("QDRANT_API_KEY", "optional")
+    monkeypatch.delenv("GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER", raising=False)
+    monkeypatch.delenv("GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER", raising=False)
 
     settings = Settings()  # do not use cached get_settings in tests
 
@@ -25,6 +29,7 @@ def test_config_loads_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.qdrant_url == "http://localhost:6333"
     assert settings.qdrant_api_key == "optional"
     assert settings.semantic_search_embedding_adapter == "not_configured"
+    assert settings.language_detection_adapter == "not_configured"
 
 
 def _minimal_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -34,9 +39,12 @@ def _minimal_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://user:pass@localhost:5432/db")
     monkeypatch.setenv("QDRANT_URL", "http://localhost:6333")
     monkeypatch.setenv("QDRANT_API_KEY", "optional")
+    config_module.get_settings.cache_clear()
 
 
-def test_semantic_search_deterministic_fake_rejected_in_prod(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_semantic_search_deterministic_fake_rejected_in_prod(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _minimal_settings_env(monkeypatch)
     monkeypatch.setenv("APP_ENV", "prod")
     monkeypatch.setenv("RUN_INTEGRATION_TESTS", "1")
@@ -47,7 +55,9 @@ def test_semantic_search_deterministic_fake_rejected_in_prod(monkeypatch: pytest
     assert "prod" in str(excinfo.value).lower()
 
 
-def test_semantic_search_deterministic_fake_requires_run_integration_tests(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_semantic_search_deterministic_fake_requires_run_integration_tests(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _minimal_settings_env(monkeypatch)
     monkeypatch.setenv("GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER", "deterministic_fake")
     monkeypatch.delenv("RUN_INTEGRATION_TESTS", raising=False)
@@ -62,7 +72,9 @@ def test_semantic_search_deterministic_fake_requires_run_integration_tests(monke
     assert "run_integration_tests" in str(excinfo.value).lower()
 
 
-def test_semantic_search_deterministic_fake_allowed_for_integration_test_env(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_semantic_search_deterministic_fake_allowed_for_integration_test_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _minimal_settings_env(monkeypatch)
     monkeypatch.setenv("RUN_INTEGRATION_TESTS", "1")
     monkeypatch.setenv("GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER", "deterministic_fake")
@@ -71,9 +83,37 @@ def test_semantic_search_deterministic_fake_allowed_for_integration_test_env(mon
     assert settings.semantic_search_embedding_adapter == "deterministic_fake"
 
 
-def test_semantic_search_embedding_adapter_invalid_value_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_semantic_search_embedding_adapter_invalid_value_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _minimal_settings_env(monkeypatch)
     monkeypatch.setenv("GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER", "bogus")
+
+    with pytest.raises(ValidationError):
+        Settings()
+
+
+def test_language_detection_adapter_default_not_configured(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+    monkeypatch.delenv("GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER", raising=False)
+
+    settings = Settings()
+    assert settings.language_detection_adapter == "not_configured"
+
+
+def test_language_detection_adapter_lingua_allowed_in_test_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _minimal_settings_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER", "lingua")
+
+    settings = Settings()
+    assert settings.language_detection_adapter == "lingua"
+
+
+def test_language_detection_adapter_invalid_value_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER", "cld3")
 
     with pytest.raises(ValidationError):
         Settings()
