@@ -214,22 +214,22 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 | Attribute | Detail |
 |-----------|--------|
 | **Goal** | Single **“GraphClerk in your pipeline / RAG stack”** story: ingest → graph → semantic index → **index vectors** → retrieve → logs → context fields → optional model metadata → optional `/answer`; **Docker** quickstart pointers; **production** considerations; **curl** and **Python** examples; **architecture** diagram; **failure-mode** guide. |
-| **Current state** | README, `docs/api/API_OVERVIEW.md`, demo corpus doc, release checklist — plus **`docs/onboarding/`**: entry (**F1**), pipeline guide (**F1**), minimal feed (**F2**), architecture (**F3**), **troubleshooting + Qdrant/HTTP runbooks (F4)** ([`README.md`](../onboarding/README.md), [`GRAPHCLERK_PIPELINE_GUIDE.md`](../onboarding/GRAPHCLERK_PIPELINE_GUIDE.md), [`FEED_CONTENT_MINIMAL_GUIDE.md`](../onboarding/FEED_CONTENT_MINIMAL_GUIDE.md), [`GRAPHCLERK_ARCHITECTURE.md`](../onboarding/GRAPHCLERK_ARCHITECTURE.md), [`TROUBLESHOOTING_AND_OPERATIONS.md`](../onboarding/TROUBLESHOOTING_AND_OPERATIONS.md)). **Onboarding is not complete** — **F5** cookbook remains. |
-| **Missing work** | **F5** curl/Python cookbook; keep docs aligned with shipped behavior per Status Agent. |
+| **Current state** | README, `docs/api/API_OVERVIEW.md`, demo corpus doc, release checklist — plus **`docs/onboarding/`** **Track F (F1–F5)** complete: entry, pipeline guide, minimal feed, architecture, troubleshooting, **examples cookbook** ([`README.md`](../onboarding/README.md), [`GRAPHCLERK_PIPELINE_GUIDE.md`](../onboarding/GRAPHCLERK_PIPELINE_GUIDE.md), [`FEED_CONTENT_MINIMAL_GUIDE.md`](../onboarding/FEED_CONTENT_MINIMAL_GUIDE.md), [`GRAPHCLERK_ARCHITECTURE.md`](../onboarding/GRAPHCLERK_ARCHITECTURE.md), [`TROUBLESHOOTING_AND_OPERATIONS.md`](../onboarding/TROUBLESHOOTING_AND_OPERATIONS.md), [`EXAMPLES_COOKBOOK.md`](../onboarding/EXAMPLES_COOKBOOK.md)). **Onboarding documentation baseline** for Phases **1–8** is delivered; **production deployment** deep-dives, **OCR/ASR/video** operator guides, and **`/answer`** docs remain **future** program/status work — not claimed here. |
+| **Missing work** | Keep onboarding **honest** vs code (Status Agent drift checks); optional future slices **outside** F1–F5 (e.g. production runbook, multipart cookbook) if later approved. |
 | **Required design decisions** | Doc location naming; how much lives in README vs dedicated guides; diagram tooling (Mermaid vs static). |
-| **Proposed slices** | **F1** (**implemented**) Skeleton + TOC · **F2** (**implemented**) Minimal feed guide · **F3** (**implemented**) Architecture + Mermaid · **F4** (**implemented**) Failure modes + Qdrant ops · **F5** Examples cookbook |
+| **Proposed slices** | **F1–F5** (**implemented**) — skeleton, minimal feed, architecture + Mermaid, troubleshooting + Qdrant ops, examples cookbook |
 | **Likely files** | New files under `docs/onboarding/` or `docs/integration/` only (docs). |
 | **Forbidden files** | Do not overclaim features still partial. |
 | **Tests required** | None for prose; optional CI link-check later. |
 | **Docs required** | This track *is* docs. |
 | **Risks** | Docs drift from code; mitigate by Status Agent updates per slice. |
 | **Dependencies** | Parallel with **B1** for accurate indexing story. |
-| **Acceptance criteria** | New contributor can run golden path + understand failures without reading source. |
+| **Acceptance criteria** | New contributor can run golden path + understand failures without reading source. **F1–F5** onboarding doc set satisfies the **Track F** documentation baseline for Phases **1–8** (not production SRE completeness). |
 
 ### Track F — Slice F1 (implemented): onboarding skeleton
 
-- **Entry:** [`docs/onboarding/README.md`](../onboarding/README.md) — what GraphClerk is / is not, start-here flow, links to API overview, demo corpus, release checklist, testing rules, completion program; **Phase 9 not started**; **F5** listed as next slice.
-- **Pipeline guide:** [`docs/onboarding/GRAPHCLERK_PIPELINE_GUIDE.md`](../onboarding/GRAPHCLERK_PIPELINE_GUIDE.md) — audience, at-a-glance flow, core concepts (**Artifact** … **`graphclerk_model_pipeline`**), explicit non-features, **10-step** baseline flow, minimal vs rich, manual backfill pointers + Qdrant dimension doc links, UI map, failure modes (short table + link to **F4**), integration patterns, security/honesty rules; **architecture** in **F3**; **troubleshooting** in **F4**; **F5** cookbook placeholder.
+- **Entry:** [`docs/onboarding/README.md`](../onboarding/README.md) — what GraphClerk is / is not, start-here flow, links to API overview, demo corpus, release checklist, testing rules, completion program; **Phase 9 not started**; **Track F F1–F5** complete.
+- **Pipeline guide:** [`docs/onboarding/GRAPHCLERK_PIPELINE_GUIDE.md`](../onboarding/GRAPHCLERK_PIPELINE_GUIDE.md) — audience, at-a-glance flow, core concepts (**Artifact** … **`graphclerk_model_pipeline`**), explicit non-features, **10-step** baseline flow, minimal vs rich, manual backfill pointers + Qdrant dimension doc links, UI map, failure modes (short table + link to **F4**), integration patterns, security/honesty rules; links to **F3** architecture, **F4** troubleshooting, **F5** examples cookbook.
 - **Discovery:** root [`README.md`](../../README.md) points integrators at `docs/onboarding/README.md` (short pointer).
 
 ### Track F — Slice F2 (implemented): minimal feed-content guide
@@ -245,6 +245,14 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 ### Track F — Slice F4 (implemented): troubleshooting and operations
 
 - **Doc:** [`docs/onboarding/TROUBLESHOOTING_AND_OPERATIONS.md`](../onboarding/TROUBLESHOOTING_AND_OPERATIONS.md) — quick triage table; **expected vs bug**; environment checklist (Docker ports, env vars, when to unset `GRAPHCLERK_*`); **Qdrant** vs Postgres; dev-only collection reset guidance (**no** casual production deletes); semantic index lifecycle; backfill failures; File Clerk / retrieve symptoms; **retrieval log** expectations; **HTTP** guide (400/404/409/422/500/502/503 + frontend connectivity); modality honesty; **`deterministic_fake`** guards; **runbooks**; **what not to do**; links. **Does not** claim auto-index, **`/answer`**, OCR/ASR/video, production inference, Phase **9**, or guaranteed logs.
+
+### Track F — Slice F5 (implemented): examples cookbook
+
+- **Doc:** [`docs/onboarding/EXAMPLES_COOKBOOK.md`](../onboarding/EXAMPLES_COOKBOOK.md) — **PowerShell** (`Invoke-RestMethod`, `ConvertTo-Json` **-Depth** for `entry_node_ids`), **curl**, **Python** `urllib.request` + optional `requests` note; Example set **D** backfill CLI; **E** retrieve + logs; **VERIFIED LOCALLY** for **`GET /health`** and **`GET /version`** only (`http://localhost:8010` in slice); all other HTTP paths **TEMPLATE — NOT EXECUTED IN THIS SLICE**; minimal vs rich table; cleanup links; no invented request bodies (schemas: `ArtifactCreateInlineRequest`, graph create/link, `SemanticIndexCreateRequest`, `RetrieveRequest`).
+
+### Track F — documentation baseline (F1–F5)
+
+For Phases **1–8** program purposes, **Track F** onboarding deliverables (**F1** skeleton, **F2** minimal feed, **F3** architecture, **F4** troubleshooting, **F5** examples cookbook) are **implemented**. This is **documentation baseline completeness**, **not** “production enterprise runbooks,” “OCR/ASR/video operator manuals,” or **`POST /answer`** documentation — those remain explicitly **out of scope** or **future** elsewhere in the program.
 
 ---
 
@@ -289,7 +297,7 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 ## 12. Recommended implementation order
 
 1. **Track B** — Unblocks **non-empty semantic evidence** on the documented path; reduces false “GraphClerk broken” reports.  
-2. **Track F** (onboarding docs; **F1–F4** shipped) **in parallel** — Pipeline overview, minimal feed guide, architecture diagrams, and troubleshooting/Qdrant runbooks while B lands.  
+2. **Track F** (onboarding docs; **F1–F5** shipped) **in parallel** — Pipeline overview, minimal feed, architecture, troubleshooting, and examples cookbook while B lands.  
 3. **Track C** (decisions + policy early) — Avoid rework on language metadata when **Track A** adds OCR/ASR text.  
 4. **Track A** — Largest modality surface; benefits from B demo path and C policy.  
 5. **Track D** — After EU/candidate metadata shapes stabilize.  

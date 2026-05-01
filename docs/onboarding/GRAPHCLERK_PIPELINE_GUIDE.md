@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Doc status** | **Overview — Track F F1** (+ F2 feed + F3 [`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md) + F4 [`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md)); not a complete cookbook. |
+| **Doc status** | **Overview — Track F F1–F5** (+ F2 feed + F3 architecture + F4 troubleshooting + F5 [`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md)); not a production runbook. |
 | **Last aligned to** | Phases **1–8** baseline as described in root `README.md` and `docs/status/*`; **Phase 9 not started**. |
 | **Companion** | [`README.md`](../../README.md) in this folder — entry and links. |
 
@@ -22,7 +22,8 @@
 - **F2:** hands-on **PowerShell templates** in [`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md) (not duplicated here).
 - **F3:** **Mermaid** as-built vs operator vs future diagrams + narrative in [`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md) (not duplicated here).
 - **F4:** **Troubleshooting + operations** in [`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md) (not duplicated here).
-- **Not yet implemented (future Track F slices):** full **curl** and **Python** cookbook (**F5**), production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring details beyond architecture labels, **`/answer`** documentation **if** the product approves and ships it.
+- **F5:** **PowerShell / curl / Python** examples in [`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md) (not duplicated here).
+- **Beyond Track F doc baseline:** production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring beyond architecture labels, **`/answer`** documentation **if** the product approves and ships it.
 
 ---
 
@@ -207,15 +208,11 @@ Placeholder only — if implemented later, it must respect **packet-only** and *
 
 ## Placeholder sections (future slices)
 
-The following are **intentional stubs** — links may point here until **F2–F5** or later tracks fill them in.
+The following are **intentional stubs** for work **outside** the F1–F5 onboarding doc baseline.
 
-### curl examples
+### curl / PowerShell / Python examples
 
-*To be added (Track F5 — examples cookbook):* representative **`curl`** sequences for artifacts → graph → semantic index → retrieve → logs. Until then, see [`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md) for **PowerShell / `Invoke-RestMethod`** templates (F2).
-
-### Python client examples
-
-*To be added:* minimal **`httpx` / `requests`** client patterns mirroring integration tests (without copying secrets).
+**Delivered (F5):** **[`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md)** — labeled **VERIFIED** vs **TEMPLATE**; PowerShell, **curl**, **stdlib urllib** Python. Operator walkthrough remains **[`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md)** (F2).
 
 ### Architecture diagram
 

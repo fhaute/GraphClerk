@@ -212,6 +212,7 @@ See [`docs/api/API_OVERVIEW.md`](../api/API_OVERVIEW.md) and route modules for a
 |-----|-----|
 | [`GRAPHCLERK_PIPELINE_GUIDE.md`](GRAPHCLERK_PIPELINE_GUIDE.md) | Concepts + short failure table |
 | [`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md) | Hands-on minimal path |
+| [`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md) | PowerShell / curl / Python copy-paste; **VERIFIED** vs **TEMPLATE** |
 | [`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md) | Components + data flow |
 | [`TESTING_RULES.md`](../governance/TESTING_RULES.md) | Integration env, dimension mismatch, **`deterministic_fake`** |
 | [`RELEASE_CHECKLIST.md`](../release/RELEASE_CHECKLIST.md) | Verification records |
@@ -222,5 +223,5 @@ See [`docs/api/API_OVERVIEW.md`](../api/API_OVERVIEW.md) and route modules for a
 
 ## Open follow-ups
 
-- **F5** — curl/Python **cookbook** (examples track).
+- **Examples cookbook** shipped as **[`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md)** (F5); extend with multipart or auth when product adds stable patterns.
 - **Production** embedding provider choice, **OCR/ASR/video**, **`/answer`**, Phase **9** — **program / status** decisions, not resolved here ([`phase_1_8_completion_program.md`](../plans/phase_1_8_completion_program.md) §15).

@@ -304,8 +304,9 @@ With **`npm run dev`** in `frontend/` (see root `README.md`), open **Query Playg
 
 ## Next guides
 
+- **[`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md)** — PowerShell, **curl**, Python (**urllib**); **VERIFIED** vs **TEMPLATE** labels (F5). This file (F2) stays the **narrated** walkthrough.
 - **[`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md)** — failure modes, Qdrant, HTTP, **`deterministic_fake`** (F4).
-- **[`GRAPHCLERK_PIPELINE_GUIDE.md`](GRAPHCLERK_PIPELINE_GUIDE.md)** — concepts, integration patterns; **F5** cookbook placeholder.
+- **[`GRAPHCLERK_PIPELINE_GUIDE.md`](GRAPHCLERK_PIPELINE_GUIDE.md)** — concepts, integration patterns.
 - **[`docs/demo/PHASE_6_DEMO_CORPUS.md`](../demo/PHASE_6_DEMO_CORPUS.md)** — scripted multi-step demo and **C5** minimal vs rich policy.
 - **[`docs/api/API_OVERVIEW.md`](../api/API_OVERVIEW.md)** — full HTTP surface.
 
