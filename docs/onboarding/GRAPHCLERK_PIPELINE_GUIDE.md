@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Doc status** | **Skeleton — Track F Slice F1** (truthful for current behavior; not a complete cookbook). |
+| **Doc status** | **Overview — Track F Slice F1** (+ F2 minimal feed guide linked); not a complete cookbook. |
 | **Last aligned to** | Phases **1–8** baseline as described in root `README.md` and `docs/status/*`; **Phase 9 not started**. |
 | **Companion** | [`README.md`](../../README.md) in this folder — entry and links. |
 
@@ -19,7 +19,8 @@
 ## Current status of this guide
 
 - **Implemented in F1:** section structure, core concepts, baseline flow steps, minimal vs rich, pointers to demo/scripts/docs, failure modes, integration patterns, security/honesty rules, explicit “not implemented” list, placeholders for later slices.
-- **Not yet implemented (future Track F slices):** step-by-step **curl** and **Python** examples, **architecture diagram**, production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring details, **`/answer`** documentation **if** the product approves and ships it.
+- **F2:** hands-on **PowerShell templates** in [`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md) (not duplicated here).
+- **Not yet implemented (future Track F slices):** full **curl** and **Python** cookbook (**F5**), **architecture diagram** (**F3**), production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring details, **`/answer`** documentation **if** the product approves and ships it.
 
 ---
 
@@ -120,6 +121,8 @@ Structured JSON from **`POST /retrieve`**: intent, route, **`evidence_units`**, 
 9. **Inspect retrieval logs** — **`GET /retrieval-logs`** when logging succeeds.
 10. **Inspect UI** — see *UI inspection map* below (Query Playground, artifacts, graph, semantic indexes, logs, evaluation).
 
+**Hands-on minimal path (F2):** step-by-step **PowerShell templates** (artifact → retrieve) live in [`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md); this file stays the **conceptual** overview.
+
 ---
 
 ## Minimal vs rich pipeline
@@ -202,7 +205,7 @@ The following are **intentional stubs** — links may point here until **F2–F5
 
 ### curl examples
 
-*To be added (Track F — examples cookbook):* representative **`curl`** sequences for artifacts → graph → semantic index → retrieve → logs.
+*To be added (Track F5 — examples cookbook):* representative **`curl`** sequences for artifacts → graph → semantic index → retrieve → logs. Until then, see [`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md) for **PowerShell / `Invoke-RestMethod`** templates (F2).
 
 ### Python client examples
 
