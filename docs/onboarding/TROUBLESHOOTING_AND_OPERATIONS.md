@@ -49,6 +49,7 @@ Operators and developers diagnosing **empty packets**, **stuck `vector_status`**
 - **No OCR/ASR/video** as complete first-class evidence pipelines — Phase 5 is **partial**; see status/README.
 - **RetrievalLog** may be **absent** for a given retrieve — logging is **best-effort**; the HTTP retrieve can still succeed.
 - **`language_context`** is **metadata from selected evidence**, **not** translation.
+- **Future (Track C):** optional **production** language detection is **not** in baseline installs; dependency choice and config policy are documented in [`docs/decisions/phase_7_language_detector_dependency_decision.md`](../decisions/phase_7_language_detector_dependency_decision.md) (**research only** until **C3** ships).
 - **`actor_context`** is **recording-only** — it does **not** change routing or evidence selection.
 - **`graphclerk_model_pipeline`** on the packet is a **standalone metadata projection** in the Phase **8** baseline — **not** automatically merged into File Clerk evidence selection.
 

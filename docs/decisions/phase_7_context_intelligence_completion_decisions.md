@@ -316,7 +316,7 @@ After **C2–C6** (and **C7** if needed), update in the **same delivery** as beh
 
 | # | Question | Blocks C1? | Notes |
 |---|-----------|------------|--------|
-| 1 | Which **local** detector library (if any) passes license, accuracy, and ops bars? | **No** | **C2** |
+| 1 | Which **local** detector library (if any) passes license, accuracy, and ops bars? | **Closed in Track C Slice C2** — see [`phase_7_language_detector_dependency_decision.md`](phase_7_language_detector_dependency_decision.md) (**recommended:** optional **`lingua-language-detector`**; **`NotConfigured`** remains default). | **—** |
 | 2 | Enrichment failure policy: **warn vs fail ingest** when detector errors? | **No** | Decide in **C4** |
 | 3 | Does Fred approve **7I** boosting **ever** for Phases 1–8? | **No** | Default **no** |
 | 4 | Is **any** query-language detection required without EU metadata? | **No** | Optional future; not default |
@@ -325,7 +325,7 @@ After **C2–C6** (and **C7** if needed), update in the **same delivery** as beh
 
 ## 19. Final recommendation
 
-1. Treat **C2 dependency research** as the **gate** before **C3–C5** land in code.
+1. **C2 dependency research** is complete — [`phase_7_language_detector_dependency_decision.md`](phase_7_language_detector_dependency_decision.md) is the **gate** for **C3** before **C4–C5** land in code.
 2. Keep **`NotConfigured`** as the **only** default until **B** is proven safe — equivalent to **Decision 1**’s “A until B.”
 3. Wire detection to **ingestion enrichment** (**Decision 2A**) when ready.
 4. Persist **artifact aggregation** (**Decision 3A**) once EU tags are meaningful.
@@ -333,6 +333,12 @@ After **C2–C6** (and **C7** if needed), update in the **same delivery** as beh
 6. **Defer translation** (**Decision 7A/B**).
 7. Plan **C7** + doc updates so operators never confuse **context** with **evidence**.
 8. Close with **C8** audit under **Audit Agent** rules.
+
+---
+
+## Addendum — Track C Slice C2 (language detector dependency research)
+
+**Completed:** dependency research and primary recommendation recorded in **[`phase_7_language_detector_dependency_decision.md`](phase_7_language_detector_dependency_decision.md)** — **no** package added, **no** code changes. **Next:** **C3** adapter implementation behind config.
 
 ---
 
