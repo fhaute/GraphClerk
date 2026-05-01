@@ -94,7 +94,7 @@ Charters are summarized here; Cursor loads the matching `.cursor/rules/graphcler
 
 ### Prompting vs project rules (Cursor)
 - **Project rules**: each `graphclerk-subagent-*.mdc` file includes a **Your role (context)** section so that, when the rule applies (`alwaysApply: true` or matching `globs`), the model gets an explicit identity (“you are the … Agent”) plus pointers to the full charter in this file.
-- **Still helpful to prompt**: in a **new chat**, a **Task** subagent, or when relevant rules might not attach (wrong files open, rule toggled off), start the message with a one-line activation, for example: *“Adopt the **Audit Agent** charter for GraphClerk; follow `docs/governance/AGENT_ROLES.md` (Dedicated sub-agents) and `docs/governance/AUDIT_RULES.md`; allowed/forbidden files: …”* Role + task header beats role alone.
+- **Still helpful to prompt**: in a **new chat**, a **Task** subagent, or when relevant rules might not attach (wrong files open, rule toggled off), start the message with a one-line activation, for example: *“Adopt the **Audit Agent** charter for GraphClerk; follow `docs/governance/AGENT_ROLES.md` (Dedicated sub-agents) and `docs/governance/AUDIT_RULES.md`; allowed/forbidden files: …”* For plan upkeep: *“Adopt the **Project Manager Agent**; reconcile `.cursor/plans/<file>.md` with `docs/status/*`, README, and the phase doc; allowed files: `.cursor/plans/**` …”* Role + task header beats role alone.
 - **Code Quality Agent** is **read-only** in-repo: prompting that role should repeat that it produces **review text only**, not patches.
 
 
@@ -123,6 +123,20 @@ Charters are summarized here; Cursor loads the matching `.cursor/rules/graphcler
 - declaring phases “complete” or features “done” without matching tests and docs
 - leaving README or `docs/status/*` contradicting observable API/UI behavior after the same change set
 - silent deletion of known gaps or technical debt that still exists
+
+### Project Manager Agent (plan alignment)
+**Responsible for**
+- keeping **Cursor plans** under **`.cursor/plans/`** aligned with **repo truth**: `docs/status/*`, README “honest status,” the relevant **`docs/phases/*`** doc for that effort, and **`docs/audits/*`** when the plan references an audit outcome
+- **PM-style execution tracking**: current slice, milestones, checklists, owners (when the plan names them), **done / in progress / blocked**, dependencies, risks, and **next actions** for implementers
+- after meaningful delivery or a scope correction, **updating the plan** (progress, dates, checkboxes, blockers, out-of-scope notes) so it does not read like stale fiction
+- **Drift detection**: if the plan says “not started” but the tree suggests otherwise (or the reverse), **reconcile the plan** or add an explicit **drift / verify** note with what to compare (paths, APIs, status lines)
+- **Coordination**: when plan edits imply `docs/status/*` or README should change, **call that out** for the **Status Documentation Agent** (or do that pass in the same session if you are also acting under that charter). This role does **not** own canonical status—the status files do
+
+**Forbidden**
+- plans that **contradict** `docs/status/*` or README without reconciliation or a visible **“status doc may be stale”** / follow-up item
+- deleting or soft-pedaling **risks**, **blockers**, or **partial** scope to make progress look complete
+- adding scope to a plan that is **not** grounded in phase docs or an explicit user decision (label novel items as **proposal** if needed)
+- treating `.cursor/plans/*` as **governance**; they are **working plans**—phase contracts remain in `docs/phases/*` and `docs/governance/*`
 
 ### Testing Agent
 **Responsible for**
