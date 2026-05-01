@@ -39,3 +39,17 @@ For **integration tests** that need the API’s semantic search path to embed qu
 
 **Clearing settings cache:** tests that toggle these variables must call `app.core.config.get_settings.cache_clear()` before `get_settings()` / `create_app()` so the process does not reuse a stale `lru_cache` entry.
 
+## Track B Slice B5 — gated full-stack indexed retrieve (no factory / FileClerk monkeypatch)
+
+[`backend/tests/test_phase1_8_track_b_full_stack_retrieve.py`](../../backend/tests/test_phase1_8_track_b_full_stack_retrieve.py) exercises **HTTP ingest → evidence → graph link → semantic index → in-process `SemanticIndexVectorIndexingService` → `POST /retrieve`** with **`create_app()`** and **no** monkeypatch of `FileClerkService` or `build_semantic_index_search_service`. It **skips** unless **all** of the following are satisfied (read from the real process environment; the test does not inject `GRAPHCLERK_*` for the gate):
+
+| Variable | Requirement |
+|----------|----------------|
+| `RUN_INTEGRATION_TESTS` | `1` |
+| `DATABASE_URL` | non-empty (Postgres; same as other integration tests) |
+| `QDRANT_URL` | non-empty (same name as the rest of the backend) |
+| `GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER` | `deterministic_fake` |
+| `APP_ENV` | not `prod` (case-insensitive) |
+
+Also requires a reachable Qdrant at `QDRANT_URL` (the test pings collections after settings load). Default CI / local runs **skip** this module when the gate is not met.
+
