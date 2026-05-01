@@ -4,10 +4,10 @@ overview: "Working plan for [docs/phases/graph_clerk_phase_7_context_intelligenc
 todos:
   - id: p7-slice-70
     content: "Slice 7.0 — Entry gate + plan alignment (Phase 6 pass_with_notes; Phase 5 partial; no backend code)."
-    status: in_progress
+    status: completed
   - id: p7-slice-7a
     content: "Slice 7A — EvidenceEnrichmentService shell: no-op enrichment; candidates unchanged; tests prove text/source_fidelity untouched."
-    status: pending
+    status: completed
   - id: p7-slice-7b
     content: "Slice 7B — Language metadata contract on EvidenceUnitCandidate (metadata_json path); no migration unless approved; no detection yet; no text modification."
     status: pending
