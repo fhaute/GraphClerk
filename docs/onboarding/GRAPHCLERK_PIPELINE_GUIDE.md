@@ -90,7 +90,7 @@ Structured JSON from **`POST /retrieve`**: intent, route, **`evidence_units`**, 
 
 ### `language_context`
 
-**Optional** packet field derived from **selected evidence metadata** — **context, not evidence**. Phase 7 baseline; see phase doc and status.
+**Optional** packet field derived from **selected evidence metadata** — **context, not evidence**. Phase 7 baseline; see phase doc and status. **Full-completion policy (pre-implementation):** [`docs/decisions/phase_7_context_intelligence_completion_decisions.md`](../decisions/phase_7_context_intelligence_completion_decisions.md) (Completion Program **Track C Slice C1**).
 
 ### `actor_context`
 

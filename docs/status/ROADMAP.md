@@ -120,6 +120,7 @@
 - **Defined in**: `docs/phases/graph_clerk_phase_7_context_intelligence.md`
 - **Goal**: explicit **language** and **actor** routing/interpretation metadata (**not** source truth); optional **`RetrievalPacket`** extensions; tests proving baseline context recording does **not** alter evidence text, rankings, or bypass access control from ActorContext in this slice set.
 - **Status**: **baseline delivered + audited (`pass_with_notes`)** — **`docs/audits/PHASE_7_AUDIT.md`** (2026-05-02). Slices **7A–7H** + **7J** + **7K** complete per working plan; **Slice 7I** deterministic context boosting remains **deferred / cancelled** pending separate approval + evaluation fixtures (see working plan § 7I).
+- **Completion program (decisions only):** Phase 7 **full-completion path** recorded pre-implementation — [`docs/decisions/phase_7_context_intelligence_completion_decisions.md`](../decisions/phase_7_context_intelligence_completion_decisions.md) (**Track C Slice C1**; does **not** claim detector, boosting, or translation are implemented).
 - **Delivered so far (implementation truth)**:
   - `EvidenceEnrichmentService` no-op shell; language **`metadata_json`** candidate contract; `LanguageDetectionService` adapter shell; enrichment seam on text + multimodal paths (**no-op** default)
   - `ArtifactLanguageAggregationService` pure helper; **`RetrievalPacket.language_context`**; **`POST /retrieve`** **`actor_context`** request + **`RetrievalPacket.actor_context`** recording (**no** boost)

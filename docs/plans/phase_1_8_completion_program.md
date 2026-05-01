@@ -160,7 +160,7 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 | **Current state** | Enrichment default **no-op**; `LanguageDetectionService` **NotConfigured** pattern; aggregation helper **pure** (no automatic artifact merge); `language_context` from **selected** evidence `metadata_json` only; `actor_context` **recording only** — **no** boost. Audited **`pass_with_notes`** — baseline accepted. **Production language detection-by-default is not claimed.** **Slice 7I** boosting **not** implemented. |
 | **Missing work** | Pick detector adapter or document **no production detector**; wire per policy; persist aggregation if in scope; UI surfaces that distinguish **context ≠ evidence**; if boosting: ranking rules, fixtures, anti-AC-bypass proofs, packet `influence` fields; translation decision. |
 | **Required design decisions** | Detector on/off; where detection runs (ingest vs enrich vs retrieve vs combination). Persist aggregation automatically? **7I** forever deferred vs approved with fixtures. Translation in Phase 7 scope or **explicitly outside 1–8**. |
-| **Proposed slices** | **C1** Policy ADR + config knobs · **C2** Detector wiring (or explicit no-op prod) · **C3** Aggregation persistence · **C4** UI + copy review for “not evidence” · **C5** Optional 7I (if approved) + tests · **C6** Phase 7 full-completion audit checklist prep |
+| **Proposed slices** | **C1** ✅ decision record — [`docs/decisions/phase_7_context_intelligence_completion_decisions.md`](../decisions/phase_7_context_intelligence_completion_decisions.md) · **C2** Detector dependency research · **C3** Detector adapter (behind `NotConfigured` default) · **C4** Ingestion enrichment wiring · **C5** Artifact aggregation persistence · **C6** Packet/context tests with persisted metadata · **C7** UI/operator visibility (if needed) · **C8** Final Phase 7 full-completion audit · optional **C-boost-1** / **C-translation-1** only after explicit approval |
 | **Likely files** | `evidence_enrichment_service.py`, `language_detection_service.py`, `artifact_language_aggregation_service.py`, `text_ingestion_service.py`, `multimodal_ingestion_service.py`, `retrieval_packet_builder.py`, `file_clerk_service.py` (if boosting), schemas, `frontend/src/types/retrievalPacket.ts`, `QueryPlayground.tsx`, etc. |
 | **Forbidden files** | Do not use **context** to **hide** retrieval or bypass access control; do not edit historical audits to remove **7I** deferral notes—append new outcomes. |
 | **Tests required** | Extend `test_phase7_*`; ranking/evidence-order tests if boosting; property tests that actor cannot inject evidence. |
@@ -168,6 +168,14 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 | **Risks** | Personalization perception; secret retrieval; flaky remote detectors. |
 | **Dependencies** | **Track A** (language tags on OCR/ASR text) optional; align with **Track D** metadata merge boundaries. |
 | **Acceptance criteria** | Decisions documented; behavior matches docs; UI does not imply personalization-as-evidence; audit-ready. |
+
+### Track C — Slice C1 (completed): Phase 7 context intelligence completion decisions
+
+- **Outcome:** Design-only **decision record** created — **[`docs/decisions/phase_7_context_intelligence_completion_decisions.md`](../decisions/phase_7_context_intelligence_completion_decisions.md)**. **No** backend, frontend, or script changes in this slice. **Phase 9** has **not** started. Prior [`PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) remains **baseline history**.
+- **Purpose:** Decide or explicitly defer production detector policy, wiring location, aggregation persistence, `language_context` / `actor_context` policy, deterministic boosting, translation scope, and UI/docs implications **before** implementation slices **C2+**.
+- **Recommended next Track C slice:** **C2** — production language detector **dependency research / decision** (gates **C3**).
+
+**Track C** is **not** complete — only **C1** is closed.
 
 ---
 
