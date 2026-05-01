@@ -55,10 +55,12 @@
   - `backend/tests/test_phase5_*.py`, `backend/tests/test_phase5_file_clerk_multimodal_evidence.py`, `backend/tests/test_phase5_multimodal_ingest_http_errors.py`
 
 ## Phase 6 — Productization, UI, Evaluation, and Hardening
-- **Status**: **in_progress** / **partially implemented** (**not fully complete**; no Phase 6 audit yet)
+- **Status**: **implemented (`pass_with_notes`)** — productization **baseline** accepted; **not** full enterprise completion; see audit for remaining accepted gaps.
+- **Audit**: **`pass_with_notes`** — [`docs/audits/PHASE_6_AUDIT.md`](../audits/PHASE_6_AUDIT.md) (2026-05-01)
 - **Entry gate**: Documented under **Slice 6.0** in [`docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`](docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md) — Phase 5 audit **`pass`** or **`pass_with_notes`**; partial Phase 5 allowed; UI must respect Phase 5 limitations (no implication of OCR/ASR/caption/video/full multimodal completion).
 - **Evidence** (representative):
   - [`docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`](docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md)
+  - [`docs/audits/PHASE_6_AUDIT.md`](../audits/PHASE_6_AUDIT.md)
   - `frontend/src/App.tsx`, `frontend/src/components/*`, `frontend/src/api/*`
   - `frontend/vite.config.ts`, `frontend/.env.example`
   - **Slice K — onboarding / docs**: `README.md`, `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`

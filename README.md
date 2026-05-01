@@ -24,7 +24,7 @@ GraphClerk is a **local-first, graph-guided evidence-routing layer for RAG syste
 - **Phase 3**: Semantic index + graph layer (graph APIs, evidence links, semantic index APIs, vector index service, semantic search for **indexed** indexes, bounded traversal). **No** automatic vector backfill on index create.
 - **Phase 4**: File Clerk **`POST /retrieve`**, structured `RetrievalPacket`, deterministic intent/route/evidence selection, context budgeting, `RetrievalLog.retrieval_packet` snapshots.
 - **Phase 5** (**in progress**, **partial**; audit **`pass_with_notes`** — `docs/audits/PHASE_5_AUDIT.md`): multimodal routing, PDF/PPTX text to evidence when optional extras installed; image/audio **validation only** (no EU from image/audio; **503** where documented); **no** OCR/ASR/caption/video pipeline.
-- **Phase 6** (**in progress**, **partial**; **no Phase 6 audit yet** — `docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`): React/Vite UI in `frontend/` against **live** APIs only; see [Web UI](#web-ui-phase-6) below. **Onboarding / Slice K**: this README, `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`.
+- **Phase 6** (**implemented `pass_with_notes`** — `docs/audits/PHASE_6_AUDIT.md`, `docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`): React/Vite UI in `frontend/` against **live** APIs; **demo/inspection productization**, **not** production enterprise software. See [Web UI](#web-ui-phase-6). **Onboarding**: this README, `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`.
 
 ## What is explicitly not implemented yet
 
@@ -32,7 +32,7 @@ GraphClerk is a **local-first, graph-guided evidence-routing layer for RAG syste
 - **LLM calls** inside core ingestion/retrieval paths.
 - **Full** Phase 5 multimodal (OCR, transcription, captions, video; image/audio as full evidence producers).
 - **Automatic semantic index vector population** after create (indexing job/backfill).
-- **Phase 6 audit** and optional items in the Phase 6 phase doc (e.g. in-product demo loader vs script-only, automated UI tests).
+- **Phase 6 stretch items** from the phase doc (e.g. in-product demo loader vs script-only, automated UI tests, further hardening) — baseline + audit are **`pass_with_notes`**; see `docs/audits/PHASE_6_AUDIT.md`.
 
 ## Governance and phase docs
 
