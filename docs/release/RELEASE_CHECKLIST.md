@@ -15,6 +15,24 @@ Executed in the audit pass (evidence also summarized in `docs/audits/PHASE_6_AUD
 
 **Not run in this record** (operator / environment dependent): `docker compose up -d --build`, live `curl` against a running stack, `alembic upgrade head` on disposable Postgres, full manual UI smoke — still recommended before production-like demos.
 
+## Verification record (Track B Slice B5.1 — 2026-05-01)
+
+**Scope:** Gated full-stack indexed retrieval test only (`deterministic_fake` is **not** a production embedding path; this confirms dev/integration wiring against real Postgres + Qdrant, not production indexing quality).
+
+**Environment (no secrets):** Repo `docker compose` stack on the host: Postgres **5433→5432**, Qdrant **6333**, `APP_ENV=test`, `RUN_INTEGRATION_TESTS=1`, `DATABASE_URL=postgresql+psycopg://…@127.0.0.1:5433/graphclerk` (compose default user/db), `GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake` for the B5 module only. `QDRANT_URL` for pytest integration fixtures is **`http://localhost:6333`** (see `backend/tests/conftest.py`).
+
+**Postgres / Qdrant:** `docker compose ps` — `graphclerk-postgres-1` and `graphclerk-qdrant-1` **Up** (api container also up).
+
+| Step | Command | Result |
+|------|---------|--------|
+| B5 full-stack (first attempt) | `cd backend` → env as above → `python -m pytest tests/test_phase1_8_track_b_full_stack_retrieve.py -q` | **Fail** — indexing returned `failed` / `VectorIndexOperationError`: existing Qdrant collection **`semantic_indexes`** had vector **size=3**; Track B deterministic stack expects **dimension 8**. **Class:** environment / stale Qdrant state (not application logic under correct collection config). |
+| Qdrant remediation (operator dev only) | Deleted collection `semantic_indexes` via `qdrant_client` so the next indexer run recreates it with the correct size. | — |
+| B5 full-stack (after remediation) | Same pytest command with same env | **Pass** (1 test). **B5 verified** in gated integration env. |
+| Related backend tests | Same `cd backend`; `RUN_INTEGRATION_TESTS=1`, `DATABASE_URL`, `APP_ENV=test`; **`GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER` unset** for this invocation to avoid leaking into `test_config.py::test_config_loads_from_environment` → `python -m pytest tests/test_phase1_8_track_b_indexed_retrieval.py tests/test_config.py tests/test_phase3_semantic_index_search_api.py tests/test_phase4_retrieve_api.py -q` | **Pass** (19 tests). |
+| Full backend suite (default skips) | `python -m pytest -q` (integration env vars **not** set) | **Pass** |
+
+**Note:** If `GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake` is exported in the shell while running the mixed suite above, `test_config_loads_from_environment` may fail (**test isolation / env pollution**), not product behavior.
+
 ---
 
 ## Automated / scripted
