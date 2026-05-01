@@ -44,7 +44,7 @@ Cursor must not implement this phase unless Phase 6 is complete and status docs 
 
 ## Implementation status (current)
 
-**Slices 7A–7H are implemented** in the backend with targeted tests; **Phase 7 is not audited yet** — there is **no** `docs/audits/PHASE_7_AUDIT.md` at this milestone (Slice **7K** pending).
+**Slices 7A–7H are implemented** in the backend with targeted tests; **Slice 7K** is complete — [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) records **`pass_with_notes`** (2026-05-02). Remaining items are **explicit audit notes** (e.g. no production detector-by-default, no translation, **Slice 7I** boosting deferred), not unconditional “green” closure.
 
 ### Shipped baseline (honest)
 
