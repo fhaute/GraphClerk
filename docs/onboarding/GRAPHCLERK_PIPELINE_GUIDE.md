@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Doc status** | **Overview — Track F Slice F1** (+ F2 minimal feed + **F3** [`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md)); not a complete cookbook. |
+| **Doc status** | **Overview — Track F F1** (+ F2 feed + F3 [`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md) + F4 [`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md)); not a complete cookbook. |
 | **Last aligned to** | Phases **1–8** baseline as described in root `README.md` and `docs/status/*`; **Phase 9 not started**. |
 | **Companion** | [`README.md`](../../README.md) in this folder — entry and links. |
 
@@ -21,7 +21,8 @@
 - **Implemented in F1:** section structure, core concepts, baseline flow steps, minimal vs rich, pointers to demo/scripts/docs, failure modes, integration patterns, security/honesty rules, explicit “not implemented” list, placeholders for later slices.
 - **F2:** hands-on **PowerShell templates** in [`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md) (not duplicated here).
 - **F3:** **Mermaid** as-built vs operator vs future diagrams + narrative in [`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md) (not duplicated here).
-- **Not yet implemented (future Track F slices):** full **curl** and **Python** cookbook (**F5**), production deployment deep-dive, expanded Qdrant/failure guide (**F4**), multimodal ingestion how-tos, model pipeline wiring details beyond architecture labels, **`/answer`** documentation **if** the product approves and ships it.
+- **F4:** **Troubleshooting + operations** in [`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md) (not duplicated here).
+- **Not yet implemented (future Track F slices):** full **curl** and **Python** cookbook (**F5**), production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring details beyond architecture labels, **`/answer`** documentation **if** the product approves and ships it.
 
 ---
 
@@ -161,6 +162,8 @@ See [`docs/demo/PHASE_6_DEMO_CORPUS.md`](../demo/PHASE_6_DEMO_CORPUS.md) — *Mi
 ---
 
 ## Failure modes
+
+**Expanded operator guide:** **[`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md)** (Track F Slice F4) — triage table, Qdrant lifecycle, HTTP codes, **`deterministic_fake`** pitfalls, runbooks, expected vs bug. The table below stays a **short** index.
 
 | Symptom | Likely cause | Where to read |
 |---------|--------------|---------------|

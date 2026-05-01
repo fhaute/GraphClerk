@@ -197,6 +197,7 @@ Canonical application data, including:
 | **Manual vector backfill** | Move **`vector_status`** toward **`indexed`** (or honest **`failed`**) via script + **`DATABASE_URL`** / **`QDRANT_URL`**. | Same demo doc — *Manual vector indexing*; [`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md) Step 8 |
 | **B5 / B5.1 style verification** | Gated integration proof of indexed retrieve path (when env set). | [`docs/governance/TESTING_RULES.md`](../governance/TESTING_RULES.md); [`docs/release/RELEASE_CHECKLIST.md`](../release/RELEASE_CHECKLIST.md) |
 | **Qdrant dimension mismatch** | Dev Qdrant collection size vs adapter dim — operator reset of **`semantic_indexes`** only on disposable instances. | [`TESTING_RULES.md`](../governance/TESTING_RULES.md) — *Qdrant `semantic_indexes` vector dimension mismatch* |
+| **Broad failure triage** | Symptoms vs expected vs bug; HTTP and runbooks. | [`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md) |
 
 ---
 

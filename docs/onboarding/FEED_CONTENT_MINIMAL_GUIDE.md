@@ -288,6 +288,8 @@ With **`npm run dev`** in `frontend/` (see root `README.md`), open **Query Playg
 
 ## Troubleshooting
 
+**Full operator / Qdrant / HTTP guide:** [`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md) (quick triage, runbooks, expected vs bug). The short table below is **not** a duplicate.
+
 | Issue | Notes |
 |-------|--------|
 | **422** on JSON bodies | Check required fields (`artifact_type` + `text`, `node_type` + `label`, `meaning` + `entry_node_ids`, non-empty `question`). |
@@ -302,7 +304,8 @@ With **`npm run dev`** in `frontend/` (see root `README.md`), open **Query Playg
 
 ## Next guides
 
-- **[`GRAPHCLERK_PIPELINE_GUIDE.md`](GRAPHCLERK_PIPELINE_GUIDE.md)** — concepts, integration patterns, placeholders for **F3–F5**.
+- **[`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md)** — failure modes, Qdrant, HTTP, **`deterministic_fake`** (F4).
+- **[`GRAPHCLERK_PIPELINE_GUIDE.md`](GRAPHCLERK_PIPELINE_GUIDE.md)** — concepts, integration patterns; **F5** cookbook placeholder.
 - **[`docs/demo/PHASE_6_DEMO_CORPUS.md`](../demo/PHASE_6_DEMO_CORPUS.md)** — scripted multi-step demo and **C5** minimal vs rich policy.
 - **[`docs/api/API_OVERVIEW.md`](../api/API_OVERVIEW.md)** — full HTTP surface.
 
