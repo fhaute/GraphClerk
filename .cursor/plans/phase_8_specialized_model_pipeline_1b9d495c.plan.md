@@ -17,7 +17,7 @@ todos:
     status: completed
   - id: phase8-slice-8d-output-validation
     content: "Slice 8D — Model output validation service (typed outputs, reject prose/source-truth; deeper than top-level dict checks; no FileClerk wiring)."
-    status: pending
+    status: completed
   - id: phase8-slice-8e-candidate-seam
     content: "Slice 8E — Candidate-only integration seam (approval-gated; no EvidenceUnit / RetrievalPacket mutation; no ranking change)."
     status: pending
@@ -151,7 +151,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 - [x] **8A** — Boundary contracts (`backend/app/services/model_pipeline_contracts.py` + `backend/tests/test_phase8_model_pipeline_contracts.py`; contracts only, no adapters).
 - [x] **8B** — Request/response envelopes (`ModelPipelineRequestEnvelope`, `ModelPipelineResponseEnvelope`, `ModelPipelineError`; status/error semantics; no adapters).
 - [x] **8C** — Adapter shell (`ModelPipelineAdapter`, `NotConfiguredModelPipelineAdapter`, `DeterministicTestModelPipelineAdapter` tests-only; no registry, no real inference).
-- [ ] **8D** — Output validation service.
+- [x] **8D** — Output validation service (`model_pipeline_output_validation_service.py`; deep recursive checks; reports only, no mutation).
 - [ ] **8E** — Candidate seam (approval‑gated).
 - [ ] **8F** — Evaluation fixtures.
 - [ ] **8G** — Local inference design only.
