@@ -155,3 +155,8 @@ class InvalidSourceFidelityError(GraphClerkError):
 class InvalidEvidenceUnitCandidateError(GraphClerkError):
     """Raised when an EvidenceUnitCandidate fails structural validation (e.g. empty text)."""
 
+
+class InvalidLanguageMetadataError(GraphClerkError):
+    """Raised when optional Phase 7 language fields inside candidate metadata are malformed."""
+
+

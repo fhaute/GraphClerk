@@ -10,7 +10,7 @@ todos:
     status: completed
   - id: p7-slice-7b
     content: "Slice 7B — Language metadata contract on EvidenceUnitCandidate (metadata_json path); no migration unless approved; no detection yet; no text modification."
-    status: pending
+    status: completed
   - id: p7-slice-7c
     content: "Slice 7C — LanguageDetectionService adapter shell (NotConfigured + deterministic/local test adapter); explicit unknown/low-confidence; no remote services; no translation."
     status: pending
