@@ -3,18 +3,20 @@
 from __future__ import annotations
 
 import uuid
+from unittest.mock import MagicMock
 
 import httpx
 import pytest
 from httpx import ASGITransport
 
+from app.core import config as config_module
 from app.db.session import get_sessionmaker
 from app.main import create_app
 from app.models.enums import GraphNodeType, SemanticIndexVectorStatus
 from app.models.semantic_index import SemanticIndex
 from app.services.embedding_adapter import DeterministicFakeEmbeddingAdapter
 from app.services.embedding_service import EmbeddingService
-from app.services.errors import VectorIndexOperationError
+from app.services.errors import EmbeddingAdapterNotConfiguredError, VectorIndexOperationError
 from app.services.semantic_index_service import SemanticIndexVectorIndexingService
 from app.services.semantic_index_search_service import SemanticIndexSearchService
 from app.services.vector_index_service import SearchHit, VectorIndexService
@@ -300,3 +302,45 @@ async def test_retrieve_returns_non_empty_evidence_after_indexing_service(
         match = next((u for u in units if u["evidence_unit_id"] == evidence_unit_id), None)
         assert match is not None, f"expected evidence in packet, got {units!r}"
         assert match["artifact_id"] == artifact_id
+
+
+def _factory_test_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_NAME", "GraphClerk")
+    monkeypatch.setenv("APP_ENV", "test")
+    monkeypatch.setenv("LOG_LEVEL", "INFO")
+    monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://user:pass@localhost:5432/db")
+    monkeypatch.setenv("QDRANT_URL", "http://localhost:6333")
+    monkeypatch.setenv("QDRANT_API_KEY", "optional")
+
+
+def test_semantic_index_search_factory_not_configured_embedding_by_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Default app wiring keeps semantic search on NotConfigured (Track B Slice B2)."""
+
+    from app.services.semantic_index_search_factory import build_semantic_index_search_service
+
+    _factory_test_env(monkeypatch)
+    monkeypatch.delenv("RUN_INTEGRATION_TESTS", raising=False)
+    monkeypatch.delenv("GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER", raising=False)
+    config_module.get_settings.cache_clear()
+
+    svc = build_semantic_index_search_service(session=MagicMock())
+    with pytest.raises(EmbeddingAdapterNotConfiguredError):
+        svc._embedding.embed_text("probe")  # type: ignore[attr-defined]
+
+
+def test_semantic_index_search_factory_uses_deterministic_when_guards_allow(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.services.semantic_index_search_factory import build_semantic_index_search_service
+
+    _factory_test_env(monkeypatch)
+    monkeypatch.setenv("RUN_INTEGRATION_TESTS", "1")
+    monkeypatch.setenv("GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER", "deterministic_fake")
+    config_module.get_settings.cache_clear()
+
+    svc = build_semantic_index_search_service(session=MagicMock())
+    vec = svc._embedding.embed_text("hello world")  # type: ignore[attr-defined]
+    assert isinstance(vec, list)
+    assert len(vec) == 8

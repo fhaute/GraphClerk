@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+SemanticSearchEmbeddingAdapter = Literal["not_configured", "deterministic_fake"]
 
 
 class Settings(BaseSettings):
@@ -26,6 +29,28 @@ class Settings(BaseSettings):
     qdrant_api_key: str | None = Field(default=None, alias="QDRANT_API_KEY")
 
     artifacts_dir: str = Field(default="./data/artifacts", alias="ARTIFACTS_DIR")
+
+    semantic_search_embedding_adapter: SemanticSearchEmbeddingAdapter = Field(
+        default="not_configured",
+        alias="GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER",
+    )
+
+    @model_validator(mode="after")
+    def _validate_semantic_search_embedding_adapter(self) -> Settings:
+        """``deterministic_fake`` is integration-test-only and must never load in production."""
+
+        if self.semantic_search_embedding_adapter != "deterministic_fake":
+            return self
+        if self.app_env == "prod":
+            msg = "GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake is not allowed when APP_ENV=prod"
+            raise ValueError(msg)
+        if os.environ.get("RUN_INTEGRATION_TESTS") != "1":
+            msg = (
+                "GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake requires "
+                "RUN_INTEGRATION_TESTS=1 (integration-test-only; not production semantics)"
+            )
+            raise ValueError(msg)
+        return self
 
 
 @lru_cache(maxsize=1)

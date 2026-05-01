@@ -12,7 +12,12 @@ from app.services.semantic_index_search_service import SemanticIndexSearchServic
 
 
 def build_semantic_index_search_service(*, session: Session) -> SemanticIndexSearchService:
-    """Construct the default Phase 3 semantic index search stack for a DB session."""
+    """Construct the default Phase 3 semantic index search stack for a DB session.
+
+    When ``GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake`` (allowed only
+    under ``Settings`` validation rules), embeddings are **non-semantic** test vectors —
+    not a production embedding capability.
+    """
 
     from qdrant_client import QdrantClient
 
@@ -24,11 +29,19 @@ def build_semantic_index_search_service(*, session: Session) -> SemanticIndexSea
     settings = get_settings()
     client = QdrantClient(url=settings.qdrant_url, api_key=settings.qdrant_api_key)
 
-    # Phase 3: explicit expected dimension. Until a real adapter exists, this remains a fixed constant.
+    # Phase 3 / Track B: explicit expected dimension (must match B1 backfill script and deterministic fake).
     expected_dimension = 8
-    embedding = EmbeddingService(
-        adapter=NotConfiguredEmbeddingAdapter(dimension=expected_dimension),
-        expected_dimension=expected_dimension,
-    )
+    if settings.semantic_search_embedding_adapter == "deterministic_fake":
+        from app.services.embedding_adapter import DeterministicFakeEmbeddingAdapter
+
+        embedding = EmbeddingService(
+            adapter=DeterministicFakeEmbeddingAdapter(dimension=expected_dimension),
+            expected_dimension=expected_dimension,
+        )
+    else:
+        embedding = EmbeddingService(
+            adapter=NotConfiguredEmbeddingAdapter(dimension=expected_dimension),
+            expected_dimension=expected_dimension,
+        )
     vector = VectorIndexService(qdrant_client=client, expected_dimension=expected_dimension)
     return SemanticIndexSearchService(session=session, embedding_service=embedding, vector_index_service=vector)

@@ -97,7 +97,9 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 - **Tests:** [`backend/tests/test_phase1_8_track_b_indexed_retrieval.py`](../../backend/tests/test_phase1_8_track_b_indexed_retrieval.py) (requires DB-backed `db_ready` when `RUN_INTEGRATION_TESTS=1` + `DATABASE_URL`).
 - **Not in B1:** automatic indexing on `POST /semantic-indexes` create; background job system; production embedding adapter in the API default factory.
 
-### Track B — Slice B2 (design): app-configurable semantic search embeddings for full-stack tests
+### Track B — Slice B2 (implemented): guarded deterministic semantic search embeddings
+
+**Outcome:** Settings field **`GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER`** (`not_configured` \| `deterministic_fake`, default `not_configured`) with Pydantic validation: **`deterministic_fake`** requires **`RUN_INTEGRATION_TESTS=1`** and is **rejected** when **`APP_ENV=prod`**. [`build_semantic_index_search_service`](../../backend/app/services/semantic_index_search_factory.py) wires **`DeterministicFakeEmbeddingAdapter`** (dim 8, same as B1 backfill) only when that mode is active. Documented in [`TESTING_RULES.md`](../../docs/governance/TESTING_RULES.md). **B5** (single long full-stack ingest→backfill→search→retrieve without route monkeypatch) remains **pending**.
 
 **Problem (post-B1):** [`scripts/backfill_semantic_indexes.py`](../../scripts/backfill_semantic_indexes.py) and `SemanticIndexVectorIndexingService` use **`DeterministicFakeEmbeddingAdapter`** against Qdrant, but [`build_semantic_index_search_service`](../../backend/app/services/semantic_index_search_factory.py) always wires **`NotConfiguredEmbeddingAdapter`** ([`semantic_index_search_factory.py`](../../backend/app/services/semantic_index_search_factory.py) L29–31). Query vectors for search therefore cannot match backfilled vectors in a **single** process unless tests monkeypatch the factory (allowed today) or the app gains a **guarded** alternate embedding path for search only.
 
@@ -132,16 +134,14 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 9. **C4 full-stack vs next slice:** Treat **true** ingest→Qdrant→search→retrieve **without** factory monkeypatch as **B2** (or **B2+B5** if split: B2 = wiring, B5 = long integration test). **C4** in the completion program referred to UI context — do not conflate; use **B5** label above for integration.
 10. **Deferred:** Production embedding adapter for **default** `prod` search; automatic indexing on create; UI surfacing (**B3**); optional **B**-only policy if team decides env-based A is unnecessary.
 
-#### Proposed implementation slice (for a follow-up coding task — not executed in this design pass)
+#### Implementation record (B2 shipped)
 
 | Item | Detail |
 |------|--------|
-| **Slice name** | **B2 — Guarded deterministic semantic search embeddings** |
-| **Allowed files (indicative)** | `backend/app/core/config.py`, `backend/app/services/semantic_index_search_factory.py`, `backend/tests/test_phase1_8_track_b_*.py`, `docs/governance/TESTING_RULES.md`, optionally `.env.example` |
-| **Forbidden (B2)** | Changing **default** prod behavior beyond explicit failure for invalid combos; silent fallback to fake when `NotConfigured` was intended; `frontend/**`; production vendor SDK; Phase 9 |
-| **Test plan** | Validator tests for settings; gated integration test as in §7; existing default suite unchanged when flag off |
-| **Risks** | Env typo in CI; document clearly. Dimension drift if constant duplicated — centralize `EXPECTED_SEMANTIC_EMBEDDING_DIMENSION = 8` in one module if touched. |
-| **Final recommendation** | Implement **A (guarded)**; document **B (monkeypatch factory)** as alternate for faster tests; schedule **B5** immediately after B2 for one long integration test. |
+| **Config** | [`backend/app/core/config.py`](../../backend/app/core/config.py) — `semantic_search_embedding_adapter` + `@model_validator` |
+| **Factory** | [`backend/app/services/semantic_index_search_factory.py`](../../backend/app/services/semantic_index_search_factory.py) |
+| **Tests** | [`backend/tests/test_config.py`](../../backend/tests/test_config.py), [`backend/tests/test_phase1_8_track_b_indexed_retrieval.py`](../../backend/tests/test_phase1_8_track_b_indexed_retrieval.py) |
+| **Deferred (B5)** | Long gated httpx test: ingest → `SemanticIndexVectorIndexingService` → `POST /retrieve` with **no** `build_semantic_index_search_service` monkeypatch (optional next slice). |
 
 ---
 
@@ -278,7 +278,7 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 
 **Track B — Slice B1:** **Documented minimal indexed demo path** + **operator manual backfill** (CLI or API sequence) proving `pending → indexed | failed` with **explicit** Qdrant errors, plus automated coverage (integration or high-fidelity mock) that **`POST /retrieve`** returns **non-empty** evidence when the semantic index is **indexed** and the question matches.
 
-**Next (after B1):** **Track B Slice B2** — guarded semantic-search embedding mode for full-stack tests (see *Track B — Slice B2 (design)* above); then **B5** long integration or merge B2+B5 per implementer preference.
+**Next (after B1–B2):** **Track B Slice B5** — optional long gated httpx test: ingest → backfill → `POST /retrieve` with **no** factory monkeypatch when `GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake` + Qdrant + DB env are set (see *Track B — Slice B2* above).
 
 ---
 
