@@ -242,7 +242,7 @@ Search meaning first, then retrieve evidence.
 - GraphClerk is not a chatbot by itself.
 - GraphClerk is not a vector database.
 - GraphClerk is not a document storage system only.
-- GraphClerk is not EBES.
+- GraphClerk is not an enterprise records-management or compliance archive product.
 - GraphClerk does not replace original source material with summaries.
 - GraphClerk core is not a direct chunk-to-LLM RAG shortcut.
 - Optional answer generation must remain packet-bound and traceable.

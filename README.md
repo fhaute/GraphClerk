@@ -8,7 +8,7 @@ GraphClerk is a **local-first, graph-guided evidence-routing layer for RAG syste
 
 - **Not** a chatbot or autonomous agent framework by itself.
 - **Not** a replacement for your vector database, embedding service, or RAG orchestration framework.
-- **Not** a full document management system or EBES.
+- **Not** a full document management system or enterprise records platform.
 - **Not** answer synthesis: **`POST /answer`** and LLM-driven prose from packets are **out of scope** until separately approved and implemented.
 - **Not** multimodal “AI complete”: **no OCR, ASR, image captioning, or video ingestion pipeline** in the current backend; image/audio paths are largely **validation shells** (see Phase 5 docs).
 

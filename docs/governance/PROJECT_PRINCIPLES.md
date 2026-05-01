@@ -27,6 +27,6 @@ It improves the layer between user intent and LLM context.
 - GraphClerk is not a chatbot by itself.
 - GraphClerk is not a vector database.
 - GraphClerk is not a document storage system only.
-- GraphClerk is not EBES.
+- GraphClerk is not an enterprise records-management or compliance archive product.
 - GraphClerk does not replace original source material with summaries.
 
