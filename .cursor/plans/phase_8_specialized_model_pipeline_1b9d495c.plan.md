@@ -106,7 +106,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 ### Slice progress (planning tracker)
 
 - [x] **8.0** — Entry gate + plan alignment (working plan created; kickoff docs‑only).
-- [ ] **8A** — Boundary contracts (await explicit implementation task).
+- [x] **8A** — Boundary contracts (`backend/app/services/model_pipeline_contracts.py` + `backend/tests/test_phase8_model_pipeline_contracts.py`; contracts only, no adapters).
 - [ ] **8B** — ModelTask envelopes.
 - [ ] **8C** — NotConfigured adapter shell.
 - [ ] **8D** — Output validation service.
