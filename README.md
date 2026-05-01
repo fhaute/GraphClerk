@@ -1,130 +1,189 @@
 # GraphClerk
 
-GraphClerk is a **local-first, graph-guided evidence-routing layer for RAG systems**.
+## What GraphClerk is
 
-It is not a chatbot by itself. It does not try to replace RAG frameworks, vector databases, or LLMs.
-It improves the layer between user intent and LLM context by returning **structured evidence packets**
-with traceability to original source artifacts.
+GraphClerk is a **local-first, graph-guided evidence-routing layer for RAG systems**. It sits between user intent and an LLM by returning **structured retrieval packets** with traceability to **source artifacts** and **evidence units**, using a **semantic index** and **graph** layer so you can **search meaning first, then retrieve evidence**.
+
+## What GraphClerk is not
+
+- **Not** a chatbot or autonomous agent framework by itself.
+- **Not** a replacement for your vector database, embedding service, or RAG orchestration framework.
+- **Not** a full document management system or EBES.
+- **Not** answer synthesis: **`POST /answer`** and LLM-driven prose from packets are **out of scope** until separately approved and implemented.
+- **Not** multimodal “AI complete”: **no OCR, ASR, image captioning, or video ingestion pipeline** in the current backend; image/audio paths are largely **validation shells** (see Phase 5 docs).
 
 ## Project principle
+
 **Search meaning first, then retrieve evidence.**
 
-## What’s implemented (honest status)
-- **Phase 0**: governance baseline (`docs/governance/*`)
-- **Phase 1**: backend foundation (FastAPI, SQLAlchemy/Alembic, Docker Compose, `/health`, `/version`)
-- **Phase 2**: text/Markdown ingestion → `Artifact` + `EvidenceUnit` with location metadata
-- **Phase 3**: semantic index + graph meaning layer (graph APIs, evidence links, semantic index APIs, vector index service, semantic index search, bounded traversal)
-- **Phase 4**: File Clerk retrieval packets (`POST /retrieve`), structured `RetrievalPacket` contracts, deterministic intent + route selection + graph-linked evidence selection + context budgeting, and `RetrievalLog.retrieval_packet` JSON snapshots
-- **Phase 5** (**partially implemented; in progress; audit pending** — see `docs/phases/graph_clerk_phase_5_multimodal_ingestion.md`): `EvidenceUnitCandidate` hardening, `ArtifactExtractor` + `ExtractorRegistry`, multimodal routing shell, `ArtifactTypeResolver`, PDF text via optional **`pdf`** (pypdf), PPTX slide text via optional **`pptx`** (python-pptx), image/audio **validation shells** via optional **`image`** (Pillow) / **`audio`** (mutagen) (**no** EvidenceUnits from image/audio yet), integration tests for PDF/PPTX evidence in `POST /retrieve` packets, and HTTP tests for multimodal `POST /artifacts` errors. **Not** complete: no OCR/ASR/caption, no video ingestion, no automatic multimodal graph extraction, no FileClerk or `RetrievalPacket` schema redesign.
+## What is implemented (honest status)
+
+- **Phase 0**: Governance baseline (`docs/governance/*`).
+- **Phase 1**: Backend foundation (FastAPI, SQLAlchemy/Alembic, Docker Compose, `/health`, `/version`).
+- **Phase 2**: Text/Markdown ingestion → `Artifact` + `EvidenceUnit` with location metadata.
+- **Phase 3**: Semantic index + graph layer (graph APIs, evidence links, semantic index APIs, vector index service, semantic search for **indexed** indexes, bounded traversal). **No** automatic vector backfill on index create.
+- **Phase 4**: File Clerk **`POST /retrieve`**, structured `RetrievalPacket`, deterministic intent/route/evidence selection, context budgeting, `RetrievalLog.retrieval_packet` snapshots.
+- **Phase 5** (**in progress**, **partial**; audit **`pass_with_notes`** — `docs/audits/PHASE_5_AUDIT.md`): multimodal routing, PDF/PPTX text to evidence when optional extras installed; image/audio **validation only** (no EU from image/audio; **503** where documented); **no** OCR/ASR/caption/video pipeline.
+- **Phase 6** (**in progress**, **partial**; **no Phase 6 audit yet** — `docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`): React/Vite UI in `frontend/` against **live** APIs only; see [Web UI](#web-ui-phase-6) below. **Onboarding / Slice K**: this README, `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`.
 
 ## What is explicitly not implemented yet
-- optional **`POST /answer`** / `LocalRAGConsumer` / `AnswerSynthesizer` (deferred until separately approved)
-- answer synthesis / LLM calls
-- automatic graph extraction / claim extraction
-- **full** Phase 5 multimodal ingestion (OCR, transcription, captions, video; image/audio do not emit `EvidenceUnit`s today)
-- production embedding adapter not wired (Phase 3 uses explicit placeholder adapters)
-- SemanticIndex creation does not auto-index into Qdrant; no indexing job/backfill yet
-- UI
 
-## Governance first
-This repository starts with Phase 0 governance guardrails. Technical implementation must not begin
-until the governance baseline is present and committed.
+- **`POST /answer`** / `LocalRAGConsumer` / answer synthesis in the API.
+- **LLM calls** inside core ingestion/retrieval paths.
+- **Full** Phase 5 multimodal (OCR, transcription, captions, video; image/audio as full evidence producers).
+- **Automatic semantic index vector population** after create (indexing job/backfill).
+- **Phase 6 audit** and optional items in the Phase 6 phase doc (e.g. in-product demo loader vs script-only, automated UI tests).
 
-- `docs/graph_clerk_phase_0_governance_baseline.md`: Phase 0 initialization document (source)
-- `docs/governance/`: split governance documents used by prompts, reviews, and audits
-- `docs/phases/PHASE_1_FOUNDATION.md`: Phase 1 implementation status and non-features
-- `docs/phases/PHASE_2_TEXT_FIRST_INGESTION.md`: Phase 2 ingestion behavior (text/Markdown only)
-- `docs/phases/graph_clerk_phase_3_semantic_index_and_graph_layer.md`: Phase 3 definition (meaning layer)
-- `docs/phases/graph_clerk_phase_5_multimodal_ingestion.md`: Phase 5 definition and **current implementation status**
-- `docs/status/`: status tracking (honesty rules)
-- `docs/adr/`: architecture decision records (ADRs)
+## Governance and phase docs
+
+- `docs/graph_clerk_phase_0_governance_baseline.md` — Phase 0 source narrative.
+- `docs/governance/` — guardrails for assistants and humans.
+- `docs/phases/PHASE_1_FOUNDATION.md`, `PHASE_2_*`, `graph_clerk_phase_3_*`, `graph_clerk_phase_4_*`, `graph_clerk_phase_5_*`, `graph_clerk_phase_6_*`.
+- `docs/status/` — required honesty tables.
+- `docs/api/API_OVERVIEW.md` — HTTP surface summary.
+- `docs/adr/` — ADRs.
+
+---
 
 ## Quickstart (Docker)
-Start API + Postgres + Qdrant:
+
+From the **repository root**:
 
 ```bash
 docker compose up -d --build
+docker compose ps
 ```
 
-With the default Compose mapping, the API is on the host at **`http://localhost:8010`**. The **`api`** container still listens on **8000** inside the network; **`8010:8000`** publishes it on the host.
+With the default Compose mapping, the API on the host is **`http://localhost:8010`**. The **`api`** container listens on **8000** internally; **`8010:8000`** publishes it.
 
-If **`vite`** logs **`connect ECONNREFUSED 127.0.0.1:8010`**, nothing is listening on that host port yet: run **`docker compose up -d --build`** from the repo root (and **`docker compose ps`** to confirm **`api`** is **Up**). After changing Compose port mappings, recreate containers so the new bind is applied.
+If **`vite`** logs **`ECONNREFUSED`** to **`127.0.0.1:8010`**, the API is not listening on that host port yet — confirm containers are **Up** and recreate after port mapping changes.
 
-**Frontend + API in dev:** the default **`frontend/.env.development`** uses **`VITE_API_BASE_URL=/api`**. Vite proxies **`/api`** to the backend; the proxy target defaults to **`http://127.0.0.1:8010`**. Override with **`GRAPHCLERK_API_PROXY_TARGET`** in **`frontend/.env.local`** if the API is elsewhere (for example **`http://127.0.0.1:8000`** when running **`uvicorn`** on port **8000**). You can also set **`VITE_API_BASE_URL=http://localhost:8010`** to call the API directly (ensure CORS allows the UI origin).
+---
 
-If you run **`uvicorn`** directly on **8010** to match Docker’s host URL, **`--port 8010`** is enough with the default proxy target.
+## Backend (local dev)
 
-## Quickstart (local dev)
-From `backend/`:
+From **`backend/`**:
 
 ```bash
 python -m pip install -e ".[dev]"
 ```
 
-Optional multimodal libraries (from `backend/pyproject.toml`): **`pdf`** → pypdf, **`pptx`** → python-pptx, **`image`** → Pillow, **`audio`** → mutagen. Example:
+Optional multimodal extras (see `pyproject.toml`): **`pdf`**, **`pptx`**, **`image`**, **`audio`**.
 
 ```bash
 python -m pip install -e ".[dev,pdf,pptx,image,audio]"
 ```
 
+Run the API (port **8010** matches the default Docker host port and the default Vite proxy target):
+
 ```bash
-python -m pytest
 python -m uvicorn app.main:app --reload --port 8010
 ```
 
-## Running tests
-- **Default** (fast, no external services): `python -m pytest`
-- **Integration tests** (opt-in): set:
-  - `RUN_INTEGRATION_TESTS=1`
-  - `DATABASE_URL=...`
-  - `QDRANT_URL=...` (only for Qdrant tests)
+### Running backend tests
 
-**Tests and schema:** some integration tests build schema with SQLAlchemy `Base.metadata.create_all()`. That is **not** a substitute for running Alembic on real databases. Deployments and local Postgres that should match production must apply migrations (see below).
+From **`backend/`**:
+
+```bash
+python -m pytest
+```
+
+**Integration tests** (opt-in): set `RUN_INTEGRATION_TESTS=1`, `DATABASE_URL`, and where needed `QDRANT_URL`. See `docs/governance/TESTING_RULES.md`.
+
+---
+
+## Frontend (local dev)
+
+From **`frontend/`**:
+
+```bash
+npm install
+npm run dev
+```
+
+### Vite proxy and API base URL
+
+- Default **`frontend/.env.development`** sets **`VITE_API_BASE_URL=/api`**. The browser calls same-origin **`/api/...`**; **Vite** proxies that to the real API.
+- Proxy target defaults to **`http://127.0.0.1:8010`** (Docker host API port). Override with **`GRAPHCLERK_API_PROXY_TARGET`** in **`frontend/.env.local`** (e.g. **`http://127.0.0.1:8000`** if you run **`uvicorn`** on port **8000**). See `frontend/.env.example`.
+- To bypass the proxy, set **`VITE_API_BASE_URL=http://localhost:8010`** (or your API URL). Then configure CORS on the API (**`GRAPHCLERK_CORS_ORIGINS`**, with legacy alias `GRAPHCLE_CORS_ORIGINS` if needed — see `backend/app/main.py`).
+
+### Frontend production build
+
+From **`frontend/`**:
+
+```bash
+npm run build
+```
+
+Use this in CI and before releases (see `docs/release/RELEASE_CHECKLIST.md`).
+
+---
+
+## Demo corpus (optional)
+
+Script-only loader (no in-app “Load demo” button). From **repository root**:
+
+```bash
+set GRAPHCLERK_API_BASE_URL=http://localhost:8010
+python scripts/load_phase6_demo.py --dry-run
+python scripts/load_phase6_demo.py
+```
+
+On Unix shells, use `export` instead of `set`. Default in the script if env is unset may still target port **8000** — **set `GRAPHCLERK_API_BASE_URL` explicitly** to match your API (see `docs/demo/PHASE_6_DEMO_CORPUS.md`).
+
+### Honest limitations after loading
+
+- Demo **`POST /semantic-indexes`** rows typically have **`vector_status=pending`** until a real indexing/backfill path runs. **`GET /semantic-indexes/search`** only returns **`vector_status=indexed`** rows.
+- Therefore **`POST /retrieve`** may **not** surface demo semantic routes the way a fully indexed deployment would; behavior falls back to whatever the File Clerk does when indexes are not indexed.
+
+---
+
+## Web UI (Phase 6)
+
+Location: **`frontend/`**. All tabs use **live** HTTP APIs (no bundled mock corpus).
+
+| Area | What it does |
+|------|----------------|
+| **Query playground** | Calls **`POST /retrieve`**; shows **`RetrievalPacket`** (readable + raw JSON). |
+| **Artifacts & evidence** | Lists artifacts and evidence units from the API. |
+| **Semantic indexes** | Lists/detail/search (search only meaningful for **indexed** vectors). |
+| **Graph explorer** | Nodes, edges, neighborhood, evidence links. |
+| **Retrieval logs** | Reads **`GET /retrieval-logs`**. |
+| **Evaluation dashboard** | Aggregates from retrieval logs / stored packets — **observability-style counts and breakdowns**, not answer-quality or accuracy metrics (no LLM judge; see `docs/evaluation/EVALUATION_METHOD.md`). |
+
+---
+
+## API reference (summary)
+
+See **`docs/api/API_OVERVIEW.md`** for a concise endpoint list. **`POST /answer`** is **not** listed as available.
+
+---
+
+## Release and evaluation docs
+
+- **`docs/release/RELEASE_CHECKLIST.md`** — tests, build, Compose, migrations, demo loader, manual UI, audit reminder.
+- **`docs/evaluation/EVALUATION_METHOD.md`** — what the Evaluation tab measures and what it does not.
+
+---
+
+## Running tests (summary)
+
+| Where | Command |
+|-------|---------|
+| Backend | `cd backend` then `python -m pytest` |
+| Frontend | `cd frontend` then `npm run build` (production compile check; no Vitest harness in-repo yet) |
+
+---
 
 ## Database migrations (PostgreSQL / deployment)
 
-For a **real PostgreSQL** database (staging, production, or a long-lived local DB), apply migrations from the `backend/` directory (where `alembic.ini` lives):
+For a **real PostgreSQL** database (staging, production, or a long-lived local DB), apply migrations from the **`backend/`** directory (where `alembic.ini` lives):
 
 ```bash
 cd backend
 alembic upgrade head
 ```
 
-**Phase 4** adds revision **`0004_phase4_retrieval_packet_log`**, which creates the nullable JSONB column **`retrieval_log.retrieval_packet`** (canonical `RetrievalPacket` snapshot for retrieval logs). If that migration has not been applied, `POST /retrieve` logging against that column will not match a migrated database.
+**Phase 4** adds revision **`0004_phase4_retrieval_packet_log`**, which creates the nullable JSONB column **`retrieval_log.retrieval_packet`**. If that migration has not been applied, `POST /retrieve` logging against that column will not match a migrated database.
 
 `alembic upgrade head` applies the full chain, including `0004`. Do not rely on test `create_all()` behavior alone to prove migration correctness.
-
-## API surface (current)
-Infrastructure:
-- `GET /health`
-- `GET /version`
-
-Artifacts / Evidence (Phase 2 + partial Phase 5):
-- `POST /artifacts`: JSON or multipart **text/Markdown** (unchanged). Multipart **PDF** / **PPTX** create `EvidenceUnit`s when optional **`pdf`** / **`pptx`** extras are installed. **Image** / **audio** uploads are validated when **`image`** / **`audio`** extras are present but return **503** (OCR/ASR/caption backends not configured — no text evidence units). **Video** is unsupported (**400**). See phase doc for details; full HTTP error matrix stays in tests, not here.
-- `GET /artifacts`
-- `GET /artifacts/{artifact_id}`
-- `GET /artifacts/{artifact_id}/evidence`
-- `GET /evidence-units/{evidence_unit_id}`
-
-Graph (Phase 3):
-- `POST /graph/nodes`
-- `GET /graph/nodes/{node_id}`
-- `GET /graph/nodes`
-- `POST /graph/edges`
-- `GET /graph/edges/{edge_id}`
-- `GET /graph/edges`
-- `POST /graph/nodes/{node_id}/evidence`
-- `POST /graph/edges/{edge_id}/evidence`
-
-Semantic indexes (Phase 3):
-- `POST /semantic-indexes`
-- `GET /semantic-indexes/{semantic_index_id}`
-- `GET /semantic-indexes/{semantic_index_id}/entry-points`
-- `GET /semantic-indexes/search`
-
-Graph traversal (Phase 3):
-- `GET /graph/nodes/{node_id}/neighborhood`
-
-Retrieval (Phase 4):
-- `POST /retrieve`
-

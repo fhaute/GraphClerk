@@ -29,5 +29,6 @@
 
 ## Phase 6 (in progress)
 - **No automated frontend tests yet** (`frontend/` has no `*.test.*` / `*.spec.*` harness wired in-repo): consider Vitest/Playwright (or equivalent) once UI contracts stabilize.
-- **Phase 6 audit and release checklist** not completed; treat UI as **partial** until audited.
+- **Phase 6 audit** not completed; treat UI as **partial** until audited. Human **release** steps are documented in `docs/release/RELEASE_CHECKLIST.md` (not a substitute for the audit).
+- **Onboarding debt (reduced in Slice K)**: README now covers Docker **8010**, Vite **`/api`** proxy + **`GRAPHCLERK_API_PROXY_TARGET`**, backend/frontend commands, demo loader, and evaluation-method limits; API summary lives in `docs/api/API_OVERVIEW.md`.
 

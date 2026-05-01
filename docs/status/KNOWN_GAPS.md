@@ -16,7 +16,7 @@ This file tracks known missing pieces so they are explicit and not hidden.
 - **FileClerk retrieval packet assembly**: implemented (Phase 4; deterministic/heuristic components)
 - **Optional packet-only answer synthesis (`POST /answer`)**: not_started (deferred; requires separate approval)
 - **Answer synthesis / LLM calls**: not_started (future phase)
-- **Phase 6 UI / productization**: **in_progress** / **partial** — `frontend/` implements main explorers and query playground against live APIs; **Phase 6 audit**, in-product **demo corpus loader**, and several onboarding/release items from `docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md` remain **not done**. **`POST /answer`** / answer-in-UI remains blocked on backend deferral.
+- **Phase 6 UI / productization**: **in_progress** / **partial** — `frontend/` implements main explorers and query playground against live APIs. **Slice K (docs/onboarding)**: root **`README.md`**, **`docs/api/API_OVERVIEW.md`**, **`docs/release/RELEASE_CHECKLIST.md`**, **`docs/evaluation/EVALUATION_METHOD.md`**, and this demo doc align with Compose **8010**, Vite proxy, demo loader, and evaluation limits. **Still not done**: **Phase 6 audit**, in-product **demo corpus loader** (script `scripts/load_phase6_demo.py` exists separately), and other phase-doc items as listed in `docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`. **`POST /answer`** / answer-in-UI remains blocked on backend deferral.
 
 ## Known limitations (Phase 1)
 - **Integration tests are opt-in**: DB/Qdrant tests require `RUN_INTEGRATION_TESTS=1` and explicit env vars.

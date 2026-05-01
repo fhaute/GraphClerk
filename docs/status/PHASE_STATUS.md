@@ -61,4 +61,5 @@
   - [`docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`](docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md)
   - `frontend/src/App.tsx`, `frontend/src/components/*`, `frontend/src/api/*`
   - `frontend/vite.config.ts`, `frontend/.env.example`
+  - **Slice K — onboarding / docs**: `README.md`, `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`
 

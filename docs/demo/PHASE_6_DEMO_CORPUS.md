@@ -13,15 +13,26 @@ The Phase 6 demo loader seeds a **small, API-created** dataset so the GraphClerk
 
 ## Run
 
+From the **repository root**. Point the script at the same URL as your API (Docker default host port is **8010**):
+
 ```bash
-# Optional: override API origin (defaults to http://localhost:8000)
-export GRAPHCLERK_API_BASE_URL=http://localhost:8000
+# Windows PowerShell example:
+$env:GRAPHCLERK_API_BASE_URL = "http://localhost:8010"
 
 python scripts/load_phase6_demo.py --dry-run
 python scripts/load_phase6_demo.py
 ```
 
-The alternate env name `GRAPHCLE_API_BASE_URL` is accepted if `GRAPHCLERK_API_BASE_URL` is unset (typo-tolerant).
+```bash
+# Unix example:
+export GRAPHCLERK_API_BASE_URL=http://localhost:8010
+python scripts/load_phase6_demo.py --dry-run
+python scripts/load_phase6_demo.py
+```
+
+If `GRAPHCLERK_API_BASE_URL` is unset, the script falls back to **`http://localhost:8000`** — override when using the default **8010** Compose mapping (see root **`README.md`**).
+
+The alternate env name **`GRAPHCLE_API_BASE_URL`** is accepted only if `GRAPHCLERK_API_BASE_URL` is unset (legacy typo tolerance in the script — prefer **`GRAPHCLERK_API_BASE_URL`**).
 
 ## Metadata tagging
 
@@ -49,7 +60,7 @@ Timestamps are embedded in some labels to make rows easier to spot in the UI.
 Therefore:
 
 - **`GET /semantic-indexes/search`** may return **no** hits for the demo index until it is **indexed** in your deployment’s vector backend.
-- **Query Playground / `POST /retrieve`** route selection depends on indexed semantic indexes in normal operation; with only **pending** demo indexes, retrieval may fall back to behavior your backend defines for “no indexed match.”
+- **`POST /retrieve`** may not route through the demo semantic index the way a fully indexed deployment would; behavior follows the File Clerk when indexes are not **`indexed`**.
 
 This loader **does not** write to the database directly and **does not** fake indexing through hidden APIs.
 

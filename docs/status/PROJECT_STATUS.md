@@ -88,6 +88,7 @@
 
 ## Phase 6 limitations (explicit)
 - Phase 6 **audit** not completed; phase treated as **in progress**
-- Phase doc items still open at a high level (non-exhaustive): public demo sample data workflow in-product, onboarding/release checklist polish, optional API hardening pass, optional automated frontend/E2E test coverage
+- Phase doc items still open at a high level (non-exhaustive): public demo sample data workflow **in-product** (script loader exists separately), optional API hardening pass, optional automated frontend/E2E test coverage
+- **Slice K**: README + `docs/api/API_OVERVIEW.md` + `docs/release/RELEASE_CHECKLIST.md` + `docs/evaluation/EVALUATION_METHOD.md` + demo corpus doc updated for onboarding — **does not** close the phase or replace the audit
 - **`POST /answer`** / packet-grounded answer viewer remains out of scope until `/answer` is approved and implemented
 

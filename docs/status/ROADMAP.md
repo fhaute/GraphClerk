@@ -107,9 +107,10 @@
   - `frontend/` app shell with live API client, health banner, and tabbed navigation
   - Query playground + retrieval packet panel (human-readable + raw JSON)
   - Artifacts/evidence, semantic indexes, graph, retrieval logs, and evaluation dashboard surfaces (live data only; no in-app mock corpus)
+  - **Slice K — onboarding**: `README.md` (Docker **8010**, Vite **`/api`** + **`GRAPHCLERK_API_PROXY_TARGET`**, tests, `npm run build`, demo loader, UI overview, evaluation honesty), `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`
 - **Remaining / not done** (non-exhaustive; see phase doc):
   - Phase 6 **audit**
-  - In-product **demo corpus + loader** and remaining onboarding/release checklist items from the phase doc
+  - In-product **demo corpus + loader** (script `scripts/load_phase6_demo.py` remains the supported path until an in-app workflow exists)
   - Optional **API hardening** pass and **automated frontend/E2E** coverage
   - **`POST /answer`** / packet-grounded answer viewer (blocked on `/answer` implementation)
 
