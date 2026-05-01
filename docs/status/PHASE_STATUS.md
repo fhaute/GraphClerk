@@ -83,6 +83,7 @@
 
 ## Phase 8 — Specialized Model Pipeline (future)
 - **Status**: **`not_started`** — specification only: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md); **no** Phase 8 implementation claimed in `docs/status/*`.
+- **Working plan (Cursor):** [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md) — planning / slice tracker; product implementation remains **`not_started`** until approved slices ship.
 
 ## Phase 9 — IDE Integration / Developer Evidence Orchestration (future)
 - **Status**: **`not_started`** — specification only: [`docs/phases/graph_clerk_phase_9_ide_integration_developer_evidence_orchestration.md`](../phases/graph_clerk_phase_9_ide_integration_developer_evidence_orchestration.md); **no** Phase 9 implementation claimed in `docs/status/*`.
