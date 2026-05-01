@@ -152,11 +152,71 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 - [x] **8B** — Request/response envelopes (`ModelPipelineRequestEnvelope`, `ModelPipelineResponseEnvelope`, `ModelPipelineError`; status/error semantics; no adapters).
 - [x] **8C** — Adapter shell (`ModelPipelineAdapter`, `NotConfiguredModelPipelineAdapter`, `DeterministicTestModelPipelineAdapter` tests-only; no registry, no real inference).
 - [x] **8D** — Output validation service (`model_pipeline_output_validation_service.py`; deep recursive checks; reports only, no mutation).
-- [ ] **8E** — Candidate seam (approval‑gated).
+- [ ] **8E** — Candidate seam (approval‑gated; **design notes § Slice 8E** — implementation not started).
 - [ ] **8F** — Evaluation fixtures.
 - [ ] **8G** — Local inference design only.
 - [ ] **8H** — Docs/status alignment post‑implementation.
 - [ ] **8I** — Phase 8 audit.
+
+---
+
+## Slice 8E — Design notes (candidate-only integration seam)
+
+**Status:** Design-only pass. **No backend implementation** in this delivery; slice **8E** stays **unchecked** until an explicit implementation task approves code paths.
+
+### PM recommendation — option letter
+
+| Choice | Verdict |
+|--------|---------|
+| **A** — Pure projection service: validated pipeline output → namespaced **`graphclerk_model_pipeline`** metadata blob **only**; **no** ingestion wiring in the same slice | **Preferred first implementation** |
+| **B** — Thin `EvidenceEnrichmentService` path that merges **only** a pre-built projection (still **no** adapter calls inside enrichment) | **After A + after 8F** |
+| **C** — Direct merge in `TextIngestionService` / `MultimodalIngestionService` | **Avoid first** — coupling + persistence pressure |
+| **D** — Defer all **8E** until **8F** | **Partial only:** defer **merge into candidates / enrichment** until **after 8F**; pure **A** may still ship earlier **without** ingestion touch |
+| **E** — Other minimal (e.g. explicit `ProjectionOk` / `ProjectionRejected` ADT) | Same boundary as **A** |
+
+**Smallest safe slice:** **A** (pure module + tests), **no** enrichment/ingestion edits until **8F** fixtures exist.
+
+### Sub-agent summaries (this design pass)
+
+- **PM:** Sequence **8F before E2 wiring**; split **E1** projection vs **E2** optional enrichment merge if scope creeps.
+- **Code quality:** All Phase 8 writes under **`metadata_json["graphclerk_model_pipeline"]`**; **`proposed`** subtree only for model-suggested fields; projection imports **no** FileClerk/retrieval.
+- **Audit:** Namespace + **`validation.ok`** + **no** `text` / `source_fidelity` mutation prevents treating model JSON as evidence; document honest limits in **8H**.
+- **Testing:** Golden fixtures from **8F**; clone candidates and assert **`text`/`source_fidelity` unchanged**; **`validation.ok` false** → **no** merge; unavailable adapter → **no** metadata by default.
+- **Git:** Plan file only unless implementation follows.
+
+### Design Q&A (required)
+
+1. **Seam:** **`ModelPipelineCandidateMetadataProjection`** service (name TBD): validated envelope + report → **`dict | None`** for the **`graphclerk_model_pipeline`** subtree only.
+2. **Inputs:** Success **`ModelPipelineResponseEnvelope`** + **`ModelPipelineOutputValidationReport.ok`** + **`model_pipeline_request_id`**; optionally extracted **`ModelPipelineResult`**.
+3. **Outputs:** **Metadata only** — mergeable nested dict; **never** mutates candidate evidence fields.
+4. **New candidates:** **Out of scope** for minimal **8E**; defer unless separately approved.
+5. **Future `source_fidelity` if new candidates ever allowed:** **`derived`** / **`computed`** only; never **`verbatim`** for model body text.
+6. **Traceability:** Include **`schema_version`**, **`model_pipeline_request_id`**, **`role`**, **`output_kind`**, **`status`**, **`provenance.source`**, **`validation`** (`ok` + compact **`issues`**), **`proposed`**.
+7. **`ModelPipelineOutputValidationService`:** Runs **before** projection; projection **refuses** if **`ok`** is false.
+8. **Validation fails:** **No merge**; **no** silent attach (quarantine/logging **deferred**).
+9. **Adapter unavailable:** **No** candidate metadata by default (matches **NotConfigured** behavior).
+10. **8E vs 8F:** **8F before any enrichment/ingestion wiring**; **pure A** may precede **8F** if it stays **off** ingestion paths.
+11. **Enrichment vs standalone:** **Standalone A first**; optional enrichment hook (**B**) only after **8F**, default remains **no-op** in production.
+12. **Allowed files (future impl, illustrative):** `backend/app/services/model_pipeline_candidate_projection_service.py`, `backend/tests/test_phase8_model_pipeline_candidate_projection*.py`; later optionally **`evidence_enrichment_service.py`** for thin merge. **Forbidden until approved:** `text_ingestion_service.py`, `multimodal_ingestion_service.py`, FileClerk/retrieval/route/evidence selection, API, DB, adapters in enrichment default path.
+13. **Tests:** Projection golden JSON; reject paths; immutability on cloned candidates; import boundaries.
+14. **Deferred:** Orchestrator calling adapters; new EU candidates from models; UI; quarantine store.
+
+### Canonical metadata shape (`metadata_json`)
+
+```json
+{
+  "graphclerk_model_pipeline": {
+    "schema_version": "phase8.v1",
+    "model_pipeline_request_id": "...",
+    "role": "evidence_candidate_enricher",
+    "output_kind": "candidate_metadata",
+    "status": "success",
+    "provenance": { "source": "deterministic_test" },
+    "validation": { "ok": true, "issues": [] },
+    "proposed": { "labels": [], "hints": [] }
+  }
+}
+```
 
 ---
 
