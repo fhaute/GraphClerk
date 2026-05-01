@@ -13,7 +13,7 @@ todos:
     status: completed
   - id: p7-slice-7c
     content: "Slice 7C — LanguageDetectionService adapter shell (NotConfigured + deterministic/local test adapter); explicit unknown/low-confidence; no remote services; no translation."
-    status: pending
+    status: completed
   - id: p7-slice-7d
     content: "Slice 7D — Wire enrichment into text/Markdown + Phase 5 extractor persistence path after 7A–7C stable; preserve source_fidelity; regression tests Phase 2 + Phase 5 paths."
     status: pending

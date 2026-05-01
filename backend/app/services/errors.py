@@ -160,3 +160,10 @@ class InvalidLanguageMetadataError(GraphClerkError):
     """Raised when optional Phase 7 language fields inside candidate metadata are malformed."""
 
 
+class LanguageDetectionUnavailableError(GraphClerkError):
+    """Raised when language detection is not configured or cannot run."""
+
+
+class LanguageDetectionError(GraphClerkError):
+    """Raised when language detection fails or returns an invalid result shape."""
+
