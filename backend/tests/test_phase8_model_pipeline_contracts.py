@@ -1,4 +1,4 @@
-"""Phase 8 Slice 8A — model pipeline boundary contracts (no inference, no retrieval)."""
+"""Phase 8 Slices 8A–8B — model pipeline contracts and envelopes (no inference, no retrieval)."""
 
 from __future__ import annotations
 
@@ -6,19 +6,49 @@ import ast
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
 from app.services import model_pipeline_contracts as mpc
 from app.services.model_pipeline_contracts import (
+    SCHEMA_VERSION_PHASE8_V1,
     ModelOutputKind,
+    ModelPipelineError,
     ModelPipelineInputKind,
+    ModelPipelineRequestEnvelope,
+    ModelPipelineResponseEnvelope,
     ModelPipelineResult,
     ModelPipelineRole,
     ModelPipelineStatus,
     ModelPipelineTask,
 )
+
+
+def _minimal_task(**kwargs: Any) -> ModelPipelineTask:
+    d: dict[str, Any] = {
+        "role": ModelPipelineRole.extraction_helper,
+        "input_kind": ModelPipelineInputKind.extraction_context,
+        "output_kind": ModelOutputKind.candidate_metadata,
+        "payload": {},
+        "metadata": {},
+    }
+    d.update(kwargs)
+    return ModelPipelineTask(**d)
+
+
+def _success_result(**kwargs: Any) -> ModelPipelineResult:
+    d: dict[str, Any] = {
+        "role": ModelPipelineRole.extraction_helper,
+        "output_kind": ModelOutputKind.candidate_metadata,
+        "status": ModelPipelineStatus.success,
+        "payload": {},
+        "warnings": [],
+        "provenance": {"source": "deterministic_test"},
+    }
+    d.update(kwargs)
+    return ModelPipelineResult(**d)
 
 
 def test_contracts_import_successfully() -> None:
@@ -266,4 +296,167 @@ def test_provenance_requires_nonempty_source() -> None:
             payload={},
             warnings=[],
             provenance={},
+        )
+
+
+# --- Slice 8B: request/response envelopes ---
+
+
+def test_valid_request_envelope_validates() -> None:
+    env = ModelPipelineRequestEnvelope(
+        request_id="req-1",
+        task=_minimal_task(),
+        metadata={"client": "test"},
+        trace={"span": "a"},
+    )
+    assert env.request_id == "req-1"
+    assert env.schema_version == SCHEMA_VERSION_PHASE8_V1
+    assert env.task.role == ModelPipelineRole.extraction_helper
+
+
+def test_request_id_is_stripped_and_nonempty() -> None:
+    env = ModelPipelineRequestEnvelope(request_id="  rid-42  ", task=_minimal_task())
+    assert env.request_id == "rid-42"
+    with pytest.raises(ValidationError):
+        ModelPipelineRequestEnvelope(request_id="   ", task=_minimal_task())
+    with pytest.raises(ValidationError):
+        ModelPipelineRequestEnvelope(request_id="", task=_minimal_task())
+
+
+def test_request_metadata_and_trace_must_be_dicts() -> None:
+    with pytest.raises(ValidationError):
+        ModelPipelineRequestEnvelope(request_id="x", task=_minimal_task(), metadata=[])
+    with pytest.raises(ValidationError):
+        ModelPipelineRequestEnvelope(request_id="x", task=_minimal_task(), trace="nope")
+
+
+def test_valid_success_response_envelope() -> None:
+    res = _success_result()
+    env = ModelPipelineResponseEnvelope(
+        request_id="req-1",
+        status=ModelPipelineStatus.success,
+        result=res,
+        error=None,
+        warnings=["note"],
+        metadata={"k": 1},
+    )
+    assert env.status == ModelPipelineStatus.success
+    assert env.error is None
+    assert env.result is not None
+    assert env.result.status == ModelPipelineStatus.success
+
+
+def test_success_response_rejects_missing_result() -> None:
+    with pytest.raises(ValidationError):
+        ModelPipelineResponseEnvelope(
+            request_id="r",
+            status=ModelPipelineStatus.success,
+            result=None,
+            error=None,
+        )
+
+
+def test_success_response_rejects_error_present() -> None:
+    with pytest.raises(ValidationError):
+        ModelPipelineResponseEnvelope(
+            request_id="r",
+            status=ModelPipelineStatus.success,
+            result=_success_result(),
+            error=ModelPipelineError(code="E", message="m"),
+        )
+
+
+def test_non_success_response_requires_error_and_no_result() -> None:
+    for st in (
+        ModelPipelineStatus.rejected,
+        ModelPipelineStatus.unavailable,
+        ModelPipelineStatus.error,
+    ):
+        env = ModelPipelineResponseEnvelope(
+            request_id="r1",
+            status=st,
+            result=None,
+            error=ModelPipelineError(code="c", message="msg"),
+        )
+        assert env.result is None
+        assert env.error is not None
+
+    with pytest.raises(ValidationError):
+        ModelPipelineResponseEnvelope(
+            request_id="r",
+            status=ModelPipelineStatus.rejected,
+            result=None,
+            error=None,
+        )
+    with pytest.raises(ValidationError):
+        ModelPipelineResponseEnvelope(
+            request_id="r",
+            status=ModelPipelineStatus.unavailable,
+            result=_success_result(),
+            error=ModelPipelineError(code="c", message="m"),
+        )
+
+
+def test_response_status_must_match_result_status_when_result_present() -> None:
+    bad = _success_result(status=ModelPipelineStatus.rejected)
+    with pytest.raises(ValidationError):
+        ModelPipelineResponseEnvelope(
+            request_id="r",
+            status=ModelPipelineStatus.success,
+            result=bad,
+            error=None,
+        )
+
+
+def test_error_code_and_message_nonempty() -> None:
+    with pytest.raises(ValidationError):
+        ModelPipelineError(code="", message="x")
+    with pytest.raises(ValidationError):
+        ModelPipelineError(code="c", message="   ")
+
+
+def test_error_details_must_be_dict() -> None:
+    with pytest.raises(ValidationError):
+        ModelPipelineError(code="c", message="m", details=[])
+
+
+def test_error_details_reject_is_evidence_true() -> None:
+    with pytest.raises(ValidationError):
+        ModelPipelineError(code="c", message="m", details={"is_evidence": True})
+
+
+def test_error_details_reject_source_fidelity_verbatim() -> None:
+    with pytest.raises(ValidationError):
+        ModelPipelineError(code="c", message="m", details={"source_fidelity": "verbatim"})
+
+
+def test_response_warnings_must_be_list_str() -> None:
+    with pytest.raises(ValidationError):
+        ModelPipelineResponseEnvelope(
+            request_id="r",
+            status=ModelPipelineStatus.success,
+            result=_success_result(),
+            warnings=[1],
+        )
+
+
+def test_schema_version_nonempty_on_envelopes() -> None:
+    with pytest.raises(ValidationError):
+        ModelPipelineRequestEnvelope(request_id="x", task=_minimal_task(), schema_version="")
+    with pytest.raises(ValidationError):
+        ModelPipelineResponseEnvelope(
+            request_id="x",
+            status=ModelPipelineStatus.success,
+            result=_success_result(),
+            schema_version="   ",
+        )
+
+
+def test_response_metadata_rejects_top_level_truth_claims() -> None:
+    with pytest.raises(ValidationError):
+        ModelPipelineResponseEnvelope(
+            request_id="r",
+            status=ModelPipelineStatus.success,
+            result=_success_result(),
+            metadata={"is_evidence": True},
         )

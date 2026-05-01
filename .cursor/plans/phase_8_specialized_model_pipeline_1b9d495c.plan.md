@@ -107,7 +107,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 
 - [x] **8.0** — Entry gate + plan alignment (working plan created; kickoff docs‑only).
 - [x] **8A** — Boundary contracts (`backend/app/services/model_pipeline_contracts.py` + `backend/tests/test_phase8_model_pipeline_contracts.py`; contracts only, no adapters).
-- [ ] **8B** — ModelTask envelopes.
+- [x] **8B** — Request/response envelopes (`ModelPipelineRequestEnvelope`, `ModelPipelineResponseEnvelope`, `ModelPipelineError`; status/error semantics; no adapters).
 - [ ] **8C** — NotConfigured adapter shell.
 - [ ] **8D** — Output validation service.
 - [ ] **8E** — Candidate seam (approval‑gated).

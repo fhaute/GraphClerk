@@ -1,14 +1,17 @@
-"""Phase 8 Slice 8A — typed contracts for future specialized model helpers.
+"""Phase 8 — typed contracts and envelopes for future specialized model helpers.
 
-This module defines **only** Pydantic contracts and validation rules. It does **not**
-invoke models, load weights, perform inference, touch the database, or integrate
-with FileClerk or retrieval services.
+Slices **8A–8B** in this module: task/result contracts (8A) plus request/response
+envelopes and structured errors (8B). This code does **not** invoke models, load
+weights, perform inference, touch the database, or integrate with FileClerk or
+retrieval services. Envelopes do **not** imply that inference is configured or
+successful — they only carry typed status and optional payloads.
 
 Invariants (non-negotiable):
     - **Model output is not evidence.** Contracts never declare results as
-      verbatim source truth; payloads and provenance are rejected if they
-      carry ``source_fidelity: "verbatim"`` at the **top level** (deeper
-      recursive scrubbing belongs to Slice 8D).
+      verbatim source truth; payloads, provenance, and (for 8B) error ``details``
+      are rejected if they carry forbidden top-level truth claims (e.g.
+      ``source_fidelity: "verbatim"``, ``is_evidence: true``). **Deeper recursive
+      scrubbing** of nested dicts belongs to **Slice 8D**.
     - Outputs are **candidate** or **derived** metadata, routing hints, or
       validation signals — never a substitute for ``EvidenceUnit`` /
       ``RetrievalPacket`` evidence without separate normalization.
@@ -21,9 +24,12 @@ Error semantics:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
+
+# Default wire format version for Phase 8 pipeline JSON envelopes (not an inference claim).
+SCHEMA_VERSION_PHASE8_V1: str = "phase8.v1"
 
 # --- Controlled vocabularies (string enums, project style) ---
 
@@ -131,6 +137,26 @@ def _validate_role_output_pair(role: ModelPipelineRole, output_kind: ModelOutput
         )
 
 
+def _warnings_list_str(v: Any) -> list[str]:
+    if not isinstance(v, list):
+        raise ValueError("warnings must be a list[str].")
+    out: list[str] = []
+    for i, item in enumerate(v):
+        if not isinstance(item, str):
+            raise ValueError(f"warnings[{i}] must be str, not {type(item).__name__}.")
+        out.append(item)
+    return out
+
+
+def _non_empty_stripped_str(v: str, *, field_name: str) -> str:
+    if not isinstance(v, str):
+        raise ValueError(f"{field_name} must be a string.")
+    s = v.strip()
+    if s == "":
+        raise ValueError(f"{field_name} must be a non-empty string.")
+    return s
+
+
 class ModelPipelineTask(BaseModel):
     """A single future model-helper task envelope (no execution).
 
@@ -182,14 +208,7 @@ class ModelPipelineResult(BaseModel):
     @field_validator("warnings", mode="before")
     @classmethod
     def _warnings_must_be_str_list(cls, v: Any) -> list[str]:
-        if not isinstance(v, list):
-            raise ValueError("warnings must be a list[str].")
-        out: list[str] = []
-        for i, item in enumerate(v):
-            if not isinstance(item, str):
-                raise ValueError(f"warnings[{i}] must be str, not {type(item).__name__}.")
-            out.append(item)
-        return out
+        return _warnings_list_str(v)
 
     @model_validator(mode="after")
     def _validate_matrix_and_truth_bounds(self) -> ModelPipelineResult:
@@ -202,5 +221,139 @@ class ModelPipelineResult(BaseModel):
             raise ValueError(
                 "provenance['source'] must be a non-empty str "
                 "(e.g. 'not_configured', 'deterministic_test', or adapter id).",
+            )
+        return self
+
+
+class ModelPipelineError(BaseModel):
+    """Structured error for pipeline responses (no stack traces required here).
+
+    ``details`` is a JSON-like dict only; top-level truth-claim bans match Slice 8A.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    code: str
+    message: str
+    retryable: bool = False
+    details: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("code", "message", mode="after")
+    @classmethod
+    def _code_message_nonempty(cls, v: str, info: ValidationInfo) -> str:
+        return _non_empty_stripped_str(v, field_name=info.field_name or "field")
+
+    @field_validator("details", mode="before")
+    @classmethod
+    def _details_dict(cls, v: Any, info: ValidationInfo) -> dict[str, Any]:
+        return _assert_json_like_dict(v, field_name=info.field_name or "details")
+
+    @model_validator(mode="after")
+    def _forbid_truth_in_details(self) -> ModelPipelineError:
+        _forbid_truth_claims_top_level(self.details, label="ModelPipelineError.details")
+        return self
+
+
+class ModelPipelineRequestEnvelope(BaseModel):
+    """Wire-in request wrapper around a :class:`ModelPipelineTask` (no execution).
+
+    Carries correlation ``request_id``, optional ``metadata`` / ``trace`` blobs,
+    and a **schema version** string for forward compatibility. Does not imply that
+    any model adapter is configured.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    request_id: str
+    task: ModelPipelineTask
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    trace: dict[str, Any] = Field(default_factory=dict)
+    schema_version: str = Field(default=SCHEMA_VERSION_PHASE8_V1)
+
+    @field_validator("request_id", mode="after")
+    @classmethod
+    def _request_id_nonempty(cls, v: str) -> str:
+        return _non_empty_stripped_str(v, field_name="request_id")
+
+    @field_validator("schema_version", mode="after")
+    @classmethod
+    def _schema_version_nonempty(cls, v: str) -> str:
+        return _non_empty_stripped_str(v, field_name="schema_version")
+
+    @field_validator("metadata", "trace", mode="before")
+    @classmethod
+    def _meta_trace_dicts(cls, v: Any, info: ValidationInfo) -> dict[str, Any]:
+        return _assert_json_like_dict(v, field_name=info.field_name or "field")
+
+    @model_validator(mode="after")
+    def _forbid_truth_in_request_blobs(self) -> ModelPipelineRequestEnvelope:
+        _forbid_truth_claims_top_level(self.metadata, label="ModelPipelineRequestEnvelope.metadata")
+        _forbid_truth_claims_top_level(self.trace, label="ModelPipelineRequestEnvelope.trace")
+        return self
+
+
+class ModelPipelineResponseEnvelope(BaseModel):
+    """Wire-out response wrapper: status, optional :class:`ModelPipelineResult`, or error.
+
+    **Slice 8B rules:** ``status == success`` requires a non-``None`` ``result``,
+    ``error`` must be ``None``, and ``result.status`` must match the envelope
+    ``status``. Non-success statuses require a non-``None`` ``error`` and
+    ``result`` must be ``None`` (no partial result payloads in this slice).
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    request_id: str
+    status: ModelPipelineStatus
+    result: ModelPipelineResult | None = None
+    error: ModelPipelineError | None = None
+    warnings: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    schema_version: str = Field(default=SCHEMA_VERSION_PHASE8_V1)
+
+    @field_validator("request_id", mode="after")
+    @classmethod
+    def _response_request_id_nonempty(cls, v: str) -> str:
+        return _non_empty_stripped_str(v, field_name="request_id")
+
+    @field_validator("schema_version", mode="after")
+    @classmethod
+    def _response_schema_nonempty(cls, v: str) -> str:
+        return _non_empty_stripped_str(v, field_name="schema_version")
+
+    @field_validator("metadata", mode="before")
+    @classmethod
+    def _response_metadata_dict(cls, v: Any, info: ValidationInfo) -> dict[str, Any]:
+        return _assert_json_like_dict(v, field_name=info.field_name or "metadata")
+
+    @field_validator("warnings", mode="before")
+    @classmethod
+    def _response_warnings(cls, v: Any) -> list[str]:
+        return _warnings_list_str(v)
+
+    @model_validator(mode="after")
+    def _validate_success_vs_failure_shape(self) -> Self:
+        _forbid_truth_claims_top_level(self.metadata, label="ModelPipelineResponseEnvelope.metadata")
+
+        if self.status == ModelPipelineStatus.success:
+            if self.error is not None:
+                raise ValueError("success response must have error=None.")
+            if self.result is None:
+                raise ValueError("success response requires a non-None result.")
+            if self.result.status != self.status:
+                raise ValueError(
+                    "result.status must match envelope status when result is present "
+                    f"(envelope={self.status.value!r}, result={self.result.status.value!r}).",
+                )
+            return self
+
+        # rejected | unavailable | error
+        if self.error is None:
+            raise ValueError(
+                f"response with status {self.status.value!r} requires a non-None error.",
+            )
+        if self.result is not None:
+            raise ValueError(
+                "non-success response must have result=None in Slice 8B (no partial results).",
             )
         return self
