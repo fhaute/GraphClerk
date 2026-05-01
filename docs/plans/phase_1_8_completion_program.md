@@ -214,10 +214,10 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 | Attribute | Detail |
 |-----------|--------|
 | **Goal** | Single **“GraphClerk in your pipeline / RAG stack”** story: ingest → graph → semantic index → **index vectors** → retrieve → logs → context fields → optional model metadata → optional `/answer`; **Docker** quickstart pointers; **production** considerations; **curl** and **Python** examples; **architecture** diagram; **failure-mode** guide. |
-| **Current state** | README, `docs/api/API_OVERVIEW.md`, demo corpus doc, release checklist — plus **`docs/onboarding/`**: entry + pipeline overview (**F1**) + **minimal feed-content walkthrough (F2)** ([`README.md`](../onboarding/README.md), [`GRAPHCLERK_PIPELINE_GUIDE.md`](../onboarding/GRAPHCLERK_PIPELINE_GUIDE.md), [`FEED_CONTENT_MINIMAL_GUIDE.md`](../onboarding/FEED_CONTENT_MINIMAL_GUIDE.md)). **Onboarding is not complete** — diagrams + full cookbook remain. |
-| **Missing work** | **F3** full pipeline + diagram · **F4** expanded failure modes + Qdrant operator narrative · **F5** curl/Python cookbook; reduce fragmentation further; keep docs aligned with shipped behavior per Status Agent. |
+| **Current state** | README, `docs/api/API_OVERVIEW.md`, demo corpus doc, release checklist — plus **`docs/onboarding/`**: entry (**F1**), pipeline guide (**F1**), minimal feed walkthrough (**F2**), **architecture + Mermaid + narrative (F3)** ([`README.md`](../onboarding/README.md), [`GRAPHCLERK_PIPELINE_GUIDE.md`](../onboarding/GRAPHCLERK_PIPELINE_GUIDE.md), [`FEED_CONTENT_MINIMAL_GUIDE.md`](../onboarding/FEED_CONTENT_MINIMAL_GUIDE.md), [`GRAPHCLERK_ARCHITECTURE.md`](../onboarding/GRAPHCLERK_ARCHITECTURE.md)). **Onboarding is not complete** — expanded operator failure doc + cookbook remain. |
+| **Missing work** | **F4** expanded failure modes + Qdrant operator narrative · **F5** curl/Python cookbook; reduce fragmentation further; keep docs aligned with shipped behavior per Status Agent. |
 | **Required design decisions** | Doc location naming; how much lives in README vs dedicated guides; diagram tooling (Mermaid vs static). |
-| **Proposed slices** | **F1** (**implemented**) Skeleton + TOC · **F2** (**implemented**) Minimal feed guide · **F3** Full pipeline + diagram · **F4** Failure modes + Qdrant · **F5** Examples cookbook |
+| **Proposed slices** | **F1** (**implemented**) Skeleton + TOC · **F2** (**implemented**) Minimal feed guide · **F3** (**implemented**) Architecture + full pipeline narrative + Mermaid · **F4** Failure modes + Qdrant · **F5** Examples cookbook |
 | **Likely files** | New files under `docs/onboarding/` or `docs/integration/` only (docs). |
 | **Forbidden files** | Do not overclaim features still partial. |
 | **Tests required** | None for prose; optional CI link-check later. |
@@ -228,14 +228,19 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 
 ### Track F — Slice F1 (implemented): onboarding skeleton
 
-- **Entry:** [`docs/onboarding/README.md`](../onboarding/README.md) — what GraphClerk is / is not, start-here flow, links to API overview, demo corpus, release checklist, testing rules, completion program; **Phase 9 not started**; **F3–F5** listed as next slices.
-- **Pipeline guide:** [`docs/onboarding/GRAPHCLERK_PIPELINE_GUIDE.md`](../onboarding/GRAPHCLERK_PIPELINE_GUIDE.md) — audience, at-a-glance flow, core concepts (**Artifact** … **`graphclerk_model_pipeline`**), explicit non-features, **10-step** baseline flow, minimal vs rich, manual backfill pointers + Qdrant dimension doc links, UI map, failure modes, integration patterns, security/honesty rules, **placeholders** for curl/Python/diagram/production/multimodal/model/`/answer`.
+- **Entry:** [`docs/onboarding/README.md`](../onboarding/README.md) — what GraphClerk is / is not, start-here flow, links to API overview, demo corpus, release checklist, testing rules, completion program; **Phase 9 not started**; **F4–F5** listed as next slices.
+- **Pipeline guide:** [`docs/onboarding/GRAPHCLERK_PIPELINE_GUIDE.md`](../onboarding/GRAPHCLERK_PIPELINE_GUIDE.md) — audience, at-a-glance flow, core concepts (**Artifact** … **`graphclerk_model_pipeline`**), explicit non-features, **10-step** baseline flow, minimal vs rich, manual backfill pointers + Qdrant dimension doc links, UI map, failure modes, integration patterns, security/honesty rules; **architecture** diagram delivered in **F3** (linked file); **placeholders** for curl/Python cookbook (**F5**), expanded Qdrant narrative (**F4**), production/multimodal/`/answer` depth.
 - **Discovery:** root [`README.md`](../../README.md) points integrators at `docs/onboarding/README.md` (short pointer).
 
 ### Track F — Slice F2 (implemented): minimal feed-content guide
 
 - **Guide:** [`docs/onboarding/FEED_CONTENT_MINIMAL_GUIDE.md`](../onboarding/FEED_CONTENT_MINIMAL_GUIDE.md) — **PowerShell / `Invoke-RestMethod`** templates for **Steps 1–11** (stack → text artifact → evidence → graph node → evidence link → semantic index → **`scripts/backfill_semantic_indexes.py`** → **`POST /retrieve`** → retrieval logs → UI). Field names aligned to route schemas; examples labeled **template** (not executed in-doc). States **`POST /answer`** absent, no auto-vector backfill, **8-d** deterministic backfill, **minimal vs rich** retrieve expectations, **`not_configured`** vs optional **`deterministic_fake`** for query embeddings.
 - **Cross-links:** onboarding `README` + pipeline guide point here; root `README` may mention this file beside the onboarding index.
+
+### Track F — Slice F3 (implemented): architecture overview + pipeline narrative
+
+- **Doc:** [`docs/onboarding/GRAPHCLERK_ARCHITECTURE.md`](../onboarding/GRAPHCLERK_ARCHITECTURE.md) — legend **`[current]`** / **`[manual/operator]`** / **`[future / not implemented]`**; **Mermaid** component + data-flow diagrams; Postgres vs Qdrant; API and UI surface tables; manual operator steps with links; optional/future branches without promises; explicit **non-claims** list; relates to pipeline + minimal feed guides.
+- **Pipeline guide** links to this file at “pipeline at a glance” and replaces the old “architecture diagram” stub with a pointer to **F3**.
 
 ---
 
@@ -280,7 +285,7 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 ## 12. Recommended implementation order
 
 1. **Track B** — Unblocks **non-empty semantic evidence** on the documented path; reduces false “GraphClerk broken” reports.  
-2. **Track F** (skeleton) **in parallel** — Documents the indexing and retrieve expectations while B lands.  
+2. **Track F** (onboarding docs; **F1–F3** shipped) **in parallel** — Indexing/retrieve expectations, minimal feed guide, and architecture overview while B lands.  
 3. **Track C** (decisions + policy early) — Avoid rework on language metadata when **Track A** adds OCR/ASR text.  
 4. **Track A** — Largest modality surface; benefits from B demo path and C policy.  
 5. **Track D** — After EU/candidate metadata shapes stabilize.  

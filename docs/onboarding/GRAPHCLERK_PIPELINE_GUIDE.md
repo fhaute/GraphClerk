@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Doc status** | **Overview — Track F Slice F1** (+ F2 minimal feed guide linked); not a complete cookbook. |
+| **Doc status** | **Overview — Track F Slice F1** (+ F2 minimal feed + **F3** [`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md)); not a complete cookbook. |
 | **Last aligned to** | Phases **1–8** baseline as described in root `README.md` and `docs/status/*`; **Phase 9 not started**. |
 | **Companion** | [`README.md`](../../README.md) in this folder — entry and links. |
 
@@ -20,11 +20,14 @@
 
 - **Implemented in F1:** section structure, core concepts, baseline flow steps, minimal vs rich, pointers to demo/scripts/docs, failure modes, integration patterns, security/honesty rules, explicit “not implemented” list, placeholders for later slices.
 - **F2:** hands-on **PowerShell templates** in [`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CONTENT_MINIMAL_GUIDE.md) (not duplicated here).
-- **Not yet implemented (future Track F slices):** full **curl** and **Python** cookbook (**F5**), **architecture diagram** (**F3**), production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring details, **`/answer`** documentation **if** the product approves and ships it.
+- **F3:** **Mermaid** as-built vs operator vs future diagrams + narrative in [`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md) (not duplicated here).
+- **Not yet implemented (future Track F slices):** full **curl** and **Python** cookbook (**F5**), production deployment deep-dive, expanded Qdrant/failure guide (**F4**), multimodal ingestion how-tos, model pipeline wiring details beyond architecture labels, **`/answer`** documentation **if** the product approves and ships it.
 
 ---
 
 ## GraphClerk pipeline at a glance
+
+For **components, stores, APIs, UI**, and **Mermaid** diagrams with explicit **`[current]`** / **`[manual/operator]`** / **`[future / not implemented]`** labels, see **[`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md)** (Track F Slice F3).
 
 ```text
 User / system question
@@ -213,7 +216,7 @@ The following are **intentional stubs** — links may point here until **F2–F5
 
 ### Architecture diagram
 
-*To be added (Track F3):* Mermaid or static diagram — API, Postgres, Qdrant, UI, optional external LLM — **as-built** only.
+**Delivered (F3):** **[`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md)** — component + data-flow **Mermaid** (as-built vs **manual/operator** vs **future / not implemented**). This pipeline guide keeps the ASCII glance above for a quick read without opening that file.
 
 ### Production deployment notes
 
