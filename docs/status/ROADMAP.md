@@ -1,5 +1,7 @@
 # Roadmap
 
+**Pre–Phase 9 (tracking only):** Active program to finish **intended** Phase 1–8 product scope before Phase 9 (does **not** claim full completion or replace baseline audits): [`docs/plans/phase_1_8_completion_program.md`](../plans/phase_1_8_completion_program.md).
+
 ## Phase 0 — Governance Baseline
 - Establish governance docs, protected terms, contracts, invariants, testing and documentation rules.
 - **Status**: implemented

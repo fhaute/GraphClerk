@@ -1,6 +1,7 @@
 # Project Status
 
 ## Summary
+- **Pre–Phase 9 completion program (tracking only):** [`docs/plans/phase_1_8_completion_program.md`](../plans/phase_1_8_completion_program.md) — active plan to finish **intended** Phase 1–8 scope before Phase 9; **not** a claim that full completion is done.
 - **Current phase**: Phase 7 — Context Intelligence (**baseline implemented**; audit **`pass_with_notes`** — [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md), **2026-05-02**). Phase 5 — Multimodal ingestion remains **in progress** / **partial** (audit **`pass_with_notes`** — `docs/audits/PHASE_5_AUDIT.md`). Phase 6 — Productization / UI remains **`pass_with_notes`** (`docs/audits/PHASE_6_AUDIT.md`). **`POST /answer`** remains **deferred**. **Phase 8** — specialized model pipeline: **baseline implemented**; audit **`pass_with_notes`** — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**); **not** full specialized-model production (no production inference adapter, no registry). **Phase 9**: **`not_started`** (spec-only).
 - **Prior milestones**: Phase 4 File Clerk (**pass_with_notes**); Phase 7 baseline builds on Phases 4–6 without replacing evidence-grounded retrieval.
 
