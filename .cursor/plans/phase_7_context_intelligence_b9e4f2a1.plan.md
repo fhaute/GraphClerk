@@ -1,6 +1,6 @@
 ---
 name: Phase 7 Context Intelligence plan
-overview: "Working plan for [docs/phases/graph_clerk_phase_7_context_intelligence.md](docs/phases/graph_clerk_phase_7_context_intelligence.md): language metadata + ActorContext as routing/interpretation metadata only — **not** evidence or translation product. Baseline slices **7A–7H** implemented; **7I** boosting deferred; **7J** docs/status complete; **7K** audit pending. Phase 8 / Phase 9 remain out of scope."
+overview: "Working plan for [docs/phases/graph_clerk_phase_7_context_intelligence.md](docs/phases/graph_clerk_phase_7_context_intelligence.md): language metadata + ActorContext as routing/interpretation metadata only — **not** evidence or translation product. Baseline slices **7A–7H** implemented; **7I** boosting deferred/cancelled; **7J** docs/status complete; **7K** audit complete (`docs/audits/PHASE_7_AUDIT.md`, pass_with_notes). Phase 8 / Phase 9 remain out of scope."
 todos:
   - id: p7-slice-70
     content: "Slice 7.0 — Entry gate + plan alignment (Phase 6 pass_with_notes; Phase 5 partial; no backend code)."
@@ -37,7 +37,7 @@ todos:
     status: completed
   - id: p7-slice-7k
     content: "Slice 7K — Phase 7 audit: docs/audits/PHASE_7_AUDIT.md after implementation slices."
-    status: pending
+    status: completed
 isProject: false
 ---
 
@@ -238,11 +238,11 @@ Additionally for sequencing and honesty:
   - **not** bypass **access control**;
   - **not** personalize or trigger **hidden retrieval** paths.
 
-**Slice 7J** (**docs/status**) is **complete** for the Phase 7 baseline honesty pass; **Slice 7K** (Phase 7 audit artifact) remains **pending**.
+**Slice 7J** (**docs/status**) is **complete** for the Phase 7 baseline honesty pass; **Slice 7K** — audit artifact **`docs/audits/PHASE_7_AUDIT.md`** filed (**`pass_with_notes`**, 2026-05-02).
 
 ### Slice 7J — Docs / status update
 
-**Done for baseline:** README, `docs/status/*` (incl. `PROJECT_STATUS`, `PHASE_STATUS`, `ROADMAP`, `KNOWN_GAPS`, `TECHNICAL_DEBT`), and phase doc **Implementation status (current)** aligned — Phase **7** baseline implemented; audit pending; **7I** boosting deferred.
+**Done for baseline:** README, `docs/status/*` (incl. `PROJECT_STATUS`, `PHASE_STATUS`, `ROADMAP`, `KNOWN_GAPS`, `TECHNICAL_DEBT`), and phase doc **Implementation status (current)** aligned — Phase **7** baseline implemented; **`PHASE_7_AUDIT.md`** (**`pass_with_notes`**); **7I** boosting deferred/cancelled.
 
 - Distinguish **language metadata** from **translation**.
 - Distinguish **ActorContext** from **evidence**.
@@ -250,8 +250,9 @@ Additionally for sequencing and honesty:
 
 ### Slice 7K — Phase 7 audit
 
-- Create **`docs/audits/PHASE_7_AUDIT.md`** after implementation slices land.
-- Target outcome: **`pass`** or **`pass_with_notes`** per [`docs/governance/AUDIT_RULES.md`](../../docs/governance/AUDIT_RULES.md).
+**Complete:** [`docs/audits/PHASE_7_AUDIT.md`](../../docs/audits/PHASE_7_AUDIT.md) — result **`pass_with_notes`** (2026-05-02); status docs + README aligned. **`pass`** was not claimed due to explicit deferred detector/translation/boosting/UI debt.
+
+- Target rule reference: [`docs/governance/AUDIT_RULES.md`](../../docs/governance/AUDIT_RULES.md).
 
 ---
 

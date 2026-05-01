@@ -32,8 +32,8 @@
 - **Phase 6 audit** completed **`pass_with_notes`** — `docs/audits/PHASE_6_AUDIT.md` (2026-05-01); remaining items called out in audit + this section (not production-ready; script-only demo; optional E2E/hardening).
 - **Onboarding**: README + `docs/api/API_OVERVIEW.md` + `docs/release/RELEASE_CHECKLIST.md` + `docs/evaluation/EVALUATION_METHOD.md` + demo corpus doc (Slice K); release checklist records verification commands/results (Slice L).
 
-## Phase 7 (context intelligence — baseline; audit pending)
-- **Phase 7 audit artifact missing**: implement **`docs/audits/PHASE_7_AUDIT.md`** (Slice **7K**) before claiming audited Phase 7 closure.
+## Phase 7 (context intelligence — baseline; audit `pass_with_notes`)
+- **Phase 7 audit**: [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) — **`pass_with_notes`** (2026-05-02); deferred items below remain honest debt/gaps.
 - **No production language detector selected/configured by default**: `LanguageDetectionService` remains a shell / placeholder wiring pattern until an approved adapter and policy exist.
 - **Artifact language aggregation persistence**: `ArtifactLanguageAggregationService` is pure; automatic merge into **`Artifact.metadata_json`** on ingest is **not** wired as debt-free completion.
 - **No boosting evaluation fixtures**: Slice **7I** deferred — no in-repo deterministic boosting harness until separately approved.

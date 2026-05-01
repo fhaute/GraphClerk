@@ -36,7 +36,7 @@ This file tracks known missing pieces so they are explicit and not hidden.
 - **LocalRAGConsumer / answer synthesis** is not implemented (packet-only `/answer` remains deferred).
 
 ## Known limitations (Phase 7 — context intelligence, baseline)
-- **Phase 7 audit**: **not done** — baseline code ships without **`PHASE_7_AUDIT.md`** until Slice **7K**.
+- **Phase 7 audit**: **`pass_with_notes`** — [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) (2026-05-02); remaining gaps are **notes**, not a claim of full phase-doc/product closure.
 - **`LanguageDetectionService`**: adapter shell exists (**NotConfigured** / test adapters); **not** wired as automatic production language detection on ingest **by default**; **no** “always-on” remote detector claimed.
 - **`language_context`**: derived from **selected evidence `metadata_json`** only when language fields exist — **not** from silent text guessing or mandatory detection in packet assembly.
 - **Translation / query translation**: **not implemented**; GraphClerk is **not** a translation engine in this baseline.
