@@ -65,3 +65,9 @@
   - `frontend/vite.config.ts`, `frontend/.env.example`
   - **Slice K — onboarding / docs**: `README.md`, `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`
 
+## Phase 7 — Context Intelligence: Language and Actor Context
+- **Status**: **not_started** — planning / slice sequencing only; **no** Phase 7 implementation claimed yet.
+- **Defined in**: [`docs/phases/graph_clerk_phase_7_context_intelligence.md`](../phases/graph_clerk_phase_7_context_intelligence.md)
+- **Working plan**: `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`
+- **Next coding slice (when approved)**: **7A** — `EvidenceEnrichmentService` no-op shell (see working plan).
+

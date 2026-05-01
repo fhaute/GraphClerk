@@ -114,6 +114,18 @@
   - Optional **API hardening** pass and **automated frontend/E2E** coverage
   - **`POST /answer`** / packet-grounded answer viewer (blocked on `/answer` implementation)
 
+## Phase 7 — Context Intelligence: Language and Actor Context
+- **Defined in**: `docs/phases/graph_clerk_phase_7_context_intelligence.md`
+- **Goal**: explicit **language** and **actor** routing/interpretation metadata (not source truth); optional `RetrievalPacket` extensions; tests proving context does not alter evidence text or bypass access control.
+- **Status**: **not_started** — slice plan recorded under `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md`; backend behavior **not** implemented in this planning milestone.
+- **First implementation slice (recommended)**: **7A** — `EvidenceEnrichmentService` no-op pass-through + unit tests.
+
+## Phase 8 — Specialized Model Pipeline (future)
+- **Status**: **not_started** — specification may exist under `docs/phases/`; **no** Phase 8 implementation claimed in status docs.
+
+## Phase 9 — IDE Integration / Developer Evidence Orchestration (future)
+- **Status**: **not_started** — specification may exist under `docs/phases/`; **no** Phase 9 implementation claimed in status docs.
+
 ## Guardrails (apply to all phases)
 - Do not overclaim in README/status docs.
 - Keep retrieval separate from answer synthesis (packets first).

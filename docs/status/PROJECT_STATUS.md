@@ -12,6 +12,7 @@
 - **Phase 4 File Clerk + retrieval packets**: implemented (pass_with_notes)
 - **Phase 5 multimodal ingestion**: **in progress** / **partially implemented** (see Phase 5 section below; audit **`pass_with_notes`**)
 - **Phase 6 productization / UI**: **implemented (`pass_with_notes`)** — React/Vite app in `frontend/`; explorers and query playground wired to **live** APIs; audit `docs/audits/PHASE_6_AUDIT.md` records accepted gaps (no production SLA, no frontend test harness, script-only demo loader, optional hardening). **Not** a claim of full phase-doc closure.
+- **Phase 7 — Context Intelligence** (language + actor context): **not_started** — implementation **not** begun; working slice plan in `.cursor/plans/phase_7_context_intelligence_b9e4f2a1.plan.md` (see [`docs/phases/graph_clerk_phase_7_context_intelligence.md`](../phases/graph_clerk_phase_7_context_intelligence.md)). **Phase 8** / **Phase 9**: **not_started** (phase docs exist only; no implementation claimed).
 - **Phase 6 readiness (Slice 6.0):** Per [`docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`](docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md) (**Slice 6.0**), productization/UI work may proceed without Phase 5 being fully complete, provided the documented baseline and UI honesty rules are followed.
 
 ## Implemented (Phase 1)
