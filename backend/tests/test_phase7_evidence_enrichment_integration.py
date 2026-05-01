@@ -15,12 +15,21 @@ from app.core import config as config_module
 from app.models.artifact import Artifact
 from app.models.enums import Modality, SourceFidelity
 from app.models.evidence_unit import EvidenceUnit
-from app.schemas.evidence_unit_candidate import EvidenceUnitCandidate
+from app.schemas.evidence_unit_candidate import (
+    LANGUAGE_METADATA_KEY_LANGUAGE,
+    LANGUAGE_METADATA_KEY_LANGUAGE_CONFIDENCE,
+    LANGUAGE_METADATA_KEY_LANGUAGE_DETECTION_METHOD,
+    EvidenceUnitCandidate,
+)
 from app.services.evidence_enrichment_service import (
     EvidenceEnrichmentEmptiedCandidatesError,
     EvidenceEnrichmentService,
 )
 from app.services.extraction.extractor_registry import ExtractorRegistry
+from app.services.language_detection_service import (
+    DeterministicTestLanguageDetectionAdapter,
+    LanguageDetectionService,
+)
 from app.services.multimodal_ingestion_service import MultimodalIngestionService
 from app.services.text_ingestion_service import TextIngestionService
 
@@ -36,6 +45,7 @@ class SpyEnrichmentService(EvidenceEnrichmentService):
     """Records ``enrich`` inputs; default behavior is identity."""
 
     def __init__(self) -> None:
+        super().__init__()
         self.calls: list[list[EvidenceUnitCandidate]] = []
 
     def enrich(self, candidates: Sequence[EvidenceUnitCandidate]) -> list[EvidenceUnitCandidate]:
@@ -44,12 +54,18 @@ class SpyEnrichmentService(EvidenceEnrichmentService):
 
 
 class EmptyReturnEnrichmentService(EvidenceEnrichmentService):
+    def __init__(self) -> None:
+        super().__init__()
+
     def enrich(self, candidates: Sequence[EvidenceUnitCandidate]) -> list[EvidenceUnitCandidate]:  # type: ignore[override]
         _ = candidates
         return []
 
 
 class KeepFirstOnlyEnrichmentService(EvidenceEnrichmentService):
+    def __init__(self) -> None:
+        super().__init__()
+
     def enrich(self, candidates: Sequence[EvidenceUnitCandidate]) -> list[EvidenceUnitCandidate]:  # type: ignore[override]
         c = list(candidates)
         return [c[0]] if c else []
@@ -113,7 +129,11 @@ def test_text_ingestion_preserves_text_and_source_fidelity(db_ready: None) -> No
         )
 
         evs = (
-            session.execute(select(EvidenceUnit).where(EvidenceUnit.artifact_id == result.artifact.id).order_by(EvidenceUnit.created_at))
+            session.execute(
+                select(EvidenceUnit)
+                .where(EvidenceUnit.artifact_id == result.artifact.id)
+                .order_by(EvidenceUnit.created_at)
+            )
             .scalars()
             .all()
         )
@@ -163,7 +183,11 @@ def test_multimodal_ingestion_preserves_text_and_source_fidelity(db_ready: None)
         )
 
         evs = (
-            session.execute(select(EvidenceUnit).where(EvidenceUnit.artifact_id == result.artifact.id).order_by(EvidenceUnit.created_at))
+            session.execute(
+                select(EvidenceUnit)
+                .where(EvidenceUnit.artifact_id == result.artifact.id)
+                .order_by(EvidenceUnit.created_at)
+            )
             .scalars()
             .all()
         )
@@ -187,7 +211,13 @@ def test_text_ingestion_uses_returned_list_when_enrichment_truncates(db_ready: N
             content_bytes=b"A\n\nB\n",
         )
 
-        evs = session.execute(select(EvidenceUnit).where(EvidenceUnit.artifact_id == result.artifact.id)).scalars().all()
+        evs = (
+            session.execute(
+                select(EvidenceUnit).where(EvidenceUnit.artifact_id == result.artifact.id)
+            )
+            .scalars()
+            .all()
+        )
 
     assert result.evidence_unit_count == 1
     assert len(evs) == 1
@@ -213,7 +243,9 @@ def test_multimodal_raises_when_enrichment_drops_all_candidates(db_ready: None) 
     settings = config_module.get_settings()
     registry = ExtractorRegistry()
     registry.register(Modality.pdf, StubPdfExtractor())
-    svc = MultimodalIngestionService(settings=settings, registry=registry, enrichment=EmptyReturnEnrichmentService())
+    svc = MultimodalIngestionService(
+        settings=settings, registry=registry, enrichment=EmptyReturnEnrichmentService()
+    )
 
     with _session() as session:
         with pytest.raises(EvidenceEnrichmentEmptiedCandidatesError):
@@ -236,7 +268,9 @@ def _configure_test_settings_env(tmp_path, monkeypatch: pytest.MonkeyPatch) -> N
     config_module.get_settings.cache_clear()
 
 
-def test_text_ingestion_calls_enrichment_before_persistence_mock(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_text_ingestion_calls_enrichment_before_persistence_mock(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """DB-free wiring check: enrichment runs before ``create_from_candidates``."""
 
     _configure_test_settings_env(tmp_path, monkeypatch)
@@ -258,7 +292,9 @@ def test_text_ingestion_calls_enrichment_before_persistence_mock(tmp_path, monke
     with patch("app.services.text_ingestion_service.ArtifactService") as AS_cls:
         AS_cls.return_value.create_from_bytes.return_value = (art, None)
         with patch("app.services.text_ingestion_service.EvidenceUnitService") as ES_cls:
-            ES_cls.return_value.create_from_candidates.side_effect = lambda **kw: captured.append(list(kw["candidates"]))
+            ES_cls.return_value.create_from_candidates.side_effect = lambda **kw: captured.append(
+                list(kw["candidates"])
+            )
 
             svc.ingest(
                 session=mock_session,
@@ -276,7 +312,9 @@ def test_text_ingestion_calls_enrichment_before_persistence_mock(tmp_path, monke
     assert captured[0][0].text == "Hello"
 
 
-def test_multimodal_ingestion_calls_enrichment_before_persistence_mock(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_multimodal_ingestion_calls_enrichment_before_persistence_mock(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     _configure_test_settings_env(tmp_path, monkeypatch)
     settings = config_module.get_settings()
     registry = ExtractorRegistry()
@@ -298,7 +336,9 @@ def test_multimodal_ingestion_calls_enrichment_before_persistence_mock(tmp_path,
     with patch("app.services.multimodal_ingestion_service.ArtifactService") as AS_cls:
         AS_cls.return_value.create_from_bytes.return_value = (art, None)
         with patch("app.services.multimodal_ingestion_service.EvidenceUnitService") as ES_cls:
-            ES_cls.return_value.create_from_candidates.side_effect = lambda **kw: captured.append(list(kw["candidates"]))
+            ES_cls.return_value.create_from_candidates.side_effect = lambda **kw: captured.append(
+                list(kw["candidates"])
+            )
 
             svc.ingest(
                 session=mock_session,
@@ -314,12 +354,16 @@ def test_multimodal_ingestion_calls_enrichment_before_persistence_mock(tmp_path,
     assert captured[0] == spy.calls[0]
 
 
-def test_multimodal_uses_enrichment_returned_list_mock(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_multimodal_uses_enrichment_returned_list_mock(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     _configure_test_settings_env(tmp_path, monkeypatch)
     settings = config_module.get_settings()
     registry = ExtractorRegistry()
     registry.register(Modality.pdf, StubPdfExtractor())
-    svc = MultimodalIngestionService(settings=settings, registry=registry, enrichment=KeepFirstOnlyEnrichmentService())
+    svc = MultimodalIngestionService(
+        settings=settings, registry=registry, enrichment=KeepFirstOnlyEnrichmentService()
+    )
 
     art = MagicMock()
     art.id = uuid.uuid4()
@@ -335,7 +379,9 @@ def test_multimodal_uses_enrichment_returned_list_mock(tmp_path, monkeypatch: py
     with patch("app.services.multimodal_ingestion_service.ArtifactService") as AS_cls:
         AS_cls.return_value.create_from_bytes.return_value = (art, None)
         with patch("app.services.multimodal_ingestion_service.EvidenceUnitService") as ES_cls:
-            ES_cls.return_value.create_from_candidates.side_effect = lambda **kw: captured.append(list(kw["candidates"]))
+            ES_cls.return_value.create_from_candidates.side_effect = lambda **kw: captured.append(
+                list(kw["candidates"])
+            )
 
             svc.ingest(
                 session=mock_session,
@@ -401,3 +447,94 @@ def test_default_text_enrichment_is_no_op_matches_explicit_default(db_ready: Non
         )
 
     assert r1.evidence_unit_count == r2.evidence_unit_count == 2
+
+
+def test_text_ingestion_persists_language_metadata_when_detection_injected(db_ready: None) -> None:
+    settings = config_module.get_settings()
+    adapter = DeterministicTestLanguageDetectionAdapter(
+        default_language="fr",
+        default_confidence=0.91,
+        short_text_max_chars=0,
+    )
+    enrichment = EvidenceEnrichmentService(
+        language_detection=LanguageDetectionService(adapter=adapter),
+    )
+    svc = TextIngestionService(settings=settings, enrichment=enrichment)
+
+    with _session() as session:
+        result = svc.ingest(
+            session=session,
+            filename="lang-meta.txt",
+            artifact_type="text",
+            mime_type="text/plain",
+            content_bytes=b"Alpha line here\n\nAnother paragraph line\n",
+        )
+        evs = (
+            session.execute(
+                select(EvidenceUnit)
+                .where(EvidenceUnit.artifact_id == result.artifact.id)
+                .order_by(EvidenceUnit.created_at)
+            )
+            .scalars()
+            .all()
+        )
+
+    assert len(evs) == 2
+    for ev in evs:
+        meta = ev.metadata_json or {}
+        assert meta.get(LANGUAGE_METADATA_KEY_LANGUAGE) == "fr"
+        assert meta.get(LANGUAGE_METADATA_KEY_LANGUAGE_CONFIDENCE) == 0.91
+        assert meta.get(LANGUAGE_METADATA_KEY_LANGUAGE_DETECTION_METHOD) == "deterministic_test"
+
+
+def test_text_ingestion_passes_enriched_language_metadata_to_create_from_candidates_mock(
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """DB-free: injected language detection metadata reaches ``EvidenceUnitService``."""
+
+    _configure_test_settings_env(tmp_path, monkeypatch)
+    settings = config_module.get_settings()
+    adapter = DeterministicTestLanguageDetectionAdapter(
+        default_language="es", short_text_max_chars=0
+    )
+    enrichment = EvidenceEnrichmentService(
+        language_detection=LanguageDetectionService(adapter=adapter)
+    )
+    svc = TextIngestionService(settings=settings, enrichment=enrichment)
+
+    art = MagicMock()
+    art.id = uuid.uuid4()
+
+    mock_session = MagicMock()
+    begin_cm = MagicMock()
+    begin_cm.__enter__.return_value = mock_session
+    begin_cm.__exit__.return_value = None
+    mock_session.begin.return_value = begin_cm
+
+    captured: list[list[EvidenceUnitCandidate]] = []
+
+    with patch("app.services.text_ingestion_service.ArtifactService") as AS_cls:
+        AS_cls.return_value.create_from_bytes.return_value = (art, None)
+        with patch("app.services.text_ingestion_service.EvidenceUnitService") as ES_cls:
+            ES_cls.return_value.create_from_candidates.side_effect = lambda **kw: captured.append(
+                list(kw["candidates"])
+            )
+
+            svc.ingest(
+                session=mock_session,
+                filename="mock-lang.txt",
+                artifact_type="text",
+                mime_type="text/plain",
+                content_bytes=b"Hello\n\nWorld\n",
+            )
+
+    assert len(captured) == 1
+    assert len(captured[0]) == 2
+    for c in captured[0]:
+        assert c.metadata is not None
+        assert c.metadata.get(LANGUAGE_METADATA_KEY_LANGUAGE) == "es"
+        assert c.metadata.get(LANGUAGE_METADATA_KEY_LANGUAGE_CONFIDENCE) == 0.95
+        assert (
+            c.metadata.get(LANGUAGE_METADATA_KEY_LANGUAGE_DETECTION_METHOD) == "deterministic_test"
+        )
