@@ -20,7 +20,7 @@ todos:
     status: completed
   - id: phase8-slice-8e-candidate-seam
     content: "Slice 8E — Candidate-only integration seam (approval-gated; no EvidenceUnit / RetrievalPacket mutation; no ranking change)."
-    status: pending
+    status: completed
   - id: phase8-slice-8f-eval-fixtures
     content: "Slice 8F — Evaluation fixtures for model-helper outputs (deterministic; failure cases; no production inference)."
     status: pending
@@ -139,7 +139,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 | **8B** | ModelTask schema / envelopes | Typed input/output contracts; status/error semantics; explicit **derived** / **candidate** labeling; **no** persistence unless separately approved. |
 | **8C** | NotConfigured model adapter shell | Adapter protocol; NotConfigured raises **explicit** error; deterministic **test** adapter only; **no** real model. |
 | **8D** | Model output validation service | Validates typed outputs; rejects unbounded prose where structured output is required; rejects source‑truth claims; **no** FileClerk integration yet. |
-| **8E** | Candidate‑only integration seam | **Approval‑gated:** helpers may produce **candidate metadata only**; **no** `EvidenceUnit` text mutation; **no** `RetrievalPacket` source evidence mutation; **no** route/evidence ranking change. |
+| **8E** | Candidate‑only integration seam | **Approval‑gated:** helpers may produce **candidate metadata only**; **no** `EvidenceUnit` text mutation; **no** `RetrievalPacket` source evidence mutation; **no** route/evidence ranking change. **Slice 8E (projection-only):** `ModelPipelineCandidateMetadataProjectionService` landed — validated envelope → `graphclerk_model_pipeline` subtree only; **no** ingestion/enrichment wiring yet. |
 | **8F** | Evaluation fixtures | Deterministic fixtures + failure cases; **no** production inference. |
 | **8G** | Optional local inference adapter design | Design only (Ollama/vLLM/etc.); **no** dependency add without approval. |
 | **8H** | Docs/status update | Document what Phase 8 **is / is not**; no claim of model implementation or answer synthesis until true. |
@@ -152,7 +152,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 - [x] **8B** — Request/response envelopes (`ModelPipelineRequestEnvelope`, `ModelPipelineResponseEnvelope`, `ModelPipelineError`; status/error semantics; no adapters).
 - [x] **8C** — Adapter shell (`ModelPipelineAdapter`, `NotConfiguredModelPipelineAdapter`, `DeterministicTestModelPipelineAdapter` tests-only; no registry, no real inference).
 - [x] **8D** — Output validation service (`model_pipeline_output_validation_service.py`; deep recursive checks; reports only, no mutation).
-- [ ] **8E** — Candidate seam (approval‑gated; **design notes § Slice 8E** — implementation not started).
+- [x] **8E** — Candidate seam (**projection-only Option A** — `model_pipeline_candidate_projection_service.py` + tests; merge into candidates / enrichment deferred per § Slice 8E).
 - [ ] **8F** — Evaluation fixtures.
 - [ ] **8G** — Local inference design only.
 - [ ] **8H** — Docs/status alignment post‑implementation.
@@ -162,7 +162,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 
 ## Slice 8E — Design notes (candidate-only integration seam)
 
-**Status:** Design-only pass. **No backend implementation** in this delivery; slice **8E** stays **unchecked** until an explicit implementation task approves code paths.
+**Status:** Design notes below remain canonical for enrichment/ingestion wiring. **Implementation (2026‑05‑01):** pure **`ModelPipelineCandidateMetadataProjectionService`** (`backend/app/services/model_pipeline_candidate_projection_service.py`) + `backend/tests/test_phase8_model_pipeline_candidate_projection_service.py` — projection metadata subtree only; **no** FileClerk, ingestion, enrichment, API, DB, or adapter calls inside projection. Optional merge paths (**B/C**) remain **not implemented**.
 
 ### PM recommendation — option letter
 
