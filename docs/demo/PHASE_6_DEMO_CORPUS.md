@@ -80,6 +80,14 @@ After the demo loader creates a semantic index, `vector_status` is usually **`pe
 
 The script uses **`DeterministicFakeEmbeddingAdapter`** (8 dimensions) for embeddings — **dev/test only**, not a semantic production model. It **does not** auto-run on `POST /semantic-indexes` create. If `embedding_text` is missing or whitespace-only, the row becomes **`failed`** with `metadata.graphclerk_vector_indexing` explaining why (no fake **`indexed`**).
 
+### Qdrant collection `semantic_indexes` — vector dimension mismatch (dev)
+
+If backfill or indexing **fails at upsert** with errors that suggest **vector size / dimension mismatch** (for example Qdrant rejected the point because the collection was created with a **different** vector size than **8**):
+
+1. **Cause:** Qdrant’s **`semantic_indexes`** collection is fixed to the size it was **created** with. The repo’s deterministic dev path uses **dimension 8**. An older or experimental collection (e.g. size **3**) will reject **8**-dimensional vectors. This is **not** automatic backfill and **not** production embedding behavior — see [`docs/governance/TESTING_RULES.md`](../governance/TESTING_RULES.md) → *Qdrant `semantic_indexes` vector dimension mismatch*.
+2. **Dev-only fix:** On **local/disposable** Qdrant only, delete **only** the **`semantic_indexes`** collection, then rerun backfill so the collection is **recreated** at size **8**. Do **not** do this against production data without approval.
+3. **Afterward:** Retry indexing for rows stuck in **`failed`** if needed (`--semantic-index-id` or `--all-pending` per script help).
+
 ## Manual end-to-end smoke path
 
 Use this path to verify **control plane + UI + retrieval logging** with the Phase 6 demo. There is **no** `POST /answer`, **no** answer synthesis step, **no** OCR/ASR/video pipeline on this path, and **no** claim of production model inference — only public APIs and the script-only loader.

@@ -53,3 +53,33 @@ For **integration tests** that need the API’s semantic search path to embed qu
 
 Also requires a reachable Qdrant at `QDRANT_URL` (the test pings collections after settings load). Default CI / local runs **skip** this module when the gate is not met.
 
+**Before running B5 (or any integration path that upserts with `DeterministicFakeEmbeddingAdapter`):** ensure the Qdrant collection **`semantic_indexes`** already exists with vector **size 8**, or **does not exist** yet (the app will create it at the correct size on first indexing). If the collection was created earlier with another dimension (for example size **3** from experiments), upserts will fail until you reset the collection in **local/dev Qdrant only** — see *Qdrant `semantic_indexes` vector dimension mismatch* below.
+
+**Mixed pytest runs:** if `GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake` is exported in the shell while running tests that expect the default adapter (for example `test_config_loads_from_environment`), **unset** that variable for that invocation so process env does not leak into unrelated settings tests.
+
+## Qdrant `semantic_indexes` vector dimension mismatch (Track B Slice B5.2)
+
+### Symptom
+
+- **Vector indexing fails at upsert** (during `SemanticIndexVectorIndexingService` / `VectorIndexService.upsert_semantic_index_vector` or equivalent operator backfill).
+- The row may end as **`vector_status=failed`** with indexing metadata pointing at a **`VectorIndexOperationError`** (underlying Qdrant client error often mentions **vector size** / **dimension** mismatch).
+- **Concrete example:** the collection **`semantic_indexes`** already exists with vector **size 3**, while the current dev path uses **`DeterministicFakeEmbeddingAdapter` at dimension 8** (B1 backfill script, B5 test indexer, and the guarded `deterministic_fake` search path all align on **8**).
+
+### Cause
+
+- Qdrant collections are **dimension-specific**: the configured vector size is fixed at **collection create** time.
+- `VectorIndexService.ensure_semantic_indexes_collection` **reuses** an existing `semantic_indexes` collection if `get_collection` succeeds; it does **not** alter an existing collection’s vector size. If you **switch embedding adapters** or **dimensions** in dev, vectors you upsert must match that collection’s size or Qdrant rejects the write.
+- **Remediation at the data plane:** recreate the collection (or use a separate Qdrant instance / volume) whose **`semantic_indexes`** definition matches the adapter dimension you use today.
+
+### Safe dev-only fix
+
+- **Only on local or disposable dev Qdrant** — **never** delete production vector data without an approved runbook.
+- **Delete** (or recreate) **only** the **`semantic_indexes`** collection on that instance. After deletion, the next successful indexing or backfill run will **`create_collection`** with the **current** `expected_dimension` (8 for deterministic fake in this repo’s Track B paths).
+- **Then** rerun **`scripts/backfill_semantic_indexes.py`** (or your API-driven indexing flow) so vectors are upserted again. Postgres `vector_status` rows that were **`failed`** may need a **retry** (`force` / `--all-pending` / re-run per id) depending on how you operate.
+
+### What this is **not**
+
+- **Not** automatic vector backfill on semantic index create (still manual / operator-triggered per Track B policy).
+- **Not** production embedding support: **`deterministic_fake`** and the B1 script adapter remain **integration / dev** tooling, not a semantic production model.
+- **Not** a claim that GraphClerk auto-heals dimension drift; operators must align Qdrant with the embedding dimension in use.
+

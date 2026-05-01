@@ -33,6 +33,10 @@ Executed in the audit pass (evidence also summarized in `docs/audits/PHASE_6_AUD
 
 **Note:** If `GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake` is exported in the shell while running the mixed suite above, `test_config_loads_from_environment` may fail (**test isolation / env pollution**), not product behavior.
 
+## Operator note — Qdrant `semantic_indexes` dimension (Track B Slice B5.2)
+
+When **manual vector indexing** or **gated B5 integration** fails at **upsert** with a **dimension / vector size** mismatch, the usual cause is an **existing** Qdrant collection **`semantic_indexes`** created at a **different** vector size than the current dev adapter (**8** for `DeterministicFakeEmbeddingAdapter` / `deterministic_fake`). **Dev-only:** delete/recreate **only** that collection on a disposable instance, then rerun backfill or indexing — **not** for production without a runbook. Full symptom → cause → safe fix → “what this is not” lives in [`docs/governance/TESTING_RULES.md`](../governance/TESTING_RULES.md) (*Qdrant `semantic_indexes` vector dimension mismatch*). Demo-specific wording: [`docs/demo/PHASE_6_DEMO_CORPUS.md`](../demo/PHASE_6_DEMO_CORPUS.md) → *Manual vector indexing* → *Qdrant collection `semantic_indexes`*.
+
 ---
 
 ## Automated / scripted
