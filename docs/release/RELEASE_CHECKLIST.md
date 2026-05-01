@@ -53,6 +53,7 @@ Executed in the audit pass (evidence also summarized in `docs/audits/PHASE_6_AUD
 
 ## Manual
 
+- [ ] **Minimal demo E2E checklist** — follow **`docs/demo/PHASE_6_DEMO_CORPUS.md`** → *Manual end-to-end smoke path*. Record whether **`POST /retrieve`** showed **empty** `evidence_units` because semantic indexes were still **`vector_status=pending`**, or whether vectors were **indexed** / **rich** demo conditions applied.
 - [ ] **UI smoke test** — with API and `frontend` dev server (or preview) running, exercise: health banner, Query playground, Artifacts & evidence, Semantic indexes, Graph explorer, Retrieval logs, Evaluation dashboard. Confirm errors are readable and no tab implies OCR/ASR/video or **`POST /answer`**.
 - [ ] **Status docs honesty** — `README.md`, `docs/status/*`, and phase docs do not claim GraphClerk is **production-enterprise ready**, Phase 8 **started**, **`/answer`**, OCR/ASR/caption/video, or full vector auto-indexing unless true in that environment.
 

@@ -133,7 +133,7 @@ python scripts/load_phase6_demo.py --dry-run
 python scripts/load_phase6_demo.py
 ```
 
-On Unix shells, use `export` instead of `set`. Default in the script if env is unset may still target port **8000** — **set `GRAPHCLERK_API_BASE_URL` explicitly** to match your API (see `docs/demo/PHASE_6_DEMO_CORPUS.md`).
+On Unix shells, use `export` instead of `set`. Default in the script if env is unset may still target port **8000** — **set `GRAPHCLERK_API_BASE_URL` explicitly** to match your API. See **`docs/demo/PHASE_6_DEMO_CORPUS.md`** for loader details, **minimal vs rich** demo expectations, and the **manual end-to-end smoke path** (including empty **`POST /retrieve`** evidence when semantic **`vector_status`** is **`pending`**).
 
 ### Honest limitations after loading
 
