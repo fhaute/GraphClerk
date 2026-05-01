@@ -19,6 +19,113 @@ function formatJson(value: unknown): string {
   }
 }
 
+const GRAPHCLERK_LANGUAGE_AGGREGATION_KEY = "graphclerk_language_aggregation";
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+
+function fmtAggScalar(v: unknown): string {
+  if (v == null) return "—";
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  if (typeof v === "string") return v;
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return String(v);
+  }
+}
+
+function ArtifactLanguageAggregationReadout({ subtree }: { subtree: Record<string, unknown> }) {
+  const warningsRaw = subtree.warnings;
+  const warnings = Array.isArray(warningsRaw)
+    ? warningsRaw.filter((w): w is string => typeof w === "string")
+    : [];
+  const langsRaw = subtree.languages;
+  const langRows = Array.isArray(langsRaw) ? langsRaw : [];
+
+  return (
+    <div className="mt-4 rounded-md border border-violet-200 bg-violet-50/70 px-3 py-3 text-sm text-violet-950">
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-violet-900">
+        Language aggregation (artifact)
+      </h4>
+      <p className="mt-2 text-xs text-violet-900/95">
+        Artifact-level metadata summary; <span className="font-medium">not evidence</span> and{" "}
+        <span className="font-medium">not translation</span>.{" "}
+        <code className="rounded bg-violet-100/80 px-0.5 font-mono text-[11px]">
+          RetrievalPacket.language_context
+        </code>{" "}
+        is computed separately from <strong>selected</strong> evidence metadata on retrieve — the
+        packet builder does not read this subtree.
+      </p>
+      <dl className="mt-3 grid gap-1 text-xs sm:grid-cols-[minmax(9rem,auto)_1fr]">
+        <dt className="text-violet-800/90">primary_language</dt>
+        <dd className="font-mono text-violet-950">{fmtAggScalar(subtree.primary_language)}</dd>
+        <dt className="text-violet-800/90">distinct_language_count</dt>
+        <dd className="font-mono text-violet-950">{fmtAggScalar(subtree.distinct_language_count)}</dd>
+        <dt className="text-violet-800/90">evidence_units_without_language_metadata_count</dt>
+        <dd className="font-mono text-violet-950">
+          {fmtAggScalar(subtree.evidence_units_without_language_metadata_count)}
+        </dd>
+        <dt className="text-violet-800/90">source</dt>
+        <dd className="font-mono text-violet-950">{fmtAggScalar(subtree.source)}</dd>
+      </dl>
+      {warnings.length > 0 && (
+        <div className="mt-3">
+          <div className="text-xs font-medium text-violet-900">warnings</div>
+          <ul className="mt-1 list-disc space-y-0.5 border border-amber-200/80 bg-amber-50/90 px-4 py-2 text-xs text-amber-950">
+            {warnings.map((w) => (
+              <li key={w} className="whitespace-pre-wrap">
+                {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {langRows.length > 0 && (
+        <div className="mt-3">
+          <div className="text-xs font-medium text-violet-900">languages</div>
+          <div className="mt-1 overflow-x-auto rounded border border-violet-200/80 bg-white/80">
+            <table className="w-full min-w-[20rem] border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-violet-200 bg-violet-100/50 text-left text-violet-900">
+                  <th className="px-2 py-1 font-medium">language</th>
+                  <th className="px-2 py-1 font-medium">evidence_unit_count</th>
+                  <th className="px-2 py-1 font-medium">avg</th>
+                  <th className="px-2 py-1 font-medium">min</th>
+                  <th className="px-2 py-1 font-medium">max</th>
+                </tr>
+              </thead>
+              <tbody>
+                {langRows.map((row, i) => {
+                  if (!isPlainObject(row)) {
+                    return (
+                      <tr key={`bad-${i}`} className="border-b border-violet-100">
+                        <td colSpan={5} className="px-2 py-1 text-neutral-600">
+                          (non-object row)
+                        </td>
+                      </tr>
+                    );
+                  }
+                  return (
+                    <tr key={`${String(row.language)}-${i}`} className="border-b border-violet-100 last:border-0">
+                      <td className="px-2 py-1 font-mono">{fmtAggScalar(row.language)}</td>
+                      <td className="px-2 py-1 font-mono">{fmtAggScalar(row.evidence_unit_count)}</td>
+                      <td className="px-2 py-1 font-mono">{fmtAggScalar(row.average_confidence)}</td>
+                      <td className="px-2 py-1 font-mono">{fmtAggScalar(row.min_confidence)}</td>
+                      <td className="px-2 py-1 font-mono">{fmtAggScalar(row.max_confidence)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const TEXT_PREVIEW = 240;
 
 function EvidenceTextBlock({
@@ -252,34 +359,44 @@ export function ArtifactsExplorer() {
               <p className="mt-3 whitespace-pre-wrap text-sm text-red-800">{detailError}</p>
             )}
             {!detailLoading && artifactDetail && (
-              <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-[minmax(8rem,auto)_1fr]">
-                <dt className="text-neutral-500">artifact id</dt>
-                <dd className="font-mono text-xs text-neutral-900">{artifactDetail.id}</dd>
-                <dt className="text-neutral-500">filename</dt>
-                <dd>{artifactDetail.filename}</dd>
-                <dt className="text-neutral-500">title</dt>
-                <dd>{artifactDetail.title ?? "(none)"}</dd>
-                <dt className="text-neutral-500">artifact_type</dt>
-                <dd>{artifactDetail.artifact_type}</dd>
-                <dt className="text-neutral-500">mime_type</dt>
-                <dd>{artifactDetail.mime_type ?? "(none)"}</dd>
-                <dt className="text-neutral-500">checksum</dt>
-                <dd className="font-mono text-xs break-all">{artifactDetail.checksum ?? "(none)"}</dd>
-                <dt className="text-neutral-500">storage_uri</dt>
-                <dd className="font-mono text-xs break-all">{artifactDetail.storage_uri}</dd>
-                <dt className="text-neutral-500">size_bytes</dt>
-                <dd>{artifactDetail.size_bytes}</dd>
-                <dt className="text-neutral-500">created_at</dt>
-                <dd className="font-mono text-xs">{artifactDetail.created_at}</dd>
-                <dt className="text-neutral-500">updated_at</dt>
-                <dd className="font-mono text-xs">{artifactDetail.updated_at}</dd>
-                <dt className="text-neutral-500">metadata</dt>
-                <dd className="font-mono text-xs whitespace-pre-wrap">
-                  {artifactDetail.metadata == null || Object.keys(artifactDetail.metadata).length === 0
-                    ? "(none)"
-                    : formatJson(artifactDetail.metadata)}
-                </dd>
-              </dl>
+              <>
+                <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-[minmax(8rem,auto)_1fr]">
+                  <dt className="text-neutral-500">artifact id</dt>
+                  <dd className="font-mono text-xs text-neutral-900">{artifactDetail.id}</dd>
+                  <dt className="text-neutral-500">filename</dt>
+                  <dd>{artifactDetail.filename}</dd>
+                  <dt className="text-neutral-500">title</dt>
+                  <dd>{artifactDetail.title ?? "(none)"}</dd>
+                  <dt className="text-neutral-500">artifact_type</dt>
+                  <dd>{artifactDetail.artifact_type}</dd>
+                  <dt className="text-neutral-500">mime_type</dt>
+                  <dd>{artifactDetail.mime_type ?? "(none)"}</dd>
+                  <dt className="text-neutral-500">checksum</dt>
+                  <dd className="font-mono text-xs break-all">{artifactDetail.checksum ?? "(none)"}</dd>
+                  <dt className="text-neutral-500">storage_uri</dt>
+                  <dd className="font-mono text-xs break-all">{artifactDetail.storage_uri}</dd>
+                  <dt className="text-neutral-500">size_bytes</dt>
+                  <dd>{artifactDetail.size_bytes}</dd>
+                  <dt className="text-neutral-500">created_at</dt>
+                  <dd className="font-mono text-xs">{artifactDetail.created_at}</dd>
+                  <dt className="text-neutral-500">updated_at</dt>
+                  <dd className="font-mono text-xs">{artifactDetail.updated_at}</dd>
+                  <dt className="text-neutral-500">metadata</dt>
+                  <dd className="font-mono text-xs whitespace-pre-wrap">
+                    {artifactDetail.metadata == null ||
+                    Object.keys(artifactDetail.metadata).length === 0
+                      ? "(none)"
+                      : formatJson(artifactDetail.metadata)}
+                  </dd>
+                </dl>
+                {(() => {
+                  const meta = artifactDetail.metadata;
+                  if (!isPlainObject(meta)) return null;
+                  const agg = meta[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY];
+                  if (!isPlainObject(agg)) return null;
+                  return <ArtifactLanguageAggregationReadout subtree={agg} />;
+                })()}
+              </>
             )}
           </div>
 

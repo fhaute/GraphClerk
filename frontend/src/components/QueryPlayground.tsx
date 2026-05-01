@@ -109,7 +109,10 @@ export function QueryPlayground() {
       <h2 className="text-sm font-medium text-neutral-700">Query playground</h2>
       <p className="mt-1 text-xs text-neutral-500">
         Submit a natural-language question to <code className="font-mono">POST /retrieve</code>.
-        The UI shows the returned RetrievalPacket only — no mocked retrieval data.
+        The UI shows the returned RetrievalPacket only — no mocked retrieval data. Default{" "}
+        <code className="font-mono">POST /artifacts</code> does not inject language detection into
+        enrichment; optional <code className="font-mono">language_context</code> still reflects
+        whatever language keys exist on selected evidence metadata.
       </p>
 
       <form className="mt-4 space-y-4" onSubmit={onSubmit}>

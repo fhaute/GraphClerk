@@ -198,8 +198,16 @@ export function RetrievalPacketPanel({ packet }: { packet: RetrievalPacket }) {
 
         <SectionTitle>Language context (metadata)</SectionTitle>
         <p className="mt-2 text-xs text-neutral-600">
-          Language context is metadata aggregated from selected evidence metadata. It is not
-          translation, not personalization, and not evidence by itself.
+          Language context is metadata aggregated from <strong>selected evidence</strong>{" "}
+          <code className="font-mono">metadata_json</code> only (see each evidence row in the API;
+          the packet does not infer language from body text alone). It is not translation, not
+          personalization, and not evidence by itself.
+        </p>
+        <p className="mt-1 text-xs text-neutral-600">
+          This is separate from <code className="font-mono">graphclerk_language_aggregation</code>{" "}
+          on the artifact record after ingest: that subtree summarizes persisted EU metadata on the
+          artifact for operators; the retrieval packet&apos;s language context is built only from
+          the evidence included in this packet.
         </p>
         {packet.language_context == null ? (
           <p className="mt-2 text-sm text-neutral-600">No language context recorded.</p>

@@ -263,7 +263,7 @@ Logging is **best-effort**; absence of a row does not by itself mean retrieve fa
 
 ## Step 11 — Inspect the UI
 
-With **`npm run dev`** in `frontend/` (see root `README.md`), open **Query Playground**, **Artifacts & evidence**, **Graph explorer**, **Semantic indexes**, **Retrieval logs**, and **Evaluation dashboard** as needed. The browser typically hits **`/api/...`** via the Vite proxy to the same backend as `$api`.
+With **`npm run dev`** in `frontend/` (see root `README.md`), open **Query Playground**, **Artifacts & evidence**, **Graph explorer**, **Semantic indexes**, **Retrieval logs**, and **Evaluation dashboard** as needed. The browser typically hits **`/api/...`** via the Vite proxy to the same backend as `$api`. On **Artifacts & evidence**, when ingest wrote **`graphclerk_language_aggregation`**, the detail view shows a readable **Language aggregation** section in addition to raw **metadata** JSON; **Query Playground** shows **`language_context`** from the returned packet (selected evidence metadata only — see [`GRAPHCLERK_PIPELINE_GUIDE.md`](GRAPHCLERK_PIPELINE_GUIDE.md)).
 
 ---
 

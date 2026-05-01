@@ -301,6 +301,7 @@ python scripts/backfill_semantic_indexes.py --semantic-index-id "<UUID>"
 **Label:** **TEMPLATE — NOT EXECUTED IN THIS SLICE**.
 
 - **`POST /retrieve`** with body `{"question": "..."}` — optional `options`, optional `actor_context` (recording-only; see [`retrieval.py`](../../backend/app/schemas/retrieval.py) / [`retrieval_packet.py`](../../backend/app/schemas/retrieval_packet.py)).
+- **`language_context`** on the packet (when present) reflects **selected evidence** **`metadata_json`** only — **not** translation and **not** sourced from the artifact’s **`metadata_json.graphclerk_language_aggregation`** subtree (**GET** **`/artifacts/{artifact_id}`**); compare artifact vs packet fields only when you need **ingest summary vs retrieve selection** ([`GRAPHCLERK_PIPELINE_GUIDE.md`](GRAPHCLERK_PIPELINE_GUIDE.md)).
 - **Minimal:** HTTP **200**, **`evidence_units`** may be **empty** — read **`warnings`** and **`vector_status`** ([`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md)).
 - **Rich indexed:** requires **`vector_status=indexed`** **and** a valid semantic-search embedding path (default adapter **`not_configured`** — often need guarded **`deterministic_fake`** for dev alignment per [`TESTING_RULES.md`](../governance/TESTING_RULES.md)).
 - **Logs:** `GET /retrieval-logs`, `GET /retrieval-logs/{id}` — **best-effort**; absence of a row does **not** prove retrieve failed.

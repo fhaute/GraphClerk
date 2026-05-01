@@ -90,7 +90,11 @@ Structured JSON from **`POST /retrieve`**: intent, route, **`evidence_units`**, 
 
 ### `language_context`
 
-**Optional** packet field derived from **selected evidence metadata** — **context, not evidence**. Phase 7 baseline; see phase doc and status. **Full-completion policy (pre-implementation):** [`docs/decisions/phase_7_context_intelligence_completion_decisions.md`](../decisions/phase_7_context_intelligence_completion_decisions.md) (Completion Program **Track C Slice C1**).
+**Optional** packet field derived from **selected evidence** rows’ **`metadata_json`** only (same keys the packet builder aggregates when building the packet) — **context, not evidence**, **not** translation. If evidence rows lack language keys, the field may be absent or sparse; the builder does **not** infer language from body text alone and does **not** read **`Artifact.metadata_json["graphclerk_language_aggregation"]`**. Phase 7 baseline; **full-completion policy (pre-implementation):** [`docs/decisions/phase_7_context_intelligence_completion_decisions.md`](../decisions/phase_7_context_intelligence_completion_decisions.md) (Completion Program **Track C Slice C1**).
+
+### `graphclerk_language_aggregation` (artifact)
+
+After ingest, **`Artifact.metadata_json`** may include **`graphclerk_language_aggregation`**: a **summary of persisted evidence-unit language metadata** on that artifact for operators. It is **separate** from **`RetrievalPacket.language_context`** (which is built only from **evidence included in that retrieve**). Treat as **artifact-level metadata**, not packet evidence and not translation.
 
 ### `actor_context`
 

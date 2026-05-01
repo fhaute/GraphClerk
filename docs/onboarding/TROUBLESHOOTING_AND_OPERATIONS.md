@@ -48,7 +48,7 @@ Operators and developers diagnosing **empty packets**, **stuck `vector_status`**
 - **No `POST /answer`** — answer synthesis is **out of scope** until a future track ships and audits it.
 - **No OCR/ASR/video** as complete first-class evidence pipelines — Phase 5 is **partial**; see status/README.
 - **RetrievalLog** may be **absent** for a given retrieve — logging is **best-effort**; the HTTP retrieve can still succeed.
-- **`language_context`** is **metadata from selected evidence**, **not** translation.
+- **`language_context`** is **metadata from selected evidence `metadata_json`**, **not** translation; the packet builder does **not** pull from **`Artifact.metadata_json["graphclerk_language_aggregation"]`** — that subtree is an **artifact-level** post-ingest summary (UI: **Artifacts & evidence** detail shows both raw metadata and a readable aggregation block when present).
 - **Future (Track C):** optional **production** language detection is **not** in baseline installs; dependency choice and config policy are documented in [`docs/decisions/phase_7_language_detector_dependency_decision.md`](../decisions/phase_7_language_detector_dependency_decision.md) (**research only** until **C3** ships).
 - **`actor_context`** is **recording-only** — it does **not** change routing or evidence selection.
 - **`graphclerk_model_pipeline`** on the packet is a **standalone metadata projection** in the Phase **8** baseline — **not** automatically merged into File Clerk evidence selection.
@@ -130,7 +130,8 @@ Operators and developers diagnosing **empty packets**, **stuck `vector_status`**
 - **No semantic route** — no **indexed** hit for the question / embedding policy; or **`NotConfigured`** prevents query embedding for search (**503** on `GET /semantic-indexes/search` when that path raises).
 - **Graph traversal** — bounded from **entry nodes** on selected semantic indexes; evidence must be **linked** on the graph path the File Clerk uses.
 - **`actor_context`** — **recording-only** on the packet; **no** retrieval boost.
-- **`language_context`** — aggregates from **selected evidence `metadata_json`**; **not** translation.
+- **`language_context`** — aggregates from **selected evidence `metadata_json`** only; **not** translation; **not** sourced from **`graphclerk_language_aggregation`** on the artifact row.
+- **`metadata_json.graphclerk_language_aggregation`** (artifact) — optional **ingest-time** summary over that artifact’s evidence units; compare to packet **`language_context`** only when debugging **ingest vs retrieve** visibility (they can differ if retrieve selects a different evidence set).
 - **`graphclerk_model_pipeline`** — optional packet metadata for inspection; **not** wired into File Clerk selection in the baseline.
 - **No answer synthesis** — use your own LLM layer after the packet if needed.
 
