@@ -26,7 +26,7 @@ todos:
     status: completed
   - id: phase8-slice-8g-local-inference-design
     content: "Slice 8G — Optional local inference adapter design (Ollama/vLLM etc.); design-only unless deps explicitly approved."
-    status: pending
+    status: completed
   - id: phase8-slice-8h-docs-status
     content: "Slice 8H — Docs/status honesty (what Phase 8 is/is not; no overclaim of models or /answer)."
     status: pending
@@ -141,7 +141,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 | **8D** | Model output validation service | Validates typed outputs; rejects unbounded prose where structured output is required; rejects source‑truth claims; **no** FileClerk integration yet. |
 | **8E** | Candidate‑only integration seam | **Approval‑gated:** helpers may produce **candidate metadata only**; **no** `EvidenceUnit` text mutation; **no** `RetrievalPacket` source evidence mutation; **no** route/evidence ranking change. **Slice 8E (projection-only):** `ModelPipelineCandidateMetadataProjectionService` landed — validated envelope → `graphclerk_model_pipeline` subtree only; **no** ingestion/enrichment wiring yet. |
 | **8F** | Evaluation fixtures | Deterministic fixtures + failure cases; **no** production inference. **Implemented:** `backend/tests/fixtures/phase8_model_pipeline_cases.py` + `backend/tests/test_phase8_model_pipeline_evaluation_fixtures.py`. |
-| **8G** | Optional local inference adapter design | Design only (Ollama/vLLM/etc.); **no** dependency add without approval. |
+| **8G** | Optional local inference adapter design | Design only (Ollama/vLLM/etc.); **no** dependency add without approval. **Design delivered (2026‑05‑01):** § Slice 8G below — default **E** until use case; first optional implementations **A** then **B**; **C/D** deferred. |
 | **8H** | Docs/status update | Document what Phase 8 **is / is not**; no claim of model implementation or answer synthesis until true. |
 | **8I** | Phase 8 audit | After implementation slices; artifact under `docs/audits/` per project audit rules. |
 
@@ -154,7 +154,7 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 - [x] **8D** — Output validation service (`model_pipeline_output_validation_service.py`; deep recursive checks; reports only, no mutation).
 - [x] **8E** — Candidate seam (**projection-only Option A** — `model_pipeline_candidate_projection_service.py` + tests; merge into candidates / enrichment deferred per § Slice 8E).
 - [x] **8F** — Evaluation fixtures (`tests/fixtures/phase8_model_pipeline_cases.py`, `test_phase8_model_pipeline_evaluation_fixtures.py`; no adapter execution in fixtures).
-- [ ] **8G** — Local inference design only.
+- [x] **8G** — Local inference design only (§ Slice 8G — optional **A/B** adapters; **E** default; **no** code in this slice).
 - [ ] **8H** — Docs/status alignment post‑implementation.
 - [ ] **8I** — Phase 8 audit.
 
@@ -217,6 +217,63 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
   }
 }
 ```
+
+---
+
+## Slice 8G — Design notes (optional local inference adapters)
+
+**Status:** **Design-only** (2026‑05‑01). **No** adapter implementation, **no** new dependencies, **no** `backend/app/**` edits in this slice. **Implementation remains disallowed** until a separate, explicit approval names a concrete helper use case (role + output contract + evaluation path).
+
+**Posture:** Prefer **`NotConfiguredModelPipelineAdapter` + deterministic test adapter** (**option E**) as the **only** shipped paths until then. When inference is approved, design targets **HTTP-local servers** first: **A (Ollama)** as the **default first optional adapter**, **B (vLLM OpenAI-compatible)** as the **peer alternate** for deployments that already standardize on OpenAI-shaped APIs. Treat **C** and **D** as **explicitly deferred** for Phase 8’s first wave (see deferral table).
+
+### Option comparison (local inference backends)
+
+| Criterion | **A — Ollama HTTP** | **B — vLLM OpenAI-compatible HTTP** | **C — llama.cpp / CLI** | **D — transformers in-process** | **E — NotConfigured + deterministic tests only** |
+|-----------|---------------------|-------------------------------------|-------------------------|--------------------------------|--------------------------------------------------|
+| **Local-first fit** | Strong: daemon on localhost, typical dev laptop setup | Strong when vLLM already runs locally/cluster | Moderate: binary + model files; subprocess coupling | Weak–moderate: Python/GPU/env heavy | Perfect: no runtime inference |
+| **Dependency weight** | Low client-side (HTTP + stdlib or existing HTTP stack); **no** weight if not configured | Same pattern as A if using generic HTTP client | Low Python deps; **high** operational coupling to CLI/version | **Very high** (`torch`, CUDA, model blobs) | **Zero** additional inference deps |
+| **Operational complexity** | Low–moderate: install service, pull model, keep version pinned | Moderate–high: server flags, GPU drivers, capacity | High: process management, quoting, streaming quirks | Very high: CUDA, VRAM, batching, security patches | **Minimal** |
+| **Deterministic testing** | Good: mock HTTP; optional gated integration | Good: mock OpenAI-shaped responses | Poor: subprocess/flaky timing, snapshot drift | Poor: hardware/non-determinism unless heavily mocked | **Excellent** |
+| **JSON / structured output** | Via prompting + parse; native “format” varies by model/API version | Similar; OpenAI JSON mode where supported — still **must** validate | Fragile without strict server-side contract | Same as D — manual parse | N/A (typed fixtures) |
+| **Failure semantics** | HTTP errors, 4xx/5xx, empty body → typed **`ModelPipelineResponseEnvelope`** (`error`, `retryable` rules TBD in impl slice) | Same | Process exit codes, stderr parsing — messy mapping | OOM, CUDA errors — hard to classify | Clean **`unavailable`** / explicit errors |
+| **Timeout / cancellation** | **Required:** client timeout per request; optional cancel via dropping connection | Same | Harder (kill subprocess tree) | Harder (async cancel + GPU work) | N/A |
+| **Security / sandboxing** | Network to localhost only by default; deny non-loopback unless explicitly configured | Same | Subprocess escape surface; argv injection risk | Large attack surface (pickles, deps) | None added |
+| **Windows compatibility** | **Good** (Ollama supports Windows) | Variable (vLLM historically Linux-first; verify target matrix before impl) | Moderate (binaries exist; PATH/WSL friction) | Moderate–hard (CUDA on Windows) | **Universal** |
+| **Keep model output non-evidence** | Same governance: validation + projection only; **no** EU/`text`/`source_fidelity` mutation | Same | Same risk as any backend if callers bypass gates | Highest creep risk (easy to “just generate”) | **Easiest to enforce** |
+| **Risk of `/answer` creep** | Medium if prompts unconstrained | Medium | Medium–high (CLI “ask anything”) | **High** (general LM in-process) | **Lowest** |
+
+### Recommendation summary
+
+1. **Recommended first (when inference is approved):** **A — Ollama HTTP** — simplest mental model for **local-first** developers, **Windows-friendly**, **mockable** HTTP surface, **no** in-process GPU stack in GraphClerk.
+2. **Peer alternate (same approval gate):** **B — vLLM OpenAI-compatible** — choose when operations already run an OpenAI-compatible local server and want one client shape.
+3. **Explicitly defer (Phase 8 first adapter wave):** **C — llama.cpp / CLI wrapper** (operational + test brittleness; security/process ergonomics) and **D — transformers / local Python runtime** (dependency weight, determinism, **`/answer` creep**, GPU ops burden).
+4. **Until a concrete use case + approval:** **E — keep only `NotConfigured` + deterministic test adapters** — satisfies “unsure → default E” and avoids silent Phase 8 scope expansion.
+
+**This task does not approve implementation.**
+
+### Design Q&A (required)
+
+1. **Which adapter option is recommended first and why?** **E** remains the **shipping default**. For the **first optional real adapter** after approval, prefer **A (Ollama)** for **local-first fit**, **low coupling**, **Windows compatibility**, and **clean HTTP mocking** in tests. Use **B** when the deployment standard is already OpenAI-compatible HTTP to vLLM (or similar).
+2. **Which adapter option should be explicitly deferred?** **C** (CLI/subprocess) and **D** (in-process transformers/torch) for the **first** GraphClerk Phase 8 inference slice — defer until governance explicitly accepts their ops cost and **`/answer`** risk.
+3. **What request/response shape should it consume/produce?** **Consume:** existing **`ModelPipelineRequestEnvelope`** (task.role, task.output_kind, bounded **`task.payload`** / **`task.metadata`** — no raw prompt dumps in the envelope unless a future slice adds an explicit, reviewed field). **Produce:** **`ModelPipelineResponseEnvelope`** only (`success` + **`ModelPipelineResult`** or non-success + **`ModelPipelineError`**), **`schema_version`** carried through.
+4. **How does raw model HTTP JSON map into `ModelPipelineResponseEnvelope`?** Adapter owns a **private parse step**: HTTP layer → extract assistant text or server-specific JSON → **normalize into role-aligned `ModelPipelineResult.payload` dict** (JSON-like) + **`provenance`** (`source`: `ollama` | `vllm`, `model`, optional ids/timings). On parse/shape failure → **`ModelPipelineStatus.error`** with **`ModelPipelineError`** (`code`, `message`, `retryable`, **`details`** JSON without truth claims). On transport/upstream down → **`unavailable`** or **`error`** per policy table (implementation slice).
+5. **How are timeouts represented?** Client-side **deadline** (e.g. **`GRAPHCLERK_MODEL_PIPELINE_TIMEOUT_SECONDS`** when implemented). On expiry → **`ModelPipelineResponseEnvelope`** with **`error`** (or **`unavailable`** if classified as upstream overload — implementation must document one mapping); typically **`retryable: true`** for timeouts unless safety dictates otherwise.
+6. **How are invalid JSON / malformed structured outputs represented?** **`ModelPipelineStatus.error`** + **`ModelPipelineError`** with stable codes such as **`model_pipeline_invalid_json`** / **`model_pipeline_schema_mismatch`**; **`details`** may include parser offset / snippet hash — **no** nested truth claims. Never fabricate **`success`** with partial payloads.
+7. **How are unavailable model servers represented?** Connection refused / DNS / TLS to configured base URL → **`ModelPipelineStatus.unavailable`** (or **`error`** if distinguished — pick one convention in impl slice) + **`ModelPipelineError`** with **`retryable: true`** where appropriate; align with **`NotConfigured`** semantics: **no** silent success, **no** `result` payload on non-success envelopes (per **8B** rules).
+8. **How are prompt templates governed?** **Out of band from ingestion:** versioned templates (module constants or checked-in template registry), **role-specific**, reviewed strings; **task.payload** supplies **structured slots** only (ids, labels, bounded excerpts). **Forbidden:** ad-hoc “answer the user” templates wired from retrieval endpoints — that is **`/answer`** scope creep. Prompt assembly stays **inside the adapter module** or a dedicated **`model_pipeline_prompts`** submodule (future allowlist).
+9. **How are model outputs validated before projection?** **Mandatory pipeline:** `ModelPipelineOutputValidationService.validate_response(envelope)` → **`ModelPipelineOutputValidationReport`**; only if **`report.ok`** may **`ModelPipelineCandidateMetadataProjectionService.project`** run. **Adapter does not skip validation** and **projection never runs on raw strings**.
+10. **How do we prevent model output from becoming evidence?** **Multiple gates:** (a) typed **`ModelPipelineResult`** only; (b) **8D** recursive validation rejects **`is_evidence`**, **`source_fidelity: verbatim`**, **`source_truth`**, and prose-shaped keys where disallowed; (c) **8E** projection places payloads under **`proposed`** in **`graphclerk_model_pipeline`** metadata only; (d) **no** adapter calls **FileClerk**, **retrieval**, **ingestion**, **no** **`EvidenceUnit`** creation, **no** mutation of **`EvidenceUnitCandidate.text`** or **`source_fidelity`** in the adapter slice.
+11. **What config/env variables would be required later?** **Illustrative only (not set now):** e.g. **`GRAPHCLERK_MODEL_PIPELINE_ADAPTER`** (`ollama` \| `vllm` \| `not_configured`), **`GRAPHCLERK_MODEL_PIPELINE_BASE_URL`**, **`GRAPHCLERK_MODEL_PIPELINE_MODEL`**, **`GRAPHCLERK_MODEL_PIPELINE_TIMEOUT_SECONDS`**, optional **`GRAPHCLERK_MODEL_PIPELINE_API_KEY`** if local auth proxy added. Default unset → **`NotConfigured`** behavior.
+12. **What files would be allowed if implementation is later approved?** **Illustrative:** new **`backend/app/services/model_pipeline_*_adapter.py`** (or single `model_pipeline_http_adapters.py`), optional **`model_pipeline_prompt_registry.py`**, thin **factory** selecting **`NotConfigured` vs HTTP adapter**, matching **`backend/tests/test_phase8_model_pipeline_*`**. Reuse **8F** fixtures where possible.
+13. **What files remain forbidden?** Same Phase 8 gates as prior slices unless a future slice explicitly expands scope: **`backend/app/api/**`**, **`backend/app/models/**`**, **`backend/app/db/**`**, **`backend/app/repositories/**`**, **`file_clerk_service.py`**, **`retrieval_packet_builder.py`**, **`route_selection_service.py`**, **`evidence_selection_service.py`**, **`text_ingestion_service.py`**, **`multimodal_ingestion_service.py`**, **`evidence_enrichment_service.py`** (unless a separately approved **thin merge** slice), **`frontend/**`**, migrations — **no** wiring inference into **`/answer`**.
+14. **What tests are required before implementation acceptance?** **Unit:** mocked HTTP client — success JSON → valid envelope; malformed JSON → **`error`**; timeout → classified outcome; connection failure → **`unavailable`/`error`**. **Contract:** role/output matrix violations still rejected by Pydantic. **Validation:** every mocked success path runs **`ModelPipelineOutputValidationService`**; failures never reach projection. **Import boundaries:** AST or grep tests — **no** FileClerk/retrieval/ingestion imports in adapter module. **Optional gated integration:** env-flagged live call against local Ollama/vLLM (off in CI default).
+
+### Required boundaries (restated for future implementation)
+
+- Adapter **`run(...) -> ModelPipelineResponseEnvelope`** only.
+- **`ModelPipelineOutputValidationService`** runs **before** **`ModelPipelineCandidateMetadataProjectionService`** (callers or orchestrator enforce order).
+- **No** persistence, **no** FileClerk, **no** retrieval services, **no** **`EvidenceUnit`** creation, **no** **`EvidenceUnitCandidate.text`** / **`source_fidelity`** mutation.
+- **No** **`/answer`** implementation; inference **opt-in** and **off** by default; **`NotConfigured`** remains default when unset.
 
 ---
 
