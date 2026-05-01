@@ -22,7 +22,7 @@ todos:
     status: completed
   - id: p7-slice-7f
     content: "Slice 7F — RetrievalPacket.language_context optional section; backward-compatible; query/evidence languages only; no translation."
-    status: pending
+    status: completed
   - id: p7-slice-7g
     content: "Slice 7G — ActorContext schema for POST /retrieve (optional); absent = unchanged behavior; invalid = clear failure; no boosting; no persistence."
     status: pending

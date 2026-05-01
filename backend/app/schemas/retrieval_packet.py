@@ -59,6 +59,32 @@ class EvidenceUnitPacket(BaseModel):
     confidence: float | None = None
 
 
+class EvidenceLanguageAggregateRow(BaseModel):
+    """Per-language rollups over selected evidence metadata (Phase 7)."""
+
+    language: str
+    evidence_unit_count: int
+    average_confidence: float | None = None
+    min_confidence: float | None = None
+    max_confidence: float | None = None
+
+
+class RetrievalLanguageContext(BaseModel):
+    """Language routing metadata derived from selected evidence ``metadata_json`` only.
+
+    Not source truth; no detection or translation in Phase 7 Slice 7F.
+    """
+
+    version: Literal[1] = 1
+    source: Literal["selected_evidence_metadata"] = "selected_evidence_metadata"
+    query_language: str | None = None
+    evidence_languages: list[EvidenceLanguageAggregateRow] = Field(default_factory=list)
+    primary_evidence_language: str | None = None
+    distinct_evidence_language_count: int = 0
+    evidence_units_without_language_metadata_count: int = 0
+    warnings: list[str] = Field(default_factory=list)
+
+
 class AlternativeInterpretation(BaseModel):
     """Explicit ambiguity / alternate meaning routing hints."""
 
@@ -110,3 +136,4 @@ class RetrievalPacket(BaseModel):
     warnings: list[str]
     confidence: float = Field(ge=0.0, le=1.0)
     answer_mode: AnswerMode
+    language_context: RetrievalLanguageContext | None = None

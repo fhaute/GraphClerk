@@ -72,6 +72,7 @@ def test_retrieval_packet_required_fields_round_trip() -> None:
     restored = RetrievalPacket.model_validate(dumped)
     assert restored.packet_type == "retrieval_packet"
     assert restored.question == packet.question
+    assert restored.language_context is None
 
 
 def test_retrieval_packet_rejects_invalid_answer_mode() -> None:

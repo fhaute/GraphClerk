@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -26,6 +27,7 @@ class EvidenceCandidate:
     unit_confidence: float | None
     support_confidence: float | None
     selection_reason: str
+    metadata_json: dict[str, Any] | None = None
 
 
 class EvidenceSelectionService:
@@ -84,6 +86,7 @@ class EvidenceSelectionService:
                     unit_confidence=u.confidence,
                     support_confidence=support_conf,
                     selection_reason=reason,
+                    metadata_json=u.metadata_json,
                 )
             )
 

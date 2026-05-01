@@ -3,15 +3,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from app.schemas.retrieval_packet import (
     AlternativeInterpretation,
     ContextBudgetSummary,
+    EvidenceLanguageAggregateRow,
     EvidenceUnitPacket,
     GraphPathPacket,
     InterpretedIntent,
+    RetrievalLanguageContext,
     RetrievalPacket,
     SelectedSemanticIndex,
+)
+from app.services.artifact_language_aggregation_service import (
+    GRAPHCLERK_LANGUAGE_AGGREGATION_KEY,
+    ArtifactLanguageAggregationService,
 )
 from app.services.evidence_selection_service import EvidenceCandidate
 from app.services.graph_traversal_service import GraphNeighborhood
@@ -116,6 +123,8 @@ class RetrievalPacketBuilder:
         if confidence < 0.35 and "low_confidence" not in warnings:
             warnings = sorted(set([*warnings, "low_confidence"]))
 
+        language_context = self._build_language_context(data.evidence_selected)
+
         packet = RetrievalPacket(
             question=data.question,
             interpreted_intent=data.interpreted_intent,
@@ -127,9 +136,49 @@ class RetrievalPacketBuilder:
             warnings=warnings,
             confidence=confidence,
             answer_mode=answer_mode,
+            language_context=language_context,
         )
         # Final validation pass (explicit, even though models enforce shape).
         return RetrievalPacket.model_validate(packet.model_dump(mode="json"))
+
+    def _build_language_context(self, evidence_selected: list[EvidenceCandidate]) -> RetrievalLanguageContext:
+        """Aggregate language fields from selected evidence ``metadata_json`` only (Slice 7F)."""
+
+        projections: list[dict[str, Any]] = []
+        for c in evidence_selected:
+            projections.append(dict(c.metadata_json) if c.metadata_json is not None else {})
+
+        merged = ArtifactLanguageAggregationService().aggregate(
+            artifact_metadata=None,
+            evidence_metadata_projections=projections,
+        )
+        inner = merged[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY]
+
+        lc_warnings = list(inner["warnings"])
+        if evidence_selected and all(c.metadata_json is None for c in evidence_selected):
+            lc_warnings.append("language_metadata_unavailable_in_packet_builder")
+        lc_warnings = sorted(set(lc_warnings))
+
+        rows = [
+            EvidenceLanguageAggregateRow(
+                language=r["language"],
+                evidence_unit_count=r["evidence_unit_count"],
+                average_confidence=r["average_confidence"],
+                min_confidence=r["min_confidence"],
+                max_confidence=r["max_confidence"],
+            )
+            for r in inner["languages"]
+        ]
+
+        return RetrievalLanguageContext(
+            evidence_languages=rows,
+            primary_evidence_language=inner["primary_language"],
+            distinct_evidence_language_count=inner["distinct_language_count"],
+            evidence_units_without_language_metadata_count=inner[
+                "evidence_units_without_language_metadata_count"
+            ],
+            warnings=lc_warnings,
+        )
 
     @staticmethod
     def _compute_confidence(
