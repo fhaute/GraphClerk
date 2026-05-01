@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 from pydantic import ValidationError
 
+from app.schemas.retrieval import ActorContext
 from app.schemas.retrieval_packet import (
     ContextBudgetSummary,
     EvidenceUnitPacket,
@@ -18,7 +19,10 @@ from app.schemas.retrieval_packet import (
 )
 from app.services.evidence_selection_service import EvidenceCandidate
 from app.services.graph_traversal_service import GraphNeighborhood
-from app.services.retrieval_packet_builder import RetrievalPacketAssemblyInput, RetrievalPacketBuilder
+from app.services.retrieval_packet_builder import (
+    RetrievalPacketAssemblyInput,
+    RetrievalPacketBuilder,
+)
 from app.services.route_selection_service import RouteSelection
 from app.services.semantic_index_search_service import SemanticIndexSearchResult
 
@@ -27,7 +31,9 @@ def _minimal_route_with_primary() -> tuple[RouteSelection, MagicMock]:
     idx = MagicMock()
     idx.id = uuid.uuid4()
     idx.meaning = "meaning"
-    primary = SemanticIndexSearchResult(semantic_index=idx, entry_node_ids=[uuid.uuid4()], score=0.9)
+    primary = SemanticIndexSearchResult(
+        semantic_index=idx, entry_node_ids=[uuid.uuid4()], score=0.9
+    )
     route = RouteSelection(
         primary=primary,
         alternatives=[],
@@ -298,3 +304,139 @@ def test_evidence_unit_packet_schema_unchanged_shape() -> None:
     names = set(EvidenceUnitPacket.model_fields.keys())
     assert "language" not in names
     assert "translated_text" not in names
+
+
+def test_builder_does_not_treat_nested_graphclerk_language_aggregation_as_evidence_language() -> (
+    None
+):
+    """``language_context`` uses top-level ``language`` on each EU metadata row only.
+
+    Persisted artifact subtree shape under a different key must not be misread as
+    a natural-language tag when ``language`` is absent at the EU metadata root.
+    """
+
+    route, idx = _minimal_route_with_primary()
+    nh = _minimal_neighborhood()
+    ev = EvidenceCandidate(
+        evidence_unit_id=uuid.uuid4(),
+        artifact_id=uuid.uuid4(),
+        modality="text",
+        content_type="paragraph",
+        source_fidelity="verbatim",
+        text="body",
+        location=None,
+        unit_confidence=0.9,
+        support_confidence=0.9,
+        selection_reason="linked",
+        metadata_json={
+            "graphclerk_language_aggregation": {
+                "version": 1,
+                "primary_language": "fr",
+                "languages": [{"language": "fr", "evidence_unit_count": 99}],
+            },
+        },
+    )
+
+    assembly = RetrievalPacketAssemblyInput(
+        question="q",
+        interpreted_intent=InterpretedIntent(intent_type="explain", confidence=0.9, notes=[]),
+        route_selection=route,
+        selected_indexes=[
+            SelectedSemanticIndex(
+                semantic_index_id=str(idx.id),
+                meaning="meaning",
+                score=0.9,
+                selection_reason="best",
+            )
+        ],
+        graph_neighborhoods=[nh],
+        evidence_selected=[ev],
+        evidence_pruned=0,
+        pruning_reasons=[],
+        warnings=[],
+        options_max_evidence_units=8,
+        options_max_graph_paths=3,
+        options_max_selected_indexes=3,
+        include_alternatives=False,
+    )
+    packet = RetrievalPacketBuilder().build(assembly)
+    lc = packet.language_context
+    assert lc is not None
+    assert lc.primary_evidence_language is None
+    assert lc.distinct_evidence_language_count == 0
+    assert lc.evidence_units_without_language_metadata_count == 1
+
+
+def test_builder_language_context_identical_with_or_without_request_actor_context() -> None:
+    """Actor context is recording-only; language_context and evidence rows stay the same."""
+
+    route, idx = _minimal_route_with_primary()
+    nh = _minimal_neighborhood()
+    evs = [
+        EvidenceCandidate(
+            evidence_unit_id=uuid.uuid4(),
+            artifact_id=uuid.uuid4(),
+            modality="text",
+            content_type="paragraph",
+            source_fidelity="verbatim",
+            text="one",
+            location=None,
+            unit_confidence=0.9,
+            support_confidence=0.9,
+            selection_reason="linked",
+            metadata_json={"language": "en", "language_confidence": 0.9},
+        ),
+        EvidenceCandidate(
+            evidence_unit_id=uuid.uuid4(),
+            artifact_id=uuid.uuid4(),
+            modality="text",
+            content_type="paragraph",
+            source_fidelity="extracted",
+            text="two",
+            location=None,
+            unit_confidence=0.8,
+            support_confidence=0.8,
+            selection_reason="linked",
+            metadata_json={"language": "en", "language_confidence": 0.7},
+        ),
+    ]
+
+    base_kw = dict(
+        question="q",
+        interpreted_intent=InterpretedIntent(intent_type="explain", confidence=0.9, notes=[]),
+        route_selection=route,
+        selected_indexes=[
+            SelectedSemanticIndex(
+                semantic_index_id=str(idx.id),
+                meaning="meaning",
+                score=0.9,
+                selection_reason="best",
+            )
+        ],
+        graph_neighborhoods=[nh],
+        evidence_selected=evs,
+        evidence_pruned=0,
+        pruning_reasons=[],
+        warnings=[],
+        options_max_evidence_units=8,
+        options_max_graph_paths=3,
+        options_max_selected_indexes=3,
+        include_alternatives=False,
+    )
+
+    p0 = RetrievalPacketBuilder().build(RetrievalPacketAssemblyInput(**base_kw))
+    p1 = RetrievalPacketBuilder().build(
+        RetrievalPacketAssemblyInput(
+            **base_kw,
+            request_actor_context=ActorContext(actor_id="u1", role="tester"),
+        ),
+    )
+
+    assert p0.language_context is not None and p1.language_context is not None
+    assert p0.language_context.model_dump() == p1.language_context.model_dump()
+    assert [u.model_dump() for u in p0.evidence_units] == [
+        u.model_dump() for u in p1.evidence_units
+    ]
+    assert p1.actor_context is not None
+    assert p1.actor_context.used is True
+    assert p1.actor_context.influence == "recorded_only_no_route_boost_applied"

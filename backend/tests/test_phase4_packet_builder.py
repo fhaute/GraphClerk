@@ -6,13 +6,21 @@ from unittest.mock import MagicMock
 from app.schemas.retrieval_packet import InterpretedIntent, SelectedSemanticIndex
 from app.services.evidence_selection_service import EvidenceCandidate
 from app.services.graph_traversal_service import GraphNeighborhood
-from app.services.retrieval_packet_builder import RetrievalPacketAssemblyInput, RetrievalPacketBuilder
+from app.services.retrieval_packet_builder import (
+    RetrievalPacketAssemblyInput,
+    RetrievalPacketBuilder,
+)
 from app.services.route_selection_service import RouteSelection
 from app.services.semantic_index_search_service import SemanticIndexSearchResult
 
 
 def test_packet_builder_no_semantic_match_packet() -> None:
-    route = RouteSelection(primary=None, alternatives=[], selection_reasons={}, search_warnings=["no_semantic_index_match"])
+    route = RouteSelection(
+        primary=None,
+        alternatives=[],
+        selection_reasons={},
+        search_warnings=["no_semantic_index_match"],
+    )
 
     assembly = RetrievalPacketAssemblyInput(
         question="hello",
@@ -46,7 +54,9 @@ def test_packet_builder_with_primary_and_evidence() -> None:
     idx.id = uuid.uuid4()
     idx.meaning = "meaning"
 
-    primary = SemanticIndexSearchResult(semantic_index=idx, entry_node_ids=[uuid.uuid4()], score=0.9)
+    primary = SemanticIndexSearchResult(
+        semantic_index=idx, entry_node_ids=[uuid.uuid4()], score=0.9
+    )
     route = RouteSelection(
         primary=primary,
         alternatives=[],
@@ -101,6 +111,7 @@ def test_packet_builder_with_primary_and_evidence() -> None:
     assert len(packet.evidence_units) == 1
     assert packet.language_context is not None
     assert packet.language_context.query_language is None
+    assert "language_missing_or_null" in packet.language_context.warnings
     assert packet.actor_context is not None
     assert packet.actor_context.used is False
     assert packet.actor_context.influence == "none"

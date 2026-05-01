@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import uuid
 from unittest.mock import MagicMock
 
 from sqlalchemy import create_engine, select
@@ -16,18 +17,27 @@ from app.schemas.evidence_unit_candidate import (
     LANGUAGE_METADATA_KEY_LANGUAGE,
     EvidenceUnitCandidate,
 )
+from app.schemas.retrieval_packet import InterpretedIntent, SelectedSemanticIndex
 from app.services.artifact_language_aggregation_service import (
     GRAPHCLERK_LANGUAGE_AGGREGATION_KEY,
     WARNING_NO_LANGUAGE_METADATA,
     apply_language_aggregation_to_artifact,
 )
 from app.services.evidence_enrichment_service import EvidenceEnrichmentService
+from app.services.evidence_selection_service import EvidenceCandidate
 from app.services.extraction.extractor_registry import ExtractorRegistry
+from app.services.graph_traversal_service import GraphNeighborhood
 from app.services.language_detection_service import (
     DeterministicTestLanguageDetectionAdapter,
     LanguageDetectionService,
 )
 from app.services.multimodal_ingestion_service import MultimodalIngestionService
+from app.services.retrieval_packet_builder import (
+    RetrievalPacketAssemblyInput,
+    RetrievalPacketBuilder,
+)
+from app.services.route_selection_service import RouteSelection
+from app.services.semantic_index_search_service import SemanticIndexSearchResult
 from app.services.text_ingestion_service import TextIngestionService
 
 
@@ -207,3 +217,120 @@ def test_multimodal_ingestion_persists_aggregation_after_extraction(db_ready: No
     agg = (art.metadata_json or {})[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY]
     assert agg["primary_language"] == "en"
     assert agg["distinct_language_count"] == 1
+
+
+def _evidence_candidate_from_evidence_unit(ev: EvidenceUnit) -> EvidenceCandidate:
+    sf = (
+        ev.source_fidelity.value
+        if isinstance(ev.source_fidelity, SourceFidelity)
+        else str(ev.source_fidelity)
+    )
+    mod = ev.modality.value if isinstance(ev.modality, Modality) else str(ev.modality)
+    return EvidenceCandidate(
+        evidence_unit_id=ev.id,
+        artifact_id=ev.artifact_id,
+        modality=mod,
+        content_type=ev.content_type,
+        source_fidelity=sf,
+        text=ev.text,
+        location=ev.location,
+        unit_confidence=ev.confidence,
+        support_confidence=ev.confidence,
+        selection_reason="test_fixture",
+        metadata_json=dict(ev.metadata_json) if ev.metadata_json else None,
+    )
+
+
+def _minimal_route_for_packet() -> tuple[RouteSelection, MagicMock]:
+    idx = MagicMock()
+    idx.id = uuid.uuid4()
+    idx.meaning = "meaning"
+    primary = SemanticIndexSearchResult(
+        semantic_index=idx, entry_node_ids=[uuid.uuid4()], score=0.9
+    )
+    route = RouteSelection(
+        primary=primary,
+        alternatives=[],
+        selection_reasons={str(idx.id): "best"},
+        search_warnings=[],
+    )
+    return route, idx
+
+
+def test_ingested_language_metadata_and_artifact_aggregation_match_packet_language_context(
+    db_ready: None,
+) -> None:
+    """C6: ingested EU metadata (enrichment) feeds packet ``language_context``."""
+
+    settings = config_module.get_settings()
+    adapter = DeterministicTestLanguageDetectionAdapter(
+        default_language="fr",
+        default_confidence=0.91,
+        short_text_max_chars=0,
+    )
+    enrichment = EvidenceEnrichmentService(
+        language_detection=LanguageDetectionService(adapter=adapter),
+    )
+    svc = TextIngestionService(settings=settings, enrichment=enrichment)
+
+    with _session() as session:
+        result = svc.ingest(
+            session=session,
+            filename="c6-flow.txt",
+            artifact_type="text",
+            mime_type="text/plain",
+            content_bytes=b"First paragraph long\n\nSecond paragraph long\n",
+        )
+        art = session.get(Artifact, result.artifact.id)
+        evs = (
+            session.execute(
+                select(EvidenceUnit)
+                .where(EvidenceUnit.artifact_id == result.artifact.id)
+                .order_by(EvidenceUnit.created_at)
+            )
+            .scalars()
+            .all()
+        )
+
+    assert GRAPHCLERK_LANGUAGE_AGGREGATION_KEY in (art.metadata_json or {})
+    assert (art.metadata_json or {})[GRAPHCLERK_LANGUAGE_AGGREGATION_KEY][
+        "primary_language"
+    ] == "fr"
+
+    candidates = [_evidence_candidate_from_evidence_unit(ev) for ev in evs]
+    route, idx = _minimal_route_for_packet()
+    nh = MagicMock(spec=GraphNeighborhood)
+    nh.start_node_id = uuid.uuid4()
+    nh.depth = 1
+    nh.nodes = []
+    nh.edges = []
+    nh.truncated = False
+
+    assembly = RetrievalPacketAssemblyInput(
+        question="probe",
+        interpreted_intent=InterpretedIntent(intent_type="explain", confidence=0.9, notes=[]),
+        route_selection=route,
+        selected_indexes=[
+            SelectedSemanticIndex(
+                semantic_index_id=str(idx.id),
+                meaning="meaning",
+                score=0.9,
+                selection_reason="best",
+            )
+        ],
+        graph_neighborhoods=[nh],
+        evidence_selected=candidates,
+        evidence_pruned=0,
+        pruning_reasons=[],
+        warnings=[],
+        options_max_evidence_units=8,
+        options_max_graph_paths=3,
+        options_max_selected_indexes=3,
+        include_alternatives=False,
+    )
+    packet = RetrievalPacketBuilder().build(assembly)
+    lc = packet.language_context
+    assert lc is not None
+    assert lc.source == "selected_evidence_metadata"
+    assert lc.primary_evidence_language == "fr"
+    assert lc.distinct_evidence_language_count == 1

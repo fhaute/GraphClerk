@@ -17,8 +17,8 @@ from app.models.semantic_index import SemanticIndex
 from app.services.embedding_adapter import DeterministicFakeEmbeddingAdapter
 from app.services.embedding_service import EmbeddingService
 from app.services.errors import EmbeddingAdapterNotConfiguredError, VectorIndexOperationError
-from app.services.semantic_index_service import SemanticIndexVectorIndexingService
 from app.services.semantic_index_search_service import SemanticIndexSearchService
+from app.services.semantic_index_service import SemanticIndexVectorIndexingService
 from app.services.vector_index_service import SearchHit, VectorIndexService
 
 
@@ -60,7 +60,9 @@ class _RecordingVectorIndexService(VectorIndexService):
         self.upserts.append((semantic_index_id, vector, payload))
 
 
-def _indexing_service(session, vector: _RecordingVectorIndexService) -> SemanticIndexVectorIndexingService:
+def _indexing_service(
+    session, vector: _RecordingVectorIndexService
+) -> SemanticIndexVectorIndexingService:
     emb = EmbeddingService(
         adapter=DeterministicFakeEmbeddingAdapter(dimension=8),
         expected_dimension=8,
@@ -105,7 +107,10 @@ def test_indexing_fails_when_embedding_text_empty(db_ready: None) -> None:
         assert refreshed is not None
         assert refreshed.vector_status == SemanticIndexVectorStatus.failed
         meta = refreshed.metadata_json or {}
-        assert meta.get("graphclerk_vector_indexing", {}).get("last_error_code") == "embedding_text_empty"
+        assert (
+            meta.get("graphclerk_vector_indexing", {}).get("last_error_code")
+            == "embedding_text_empty"
+        )
         assert vector.upserts == []
 
 
@@ -214,7 +219,9 @@ class _StubVectorIndexServiceSearchOnly:
     def __init__(self, hits: list[SearchHit]) -> None:
         self._hits = hits
 
-    def search_semantic_indexes(self, *, query_vector: list[float], limit: int = 5) -> list[SearchHit]:
+    def search_semantic_indexes(
+        self, *, query_vector: list[float], limit: int = 5
+    ) -> list[SearchHit]:
         _ = query_vector
         _ = limit
         return self._hits
@@ -243,11 +250,17 @@ async def test_retrieve_returns_non_empty_evidence_after_indexing_service(
         evs = await client.get(f"/artifacts/{artifact_id}/evidence")
         evidence_unit_id = evs.json()["items"][0]["id"]
 
-        node_resp = await client.post("/graph/nodes", json={"node_type": "concept", "label": "B1Node"})
+        node_resp = await client.post(
+            "/graph/nodes", json={"node_type": "concept", "label": "B1Node"}
+        )
         node_id = node_resp.json()["id"]
         link = await client.post(
             f"/graph/nodes/{node_id}/evidence",
-            json={"evidence_unit_id": evidence_unit_id, "support_type": "supports", "confidence": 0.9},
+            json={
+                "evidence_unit_id": evidence_unit_id,
+                "support_type": "supports",
+                "confidence": 0.9,
+            },
         )
         assert link.status_code == 200
 
@@ -302,6 +315,9 @@ async def test_retrieve_returns_non_empty_evidence_after_indexing_service(
         match = next((u for u in units if u["evidence_unit_id"] == evidence_unit_id), None)
         assert match is not None, f"expected evidence in packet, got {units!r}"
         assert match["artifact_id"] == artifact_id
+        lc = body.get("language_context")
+        assert lc is not None
+        assert lc.get("source") == "selected_evidence_metadata"
 
 
 def _factory_test_env(monkeypatch: pytest.MonkeyPatch) -> None:

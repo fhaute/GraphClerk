@@ -27,7 +27,8 @@ from app.services.vector_index_service import VectorIndexService
 # DeterministicFakeEmbeddingAdapter yields identical query/index vectors (Qdrant hit).
 B5_SEMANTIC_ANCHOR = "track_b_b5_full_stack_semantic_anchor_exact_match_string"
 B5_ARTIFACT_TEXT = (
-    "Track B slice B5 artifact body. Evidence trace sentence for graph link retrieval.\n\nSecond line.\n"
+    "Track B slice B5 artifact body. Evidence trace sentence for graph link retrieval.\n\n"
+    "Second line.\n"
 )
 
 
@@ -40,7 +41,8 @@ def _b5_skip_unless_env() -> None:
         pytest.skip("QDRANT_URL required for Track B B5 full-stack test")
     if os.getenv("GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER") != "deterministic_fake":
         pytest.skip(
-            "GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake required for Track B B5 full-stack test"
+            "GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake required "
+            "for Track B B5 full-stack test"
         )
     if os.getenv("APP_ENV", "").lower() == "prod":
         pytest.skip("APP_ENV=prod is not allowed for Track B B5 full-stack test")
@@ -102,13 +104,19 @@ async def test_retrieve_non_empty_evidence_full_stack_no_monkeypatch(
         assert len(items) >= 1
         evidence_unit_id = items[0]["id"]
 
-        node_resp = await client.post("/graph/nodes", json={"node_type": "concept", "label": "B5FullStackNode"})
+        node_resp = await client.post(
+            "/graph/nodes", json={"node_type": "concept", "label": "B5FullStackNode"}
+        )
         assert node_resp.status_code == 200
         node_id = node_resp.json()["id"]
 
         link = await client.post(
             f"/graph/nodes/{node_id}/evidence",
-            json={"evidence_unit_id": evidence_unit_id, "support_type": "supports", "confidence": 0.9},
+            json={
+                "evidence_unit_id": evidence_unit_id,
+                "support_type": "supports",
+                "confidence": 0.9,
+            },
         )
         assert link.status_code == 200
 
@@ -157,3 +165,8 @@ async def test_retrieve_non_empty_evidence_full_stack_no_monkeypatch(
         assert match is not None, f"missing evidence unit {evidence_unit_id} in {units!r}"
         assert match.get("artifact_id") == artifact_id
         assert isinstance(body.get("warnings"), list)
+        lc = body.get("language_context")
+        assert lc is not None
+        assert lc.get("source") == "selected_evidence_metadata"
+        # Default JSON artifact route does not inject language enrichment on EUs.
+        assert lc.get("primary_evidence_language") is None
