@@ -105,6 +105,14 @@ Use this path to verify **control plane + UI + retrieval logging** with the Phas
 
 For release-style verification, record whether your run was **minimal** (empty evidence acceptable with pending indexes) or **rich** (indexed vectors present).
 
+### Policy decision (Phase 0–8 completion — C5)
+
+**Chosen policy: option C**
+
+- **Minimal E2E** (loader + UI + retrieve + logs; **`vector_status`** often **`pending`**; evidence may be empty) is **accepted as sufficient** for Phase **0–8** closure and for **Phase 9 planning** — no requirement to implement automatic backfill first.
+- **External or stakeholder demos** that must show **semantic-route evidence snippets** need a **dev-only “indexed” setup** (for example opt-in integration flows with Qdrant + embedding upsert, or other operator-documented steps — **not** added to `load_phase6_demo.py` by this policy) **or** an explicit walkthrough that **pending** indexes mean search and File Clerk semantic routing only consider **`indexed`** rows.
+- **Automatic vector indexing/backfill** remains **out of scope** here; treat it as existing **Phase 3** product/debt work if prioritized later.
+
 ## APIs used
 
 1. `POST /artifacts` — markdown inline body  

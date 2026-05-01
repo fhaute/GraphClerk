@@ -53,6 +53,7 @@ Executed in the audit pass (evidence also summarized in `docs/audits/PHASE_6_AUD
 
 ## Manual
 
+- [ ] **C5 demo policy (pre–Phase 9)** — **Option C** is recorded: minimal E2E does **not** block Phase **9** planning; **stakeholder-facing** demos that promise evidence snippets must use **rich** (indexed) conditions **or** explicitly disclose **minimal** / **pending** behavior. See **`docs/demo/PHASE_6_DEMO_CORPUS.md`** → *Policy decision (Phase 0–8 completion — C5)* and **`docs/reports/phase_0_8_completion_hardening_plan.md`** → *C5 policy decision*.
 - [ ] **Minimal demo E2E checklist** — follow **`docs/demo/PHASE_6_DEMO_CORPUS.md`** → *Manual end-to-end smoke path*. Record whether **`POST /retrieve`** showed **empty** `evidence_units` because semantic indexes were still **`vector_status=pending`**, or whether vectors were **indexed** / **rich** demo conditions applied.
 - [ ] **UI smoke test** — with API and `frontend` dev server (or preview) running, exercise: health banner, Query playground, Artifacts & evidence, Semantic indexes, Graph explorer, Retrieval logs, Evaluation dashboard. Confirm errors are readable and no tab implies OCR/ASR/video or **`POST /answer`**.
 - [ ] **Status docs honesty** — `README.md`, `docs/status/*`, and phase docs do not claim GraphClerk is **production-enterprise ready**, Phase 8 **started**, **`/answer`**, OCR/ASR/caption/video, or full vector auto-indexing unless true in that environment.

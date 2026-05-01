@@ -9,6 +9,7 @@
 | **Git status** | Working tree: **untracked** `docs/reports/pre_phase_9_repo_readiness_inventory.md` (from prior inventory); **this report** added as second untracked file until committed by maintainers. |
 | **Scope** | Read-only synthesis from `docs/reports/pre_phase_9_repo_readiness_inventory.md`, `docs/status/*`, audits **5–8**, `README.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`, `scripts/load_phase6_demo.py`, `backend/app/services/file_clerk_service.py` + route/search wiring, `frontend/src/**` (types/playground/panel). **No** code, status, phase doc, audit, or plan edits in this task. |
 | **Files modified** | **One new file:** this plan (`docs/reports/phase_0_8_completion_hardening_plan.md`). |
+| **C5 amendment** | **2026-05-01** — Slice **C5** policy (**option C**) recorded in [C5 policy decision](#c5-policy-decision-minimal-vs-rich-demo-prephase-9); no code or script changes. |
 
 ---
 
@@ -104,10 +105,10 @@
 | **C2** | **`graphclerk_model_pipeline`** UI | **Defer** until metadata exists on real rows (post-merge). Optional: ensure **Artifacts/EU** JSON viewers surface `metadata_json` (likely already via raw views) — verify in **C1** scope |
 | **C3** | **Manual demo checklist** + tighten `PHASE_6_DEMO_CORPUS` / README: steps = loader → **manual** `POST /retrieve` question → inspect packet + logs → explain empty evidence if `pending` | Always — low cost |
 | **C4** | **Gated** `RUN_INTEGRATION_TESTS=1` E2E: ingest → graph link → retrieve → assert log row (assert **warnings** or **non-empty** evidence depending on env) | If CI wants proof |
-| **C5** | **Decision doc**: (a) accept **minimal E2E** without Qdrant evidence, **or** (b) document **dev-only** steps to index demo SI (compose + embedding + upsert), **or** (c) schedule future product change for non-semantic bootstrap | PM + platform owner |
+| **C5** | **Decision doc (recorded):** **Option C** — minimal E2E enough for Phase **9** planning; external demos use **dev-only indexed recipe** **or** explicit pending-vector narrative — see [C5 policy decision](#c5-policy-decision-minimal-vs-rich-demo-prephase-9) | **Closed** (policy) |
 | **C6** | `docs/release/RELEASE_CHECKLIST.md` — add **two-tier** demo verification | Before next tagged release |
 
-**Only C0–C3 + C6 are broadly “actually needed”** for coherence; **C4–C5** depend on CI/release appetite.
+**Only C0–C3 + C6 are broadly “actually needed”** for coherence; **C4** depends on CI appetite; **C5** (policy) is **recorded** above.
 
 ---
 
@@ -161,7 +162,40 @@
 
 **Phase 9 planning can start in parallel** with **C1 + C3 + C6** hardening slices — implementation of Phase **9** should still wait on charter/allowlist.
 
-If the org requires **evidence-rich** demos for every stakeholder, schedule **C5(b)** (dev indexing recipe) **before** external Phase **9** demos — still not a code-architecture blocker for Phase **9** design work.
+If the org requires **evidence-rich** demos for every stakeholder, follow **C5** policy **C**: use a **dev-only indexed recipe** (or equivalent operator steps) **before** external Phase **9** demos that promise snippets — still not a code-architecture blocker for Phase **9** design work.
+
+---
+
+## C5 policy decision (minimal vs rich demo, pre–Phase 9)
+
+| Field | Value |
+|-------|-------|
+| **Recorded** | 2026-05-01 |
+| **Chosen option** | **C** — **Minimal E2E is enough** before Phase **9** planning and charter work. **External or stakeholder-facing demos** that must show **non-empty semantic evidence** must either follow a **dev-only** path that yields **`vector_status=indexed`** for the relevant semantic index (integration harness, manual Qdrant upsert, or other **documented operator steps** — **not** implemented as automatic product backfill in this slice), **or** explicitly present **pending-vector** behavior and empty **`evidence_units`** as **coherent**, not broken. |
+| **Options not chosen as gates** | **A** — accepted as the **technical** baseline but **not** sufficient as the **only** communications default when audiences conflate “demo loaded” with “retrieve shows snippets.” **B** — **rejected** as a **hard gate** for Phase **9** planning (spec and architecture work do not require rich evidence in every checkout). **D** — **rejected** for Phase 0–8 completion: **automatic vector indexing/backfill** remains **deferred** product/engineering work (overlaps **Phase 3** debt: no auto-upsert on `SemanticIndex` create; see `docs/status/TECHNICAL_DEBT.md`, `docs/status/KNOWN_GAPS.md`). |
+
+### Rationale (charter questions)
+
+| Question | Answer under policy **C** |
+|----------|---------------------------|
+| **Does Phase 9 planning require a rich evidence demo?** | **No.** Planning needs honest contracts (`RetrievalPacket`, logs, warnings, empty evidence). |
+| **Does internal testing require rich evidence?** | **Not by default.** Default **`pytest`** and minimal smoke prove the control plane. **Rich** behavior should be covered by **opt-in** integration tests (`RUN_INTEGRATION_TESTS=1`, DB/Qdrant) where maintainers choose to assert indexed routes — not a blocker for merging docs or Phase **9** design. |
+| **Does external demo require rich evidence?** | **Only if the narrative promises ranked evidence** from semantic search. Otherwise **minimal + explicit copy** is acceptable. |
+| **Is automatic vector backfill Phase 3/4 debt vs completion hardening?** | **Yes — debt/product slice.** It changes persistence and ops semantics; it is **out of scope** for C5 and was already listed as deferred (no indexing job/backfill). |
+| **Can a dev-only recipe prove rich behavior without productizing backfill?** | **Yes** — same embedding/vector services the product uses, invoked in **dev/test** contexts, without shipping “auto-index on create.” |
+| **Risks of leaving `vector_status=pending`?** | **False bug reports** and **stakeholder confusion** if demos skip the narrative; **mitigation** is C3 checklist + this policy + release checklist disclosure. **No** integrity risk to packet/trace honesty — File Clerk and search already treat **indexed** as the searchable set. |
+
+### Accepted baseline (minimal)
+
+- Docker + API + script loader → artifact, evidence, graph, semantic index **row**; **`POST /retrieve`** returns schema-valid **`RetrievalPacket`** with honest **warnings**; **`RetrievalLog`** and UI show snapshots when logging succeeds; **`evidence_units`** may be **empty** while demo SI stays **`pending`**.
+
+### Required for external / “rich” presentation
+
+- At least one semantic index participating in **`GET /semantic-indexes/search`** with **`vector_status=indexed`**, **or** a written/spoken demo script that states **trace-first / control-plane** scope and **pending** vectors.
+
+### Deferred (unchanged by C5)
+
+- Automatic vector population after `POST /semantic-indexes`, production embedding adapter wiring, **`POST /answer`**, full multimodal extraction, Phase **8** merge into ingestion — see **Explicitly deferred** elsewhere in this plan and `docs/status/*`.
 
 ---
 
