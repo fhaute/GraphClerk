@@ -1,3 +1,43 @@
+---
+name: Phase 8 Specialized Model Pipeline
+overview: Governed contracts, envelopes, adapters (NotConfigured first), validation, and optional seams for future specialized model helpers—no inference by default, no retrieval/evidence mutation, model output never treated as source evidence. Canonical plan; slice checkboxes below mirror execution truth; PM agent should reconcile todos with this file after each slice.
+isProject: true
+todos:
+  - id: phase8-slice-8-0-entry-gate
+    content: "Slice 8.0 — Entry gate + plan alignment (status/audit gates, pre–Phase 8 sweeps; no product code)."
+    status: completed
+  - id: phase8-slice-8a-contracts
+    content: "Slice 8A — Boundary contracts (`model_pipeline_contracts` task/result types; no adapters, no retrieval/FileClerk imports)."
+    status: completed
+  - id: phase8-slice-8b-envelopes
+    content: "Slice 8B — Request/response envelopes + `ModelPipelineError` (status/error semantics; no persistence, no adapters)."
+    status: completed
+  - id: phase8-slice-8c-not-configured
+    content: "Slice 8C — NotConfigured adapter shell (protocol, explicit error, deterministic test adapter only; no real model)."
+    status: pending
+  - id: phase8-slice-8d-output-validation
+    content: "Slice 8D — Model output validation service (typed outputs, reject prose/source-truth; deeper than top-level dict checks; no FileClerk wiring)."
+    status: pending
+  - id: phase8-slice-8e-candidate-seam
+    content: "Slice 8E — Candidate-only integration seam (approval-gated; no EvidenceUnit / RetrievalPacket mutation; no ranking change)."
+    status: pending
+  - id: phase8-slice-8f-eval-fixtures
+    content: "Slice 8F — Evaluation fixtures for model-helper outputs (deterministic; failure cases; no production inference)."
+    status: pending
+  - id: phase8-slice-8g-local-inference-design
+    content: "Slice 8G — Optional local inference adapter design (Ollama/vLLM etc.); design-only unless deps explicitly approved."
+    status: pending
+  - id: phase8-slice-8h-docs-status
+    content: "Slice 8H — Docs/status honesty (what Phase 8 is/is not; no overclaim of models or /answer)."
+    status: pending
+  - id: phase8-slice-8i-audit
+    content: "Slice 8I — Phase 8 audit artifact under docs/audits/ after implementation slices warrant it."
+    status: pending
+  - id: phase8-pm-reconcile
+    content: "PM — After each merged slice update this plan’s slice checklist + todo statuses; flag drift vs docs/status/README."
+    status: pending
+---
+
 # Phase 8 — Specialized Model Pipeline (working plan)
 
 **Plan id:** `1b9d495c`  
@@ -5,6 +45,8 @@
 **Phase contract (read-only reference):** [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../../docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md)
 
 This file is the **Cursor working plan** for Phase 8. It does **not** change phase governance; early slices intentionally **narrow** scope versus the full phase doc until contracts and validation exist.
+
+**PM / tracking:** Use the YAML **todos** above (and the slice checklist further down) as the execution backlog. When a slice ships, set its todo `status` to `completed` and tick the matching **Slice progress** row; keep `phase8-pm-reconcile` in sync or mark it `completed` only when you intentionally end a PM pass (otherwise leave `pending` as a standing reminder).
 
 ---
 
