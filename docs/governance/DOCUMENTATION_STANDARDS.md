@@ -16,7 +16,7 @@ GraphClerk should be understandable from its documents, not only from its code.
 1. Every phase must have a phase document.
 2. Every protected contract must have a contract section.
 3. Every major architectural decision must be recorded.
-4. Every implemented phase must update its status document.
+4. Every implemented phase must update its status document (see **Status Documentation Agent** in `docs/governance/AGENT_ROLES.md` and `docs/governance/STATUS_REPORTING.md`).
 5. Every non-obvious module must have a README or module-level docstring.
 6. Documentation must distinguish current behavior from planned behavior.
 7. Documentation must not claim functionality that is not implemented and tested.

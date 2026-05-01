@@ -20,6 +20,9 @@ The project must always make clear what is done, partial, blocked, deferred, or 
 - `failed`
 - `removed`
 
+## Ownership (Status Documentation Agent)
+Keeping the required status files and README honest status in sync with the codebase is the responsibility of the **Status Documentation Agent** charter (`docs/governance/AGENT_ROLES.md` → **Dedicated sub-agents**). Treat status updates as part of the same delivery as code when behavior or scope changes.
+
 ## Status rules
 1. A feature is not "done" until it is implemented, tested, and documented.
 2. Partially working features must be marked partial.

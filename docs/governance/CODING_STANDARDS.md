@@ -2,6 +2,8 @@
 
 These standards are part of the project contract.
 
+For assistant-led **read-only review** of readability, documentation fit, and **optional refactor proposals** (findings in the response; **no** edits to source or tests by that role), see **`docs/governance/AGENT_ROLES.md` → Code Quality Agent** (Dedicated sub-agents).
+
 ## Core rules
 1. Code must be readable before clever.
 2. Every public function, class, service, and model must have a docstring.

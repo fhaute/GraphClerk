@@ -2,6 +2,9 @@
 
 Audits prevent the project from quietly drifting away from its own contracts.
 
+## Ownership (Audit Agent)
+Executing audits to this standard, writing/updating artifacts under `docs/audits/`, and keeping outcomes consistent with `docs/status/*` when claims change is the responsibility of the **Audit Agent** charter (`docs/governance/AGENT_ROLES.md` → **Dedicated sub-agents** → **Audit Agent**).
+
 ## Required audit types
 - architecture audit
 - contract audit
