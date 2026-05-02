@@ -18,6 +18,7 @@ from app.services.model_pipeline_contracts import (
     ModelPipelineStatus,
     NotConfiguredModelPipelineAdapter,
 )
+from app.services.model_pipeline_ollama_adapter import OllamaModelPipelineAdapter
 from app.services.model_pipeline_registry import (
     MODEL_PIPELINE_ADAPTER_KEYS,
     MODEL_PIPELINE_IMPLEMENTED_ADAPTER_KEYS,
@@ -75,14 +76,45 @@ def test_timeout_above_bound_fails_validation(monkeypatch: pytest.MonkeyPatch) -
         Settings()
 
 
-def test_ollama_fails_at_registry_build(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_ollama_builds_when_base_url_and_model_set(monkeypatch: pytest.MonkeyPatch) -> None:
     _minimal_env(monkeypatch)
     monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", "ollama")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_BASE_URL", "http://localhost:11434")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_MODEL", "llama3.1:8b")
+    settings = Settings()
+    adapter = build_model_pipeline_adapter(settings)
+    assert isinstance(adapter, OllamaModelPipelineAdapter)
+
+
+def test_ollama_missing_base_url_fails_registry(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", "ollama")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_MODEL", "m")
     settings = Settings()
     with pytest.raises(ModelPipelineAdapterNotImplementedError) as ei:
         build_model_pipeline_adapter(settings)
-    assert ei.value.code == "model_pipeline_adapter_not_implemented"
-    assert "ollama" in str(ei.value).lower()
+    assert ei.value.code == "model_pipeline_ollama_misconfigured"
+
+
+def test_ollama_missing_model_fails_registry(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", "ollama")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_BASE_URL", "http://localhost:11434")
+    settings = Settings()
+    with pytest.raises(ModelPipelineAdapterNotImplementedError) as ei:
+        build_model_pipeline_adapter(settings)
+    assert ei.value.code == "model_pipeline_ollama_misconfigured"
+
+
+def test_ollama_whitespace_only_base_url_fails_registry(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", "ollama")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_BASE_URL", "   ")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_MODEL", "m")
+    settings = Settings()
+    with pytest.raises(ModelPipelineAdapterNotImplementedError) as ei:
+        build_model_pipeline_adapter(settings)
+    assert ei.value.code == "model_pipeline_ollama_misconfigured"
 
 
 def test_openai_compatible_fails_at_registry_build(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -149,11 +181,17 @@ def test_reserved_keys_do_not_silently_fallback_to_not_configured(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _minimal_env(monkeypatch)
-    for adapter_name in ("ollama", "openai_compatible"):
-        monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", adapter_name)
-        settings = Settings()
-        with pytest.raises(ModelPipelineAdapterNotImplementedError):
-            build_model_pipeline_adapter(settings)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", "openai_compatible")
+    settings = Settings()
+    with pytest.raises(ModelPipelineAdapterNotImplementedError):
+        build_model_pipeline_adapter(settings)
+
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", "ollama")
+    monkeypatch.delenv("GRAPHCLERK_MODEL_PIPELINE_BASE_URL", raising=False)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_MODEL", "m")
+    settings = Settings()
+    with pytest.raises(ModelPipelineAdapterNotImplementedError):
+        build_model_pipeline_adapter(settings)
 
 
 def test_registry_module_imports_avoid_ingestion_and_file_clerk() -> None:
@@ -180,7 +218,7 @@ def test_registry_module_imports_avoid_ingestion_and_file_clerk() -> None:
 
 
 def test_adapter_key_constants_align_with_settings_literals() -> None:
-    assert MODEL_PIPELINE_IMPLEMENTED_ADAPTER_KEYS == ("not_configured",)
+    assert MODEL_PIPELINE_IMPLEMENTED_ADAPTER_KEYS == ("not_configured", "ollama")
     assert MODEL_PIPELINE_ADAPTER_KEYS == (
         "not_configured",
         "deterministic_test",
@@ -189,7 +227,6 @@ def test_adapter_key_constants_align_with_settings_literals() -> None:
     )
     assert set(MODEL_PIPELINE_RESERVED_ADAPTER_KEYS) == {
         "deterministic_test",
-        "ollama",
         "openai_compatible",
     }
 

@@ -78,7 +78,7 @@ Operators and developers diagnosing **empty packets**, **stuck `vector_status`**
 | **`RUN_INTEGRATION_TESTS`** | Must be **`1`** for **`deterministic_fake`** adapter validation (see config) |
 | **`APP_ENV`** | **`local`**, **`dev`**, or **`test`** for non-prod; **`prod`** rejects **`deterministic_fake`** |
 | **`GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER`** | Default **`not_configured`**; **`deterministic_fake`** only for guarded dev/integration |
-| **`GRAPHCLERK_MODEL_PIPELINE_*`** | Adapter-key env (**Track D2**); default **`not_configured`** — see [`TESTING_RULES.md`](../governance/TESTING_RULES.md). **Per-purpose** model mapping is **not** env-complete yet (**D2.5** design — [`phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md)). |
+| **`GRAPHCLERK_MODEL_PIPELINE_*`** | Adapter-key env (**D2**); **`ollama`** requires non-empty **`BASE_URL`** + **`MODEL`** or registry build fails (**`model_pipeline_ollama_misconfigured`**); default **`not_configured`** — **no** automatic model calls on ingest/retrieve ([`TESTING_RULES.md`](../governance/TESTING_RULES.md)). **Per-purpose** mapping is **D4** ([**D2.5**](../decisions/phase_8_model_pipeline_completion_decisions.md)). |
 
 **When to unset `GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER`:** before running **mixed pytest** suites that expect the default adapter in process env (e.g. settings tests), or when switching shells to avoid accidental leakage — see [`TESTING_RULES.md`](../governance/TESTING_RULES.md).
 

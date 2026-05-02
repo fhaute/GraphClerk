@@ -1,7 +1,8 @@
-"""Static registry for Phase 8 model pipeline adapters (Track D Slice D2).
+"""Static registry for Phase 8 model pipeline adapters (Track D Slice D2 / D3).
 
-Only ``not_configured`` is implemented for production builds. Reserved adapters
-fail loudly at ``build_model_pipeline_adapter`` time — no silent fallback.
+``not_configured`` and ``ollama`` (when fully configured) build real adapters.
+Reserved adapters fail loudly at ``build_model_pipeline_adapter`` time — no silent
+fallback.
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from app.services.model_pipeline_contracts import (
     ModelPipelineAdapter,
     NotConfiguredModelPipelineAdapter,
 )
+from app.services.model_pipeline_ollama_adapter import OllamaModelPipelineAdapter
 
 MODEL_PIPELINE_ADAPTER_NOT_CONFIGURED = "not_configured"
 MODEL_PIPELINE_ADAPTER_DETERMINISTIC_TEST = "deterministic_test"
@@ -29,11 +31,11 @@ MODEL_PIPELINE_ADAPTER_KEYS: tuple[str, ...] = (
 
 MODEL_PIPELINE_IMPLEMENTED_ADAPTER_KEYS: tuple[str, ...] = (
     MODEL_PIPELINE_ADAPTER_NOT_CONFIGURED,
+    MODEL_PIPELINE_ADAPTER_OLLAMA,
 )
 
 MODEL_PIPELINE_RESERVED_ADAPTER_KEYS: tuple[str, ...] = (
     MODEL_PIPELINE_ADAPTER_DETERMINISTIC_TEST,
-    MODEL_PIPELINE_ADAPTER_OLLAMA,
     MODEL_PIPELINE_ADAPTER_OPENAI_COMPATIBLE,
 )
 
@@ -55,6 +57,10 @@ def build_model_pipeline_adapter(
 
     ``deterministic_test`` requires ``deterministic_test_factory`` — settings alone
     never imply a silently usable test adapter in production registry builds.
+
+    ``ollama`` requires non-empty ``GRAPHCLERK_MODEL_PIPELINE_BASE_URL`` and
+    ``GRAPHCLERK_MODEL_PIPELINE_MODEL`` (validated here; not the final D4 purpose
+    registry shape per Track D2.5).
     """
 
     adapter = settings.model_pipeline_adapter
@@ -71,9 +77,28 @@ def build_model_pipeline_adapter(
             )
         return deterministic_test_factory()
     if adapter == MODEL_PIPELINE_ADAPTER_OLLAMA:
-        raise ModelPipelineAdapterNotImplementedError(
-            "model_pipeline_adapter_not_implemented",
-            "model pipeline adapter 'ollama' is not implemented yet (Track D3).",
+        base = settings.model_pipeline_base_url
+        model = settings.model_pipeline_model
+        if base is None or not str(base).strip():
+            raise ModelPipelineAdapterNotImplementedError(
+                "model_pipeline_ollama_misconfigured",
+                (
+                    "GRAPHCLERK_MODEL_PIPELINE_BASE_URL is required and must be non-empty "
+                    "when GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama"
+                ),
+            )
+        if model is None or not str(model).strip():
+            raise ModelPipelineAdapterNotImplementedError(
+                "model_pipeline_ollama_misconfigured",
+                (
+                    "GRAPHCLERK_MODEL_PIPELINE_MODEL is required and must be non-empty "
+                    "when GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama"
+                ),
+            )
+        return OllamaModelPipelineAdapter(
+            base_url=str(base).strip(),
+            model=str(model).strip(),
+            timeout_seconds=float(settings.model_pipeline_timeout_seconds),
         )
     if adapter == MODEL_PIPELINE_ADAPTER_OPENAI_COMPATIBLE:
         raise ModelPipelineAdapterNotImplementedError(
