@@ -243,4 +243,4 @@ See [`docs/api/API_OVERVIEW.md`](../api/API_OVERVIEW.md) and route modules for a
 ## Open follow-ups
 
 - **Examples cookbook** shipped as **[`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md)** (F5); extend with multipart or auth when product adds stable patterns.
-- **Production** embedding provider choice, **OCR/ASR/video**, **`/answer`**, Phase **9** — **program / status** decisions, not resolved here ([`phase_1_8_completion_program.md`](../plans/phase_1_8_completion_program.md) §15).
+- **Production** embedding provider choice, **OCR/ASR/video**, **`/answer`**, Phase **9**, **`openai_compatible`** adapter, writable model selector — **program / status** decisions, not resolved here ([`phase_1_8_completion_program.md`](../plans/phase_1_8_completion_program.md) §15). Phase **8** agreed-scope closure: [`PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md).

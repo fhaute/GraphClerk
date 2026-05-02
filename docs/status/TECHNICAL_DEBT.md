@@ -37,10 +37,8 @@
 - **Operational caveats (not debt against closure):** **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER`** defaults to **`not_configured`**; **`lingua`** requires explicit env + **`language-detector`** extra (**503** if misconfigured). Lingua **accuracy** is operator/library responsibility.
 - **Deferred product scope**: Slice **7I** boosting — no deterministic **`actor_context`** harness until separately approved; translation — **not implemented**.
 
-## Phase 8 (specialized model pipeline — baseline; audit `pass_with_notes`)
-- **Slice 8I audit**: delivered — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**, **`pass_with_notes`**).
-- **Optional inference adapters**: **8G** leaves broader fleet narratives as future — **`openai_compatible`** (**D3b**) still **not** implemented; **no** vLLM client in core paths.
-- **Registry / settings / ingest**: **D2**–**D6** shipped (adapter registry, Ollama adapter, purpose registry, enrichment orchestration, optional **`POST /artifacts`** merge). **Not** wired into **`POST /retrieve`** / FileClerk evidence selection.
-- **Operator visibility**: **D7a** Artifacts explorer metadata readout; **D7b** **`GET /model-pipeline/config`** + Evaluation dashboard read-only config table (**no** writes).
-- **Future product debt**: **D7c** writable selector + **config persistence** + **admin/auth** (if approved); **D8** full-completion audit when scheduled.
+## Phase 8 (specialized model pipeline — agreed Completion Program scope **closed**)
+- **Full-completion audit**: [`docs/audits/PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md) — **`pass`** (**Track D Slice D8**, **2026-05-02**). **Baseline history:** [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**`pass_with_notes`**, **2026-05-03**).
+- **Accepted future debt (outside Phase 8 agreed scope):** **`openai_compatible`** (**D3b**); **D7c** writable selector + persistence + auth; **`routing_hint_generator`** / other purposes; live-Ollama operator smoke beyond mocked **`pytest`** — see **`PHASE_8_FULL_COMPLETION_AUDIT.md`** non-goals.
+- **North-star phase-doc debt**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md) may list objectives **beyond** the Completion Program — track separately if pursued.
 

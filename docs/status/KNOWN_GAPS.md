@@ -51,15 +51,25 @@ This file tracks known missing pieces so they are explicit and not hidden.
 - **Phase 5 audit** is **`pass_with_notes`** (`docs/audits/PHASE_5_AUDIT.md`): partial implementation is accepted; **full** multimodal completion (OCR, ASR, image/audio EUs, etc.) remains **not done**.
 - **Optional dependency matrix**: local/CI coverage for all combinations of extras + integration tests may need hardening later.
 
-## Known limitations (Phase 8 — specialized model pipeline baseline)
-- **Phase 8 audit**: **`pass_with_notes`** — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**); historical baseline — **full-completion audit** (**D8**), **writable** operator selector + **config persistence** + **auth/admin** (**D7c** / program naming), and **`openai_compatible`** adapter (**D3b**) remain gaps.
-- **Inference path**: **`NotConfigured`** remains the **default** at global adapter registry build. Optional **`POST /artifacts`** enricher (**D6**) requires **`GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama`**, **`BASE_URL`**, and **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_*`** when enabled; builds [`OllamaModelPipelineAdapter`](../../backend/app/services/model_pipeline_ollama_adapter.py) with the **purpose** model id (**not** the global registry wiring alone). **`openai_compatible`** remains **not implemented** (**D3b**). Stdlib HTTP only; **no** vLLM/OpenAI client yet. **No** dynamic plugin system. **8G** north-star remains broader than shipped wiring.
-- **Purpose registry** ([`model_pipeline_purpose_registry.py`](../../backend/app/services/model_pipeline_purpose_registry.py)): **`build_default_model_pipeline_purpose_registry(settings)`** enables **`evidence_candidate_enricher`** only when **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`**; other roles remain disabled / policy-blocked (**no** **`routing_hint_generator`**). **Not** wired into **`POST /retrieve`** or FileClerk.
-- **`POST /artifacts` ingest merge (D6)** ([`artifacts.py`](../../backend/app/api/routes/artifacts.py), [`evidence_enrichment_service.py`](../../backend/app/services/evidence_enrichment_service.py)): language enrichment (**Track C**) **then** **`ModelPipelineMetadataEnrichmentService`**; persists **`metadata_json["graphclerk_model_pipeline"]`** on **`EvidenceUnit`** rows when successful; runtime model/validation failure does **not** abort ingestion; misconfiguration fails at **`Settings`** validation.
-- **`ModelPipelineCandidateMetadataProjectionService`** remains a **pure** projection helper; orchestration + ingest ordering live in **D5/D6** services.
-- **Model output is not evidence**: pipeline output stays **metadata-only** under **`graphclerk_model_pipeline`**; **no** **`EvidenceUnit.text`** / **`source_fidelity`** mutation from model pipeline modules; retrieval ranking unchanged.
-- **Read-only operator visibility (Track D D7a)**: **Artifacts & evidence** + docs describe **`graphclerk_model_pipeline`** and env; UI shows raw **`metadata_json`** + readout **when** the evidence detail JSON includes **`metadata_json`** (current **`GET /evidence-units/{id}`** schema may **omit** it).
-- **Read-only config visibility (Track D D7b):** **`GET /model-pipeline/config`** + **Evaluation dashboard** “Model pipeline configuration” table — **no** writes, **no** secrets/base URL leak (see [`TESTING_RULES.md`](../governance/TESTING_RULES.md)).
-- **Writable frontend selector / admin persistence / auth for model purposes**: **not implemented** (**D7c** / future).
-- **`POST /answer`** / answer synthesis: **not implemented** (Track **E**).
+## Phase 8 — agreed Completion Program scope (**closed**)
+
+- **Closure audit**: **[`docs/audits/PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md)** — **`pass`** (**Track D Slice D8**, **2026-05-02**). **Baseline history:** [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**`pass_with_notes`**, **2026-05-03**).
+- **Completion Program Track D** (**D1–D8**) is **complete** for the **agreed** Phase 1–8 model-pipeline scope — see audit checklist.
+
+## Future / explicitly outside Phase 8 agreed scope (not “blocking Phase 8”)
+
+- **`openai_compatible`** / **vLLM-style** adapter (**D3b**).
+- **Writable** operator selector + **config persistence** + **admin/auth** (**D7c**).
+- **`routing_hint_generator`**, **`artifact_classifier`**, **`extraction_helper`** enablement (policy would need product change + new audit).
+- **`POST /answer`** (Track **E**); **Phase 9**.
+- **FileClerk** / **`POST /retrieve`** integration for model pipeline adapters; **retrieval ranking** changes from model output.
+- **OCR/ASR/video**, **translation**, **`actor_context`** boosting — **not** Phase 8 deliverables.
+
+## Operational truths (still relevant)
+
+- **Default**: **`NotConfigured`** / **no** model HTTP unless **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED`** and companion env set — [`TESTING_RULES.md`](../governance/TESTING_RULES.md).
+- **Purpose registry**: only **`evidence_candidate_enricher`** may be enabled under Phase 1–8 policy — [`model_pipeline_purpose_registry.py`](../../backend/app/services/model_pipeline_purpose_registry.py).
+- **Ingest merge (D6)**: metadata-only **`graphclerk_model_pipeline`**; runtime failures do **not** abort ingest; **`Settings`** misconfiguration fails loud.
+- **Model output is not evidence**; **no** **`text`** / **`source_fidelity`** mutation from pipeline modules.
+- **UI**: **`GET /evidence-units/{id}`** may **omit** **`metadata_json`** — Artifacts explorer documents API limits; **`GET /model-pipeline/config`** is read-only (**no** secrets).
 

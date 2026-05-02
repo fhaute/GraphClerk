@@ -56,6 +56,14 @@ High-level summary of **current** public HTTP APIs. For request/response shapes,
 | `GET` | `/retrieval-logs` | List retrieval logs (pagination envelope). |
 | `GET` | `/retrieval-logs/{log_id}` | Log detail including stored packet snapshot when present. |
 
+## Model pipeline configuration (Phase 8 — read-only)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/model-pipeline/config` | **Read-only** snapshot of env-derived model pipeline settings and per-purpose registry status. **Does not** call Ollama or any model provider; **does not** return **`GRAPHCLERK_MODEL_PIPELINE_API_KEY`** or raw **`GRAPHCLERK_MODEL_PIPELINE_BASE_URL`**. |
+
+There is **no** `POST` / `PUT` / `PATCH` configuration endpoint for model pipeline settings in this repository state.
+
 ## Explicitly deferred
 
 - **`POST /answer`** — optional packet-only answer synthesis; **not implemented** in this repository state (separate approval and design). Do not assume it exists in clients or UI.

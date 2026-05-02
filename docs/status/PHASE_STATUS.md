@@ -80,22 +80,22 @@
 - **Explicitly not in this closure**: translation; **7I** boosting; Phase **9**; OCR/ASR/video completion; **`POST /answer`** — see **`PHASE_7_FULL_COMPLETION_AUDIT.md`** non-goals.
 
 ## Phase 8 — Specialized Model Pipeline
-- **Status**: **baseline implemented** (**`pass_with_notes`**) — slices **8A–8F** code + **8G design-only** + **8H** honesty + **8I** audit artifact. **Not** full specialized-model production (no production inference adapter, no registry, no pipeline merge into ingestion/FileClerk).
-- **Audit**: **`pass_with_notes`** — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**).
-- **Defined in**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md) — see **Implementation status (current)** for shipped baseline vs broader phase objectives.
+- **Status**: **implemented for the agreed Phase 1–8 completion scope** — Completion Program **Track D** (**D1–D8**) **complete**. Full-completion audit **[`docs/audits/PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md)** (**`pass`**, **Track D Slice D8**, **2026-05-02**). **Baseline history:** [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**`pass_with_notes`**, **2026-05-03**) — **unchanged**.
+- **Defined in**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md) — broader phase-doc objectives may exceed **agreed** Completion Program scope; closure claims follow **`PHASE_8_FULL_COMPLETION_AUDIT.md`**.
 - **Working plan (Cursor):** [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md)
 - **Evidence** (representative paths):
-  - [`backend/app/services/model_pipeline_contracts.py`](../../backend/app/services/model_pipeline_contracts.py)
-  - [`backend/app/services/model_pipeline_output_validation_service.py`](../../backend/app/services/model_pipeline_output_validation_service.py)
-  - [`backend/app/services/model_pipeline_candidate_projection_service.py`](../../backend/app/services/model_pipeline_candidate_projection_service.py)
-  - `backend/tests/test_phase8_model_pipeline_contracts.py`
-  - `backend/tests/test_phase8_model_pipeline_output_validation_service.py`
-  - `backend/tests/test_phase8_model_pipeline_candidate_projection_service.py`
-  - `backend/tests/test_phase8_model_pipeline_evaluation_fixtures.py`
-  - [`backend/tests/fixtures/phase8_model_pipeline_cases.py`](../../backend/tests/fixtures/phase8_model_pipeline_cases.py)
-  - [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md)
-  - [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md)
-- **Honesty constraints**: **`NotConfigured`** remains the **default** adapter story; **deterministic** adapter is **tests-only**; **no** Ollama/vLLM dependency added; **no** model calls in default app paths; **no** `/answer`; model output **not** evidence; projection **metadata-only** under **`graphclerk_model_pipeline`**; **no** retrieval/FileClerk/ingestion integration.
+  - [`docs/audits/PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md) (closure checklist)
+  - [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md)
+  - [`backend/app/core/config.py`](../../backend/app/core/config.py) — **`GRAPHCLERK_MODEL_PIPELINE_*`**
+  - [`backend/app/services/model_pipeline_registry.py`](../../backend/app/services/model_pipeline_registry.py), [`model_pipeline_ollama_adapter.py`](../../backend/app/services/model_pipeline_ollama_adapter.py)
+  - [`backend/app/services/model_pipeline_purpose_registry.py`](../../backend/app/services/model_pipeline_purpose_registry.py)
+  - [`backend/app/services/model_pipeline_metadata_enrichment_service.py`](../../backend/app/services/model_pipeline_metadata_enrichment_service.py)
+  - [`backend/app/services/model_pipeline_contracts.py`](../../backend/app/services/model_pipeline_contracts.py), [`model_pipeline_output_validation_service.py`](../../backend/app/services/model_pipeline_output_validation_service.py), [`model_pipeline_candidate_projection_service.py`](../../backend/app/services/model_pipeline_candidate_projection_service.py)
+  - [`backend/app/api/routes/model_pipeline.py`](../../backend/app/api/routes/model_pipeline.py), [`backend/app/schemas/model_pipeline_config.py`](../../backend/app/schemas/model_pipeline_config.py)
+  - [`backend/app/api/routes/artifacts.py`](../../backend/app/api/routes/artifacts.py), [`backend/app/services/evidence_enrichment_service.py`](../../backend/app/services/evidence_enrichment_service.py)
+  - `backend/tests/test_phase8_model_pipeline_*.py`
+  - [`frontend/src/components/ArtifactsExplorer.tsx`](../../frontend/src/components/ArtifactsExplorer.tsx), [`EvaluationDashboard.tsx`](../../frontend/src/components/EvaluationDashboard.tsx)
+- **Explicitly not in this closure**: **`openai_compatible`** adapter (**D3b**); writable selector / persistence / auth (**D7c**); **`routing_hint_generator`** etc. enablement; **`POST /answer`**; Phase **9** — see **`PHASE_8_FULL_COMPLETION_AUDIT.md`** non-goals.
 
 ## Phase 9 — IDE Integration / Developer Evidence Orchestration (future)
 - **Status**: **`not_started`** — specification only: [`docs/phases/graph_clerk_phase_9_ide_integration_developer_evidence_orchestration.md`](../phases/graph_clerk_phase_9_ide_integration_developer_evidence_orchestration.md); **no** Phase 9 implementation claimed in `docs/status/*`.

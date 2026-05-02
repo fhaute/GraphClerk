@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|--------|
 | **Doc status** | **Overview — Track F F1–F5** (+ F2 feed + F3 architecture + F4 troubleshooting + F5 [`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md)); not a production runbook. |
-| **Last aligned to** | Phases **1–8** baseline as described in root `README.md` and `docs/status/*`; **Phase 9 not started**. |
+| **Last aligned to** | Phases **1–8** baseline as described in root `README.md` and `docs/status/*`; Phase **8** Completion Program closure — [`PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md); **Phase 9 not started**. |
 | **Companion** | [`README.md`](../../README.md) in this folder — entry and links. |
 
 ---

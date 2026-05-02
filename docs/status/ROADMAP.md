@@ -130,22 +130,13 @@
 
 ## Phase 8 — Specialized Model Pipeline
 
-- **Completion Program — Track D D2.5 (design only):** per-purpose model mapping + future operator selector UI are specified in [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) § *D2.5 Amendment* — **not implemented** in code; **D3** Ollama adapter next per program.
-- **Defined in**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md)
+- **Completion Program — Track D:** **complete** for the **agreed Phase 1–8 completion scope** — **[`docs/audits/PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md)** (**`pass`**, **Slice D8**, **2026-05-02**). **Baseline history:** [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**`pass_with_notes`**, **2026-05-03**).
+- **Defined in**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md) — phase-doc **north star** may exceed agreed Completion Program scope; closure claims follow **`PHASE_8_FULL_COMPLETION_AUDIT.md`**.
 - **Working plan**: [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md)
-- **Completion Program — Track D Slice D1 (decisions only):** [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) — intended **full Phase 8 completion** path before implementation (**Ollama first**, registry/settings, validate-before-merge, **`/answer`** = Track **E**); **no code** in D1.
-- **Status**: **baseline delivered + audited (`pass_with_notes`)** — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**). Slices **8A–8F** + **8G** (**design-only**) + **8H** + **8I**. This is a **contract / validation / projection** baseline only — **not** the full phase-doc product (registry, production inference fleet, UI, etc.) until Track **D2+** implements the decision record.
-- **Delivered so far (implementation truth)**:
-  - **8A–8B**: `model_pipeline_contracts` — tasks, results, request/response envelopes, errors
-  - **8C**: `ModelPipelineAdapter`; **`NotConfiguredModelPipelineAdapter`**; **`DeterministicTestModelPipelineAdapter`** (tests-only)
-  - **8D**: `ModelPipelineOutputValidationService` — semantic validation without FileClerk/retrieval
-  - **8E**: `ModelPipelineCandidateMetadataProjectionService` — **`graphclerk_model_pipeline`** subtree **only**; optional **D6** ingest merge when enricher env is enabled
-  - **8F**: `backend/tests/fixtures/phase8_model_pipeline_cases.py` + evaluation fixture tests
-  - **8G**: optional local inference adapter **design** (Ollama/vLLM-first narrative); **no** runtime adapter code
-- **Remaining / deferred** (non-exhaustive):
-  - **OpenAI-compatible / vLLM** adapter (**D3b**) if approved; **D8** full-completion audit
-  - Writable operator selector + **config persistence** + **auth** (**D7c**); **`POST /answer`** remains **Track E**
-- **Operator visibility (implementation truth):** **`GET /model-pipeline/config`** (**D7b** — read-only; **no** API key / raw base URL; **no** Ollama listing); Evaluation dashboard table — [`TESTING_RULES.md`](../governance/TESTING_RULES.md)
+- **Decisions**: [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) — **D2.5** amendment (writable selector = future **D7c**).
+- **Delivered (agreed scope)**:
+  - Contracts/envelopes/adapters/registry/settings; **`OllamaModelPipelineAdapter`**; purpose registry (**`evidence_candidate_enricher`** only); validate→project orchestration; optional **`POST /artifacts`** metadata merge; **`GET /model-pipeline/config`**; **D7a/D7b** UI.
+- **Explicitly future / out of scope**: **`openai_compatible`** (**D3b**); **D7c** writable persistence/auth; **`routing_hint_generator`** etc.; **`POST /answer`**; Phase **9** — see full-completion audit **Non-goals**.
 
 ## Phase 9 — IDE Integration / Developer Evidence Orchestration (future)
 - **Status**: **not_started** — specification may exist under `docs/phases/`; **no** Phase 9 implementation claimed in status docs.

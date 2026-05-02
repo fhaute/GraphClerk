@@ -128,7 +128,7 @@ flowchart TB
 
 - **`actor_context`**: **[current]** request field; **does not** influence routing or evidence selection (recording only).
 - **`language_context`**: **[current]** optional packet field from **evidence `metadata_json`** aggregates — **not** automatic translation.
-- **`graphclerk_model_pipeline`**: **[current]** on **`EvidenceUnit.metadata_json`** when **`POST /artifacts`** runs optional **`evidence_candidate_enricher`** (**Track D D6**, env-gated; **Ollama** HTTP adapter). **[current baseline]** optional **projection** on **`RetrievalPacket`** may still appear for inspection — **not** merged into File Clerk evidence selection. **UI:** **[current]** read-only operator visibility in **Artifacts & evidence** (**Track D D7a**) — **no** writable selector or admin persistence yet (**D7b** future). Design record: [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md).
+- **`graphclerk_model_pipeline`**: **[current]** on **`EvidenceUnit.metadata_json`** when **`POST /artifacts`** runs optional **`evidence_candidate_enricher`** (**Track D D6**, env-gated; **Ollama** HTTP adapter). **[current baseline]** optional **projection** on **`RetrievalPacket`** may still appear for inspection — **not** merged into File Clerk evidence selection. **UI:** **[current]** read-only operator visibility (**Track D D7a** Artifacts; **D7b** Evaluation config table + **`GET /model-pipeline/config`**). **Writable** selector / admin persistence = future **D7c** (not shipped). Closure: [`docs/audits/PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md). Design record: [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md).
 - **`POST /answer`**: dotted **[future / not implemented]** — no endpoint in this repo today.
 
 ---
@@ -181,7 +181,7 @@ Canonical application data, including:
 | UI area | What it inspects **[current]** | What it does **not** prove |
 |---------|-------------------------------|----------------------------|
 | **Query Playground** | Live **`POST /retrieve`** packets, warnings, raw JSON. | Answer quality; hidden OCR/ASR. |
-| **Artifacts & evidence** | Rows from artifact/evidence APIs; **D7a** Phase 8 operator notes + conditional **`graphclerk_model_pipeline`** readout. | Writable model selector (**D7b**); full multimodal extraction depth. |
+| **Artifacts & evidence** | Rows from artifact/evidence APIs; **D7a** Phase 8 operator notes + conditional **`graphclerk_model_pipeline`** readout. | Writable model selector (**D7c**); full multimodal extraction depth. |
 | **Graph explorer** | Nodes, edges, links. | Automatic graph repair. |
 | **Semantic indexes** | `vector_status`, `embedding_text`, entry nodes. | Auto-backfill or production embeddings. |
 | **Retrieval logs** | Stored questions and packet snapshots when present. | Guaranteed logging on every request. |
@@ -207,7 +207,7 @@ The following are **tracked** by the [**Phase 1–8 completion program**](../pla
 
 - **OCR / ASR / video** as first-class evidence pipelines.
 - **Production embedding provider** and **production model adapter** / registry / settings UI.
-- **Writable model selector / admin persistence** for pipeline purposes (**D7b**) and **registry/UI-driven** purpose mapping beyond env.
+- **Writable model selector / admin persistence** for pipeline purposes (**D7c**) and **registry/UI-driven** purpose mapping beyond env.
 - **`POST /answer`** packet-only synthesis (Track **E**-class work if approved).
 - **Phase 9 IDE integration** or other Phase 9 deliverables.
 

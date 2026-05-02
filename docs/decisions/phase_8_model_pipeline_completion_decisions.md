@@ -434,6 +434,12 @@ Unchanged: **`POST /answer`** remains **Track E**, **outside** Track **D**.
 
 ---
 
+## D8 implementation note (full-completion audit — shipped)
+
+**Track D Slice D8:** **[`docs/audits/PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md)** records **`pass`** for Phase **8** against the **agreed Phase 1–8 Completion Program scope** after **D1–D7b**. **[`PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md)** remains **baseline history** (**not** rewritten). **Track D** is **complete** for this scope; **`openai_compatible`**, **D7c** writable UI/persistence/auth, **`/answer`**, and Phase **9** remain **out of scope** unless reopened.
+
+---
+
 ## Implementation slice proposal (Track D — historical reference)
 
 The **authoritative** slice order is the **D2.5 “Revised Track D slice plan”** table above. The following **older** table is **superseded** for numbering after **D2.5**:
