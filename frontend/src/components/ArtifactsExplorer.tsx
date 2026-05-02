@@ -20,6 +20,12 @@ function formatJson(value: unknown): string {
 }
 
 const GRAPHCLERK_LANGUAGE_AGGREGATION_KEY = "graphclerk_language_aggregation";
+const GRAPHCLERK_MODEL_PIPELINE_METADATA_KEY = "graphclerk_model_pipeline";
+
+/** Detail responses may gain `metadata_json` when the API schema is extended; not typed on `EvidenceUnitResponse` yet. */
+type EvidenceDetailWithMetadata = EvidenceUnitResponse & {
+  metadata_json?: unknown;
+};
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object" && !Array.isArray(v);
@@ -124,6 +130,123 @@ function ArtifactLanguageAggregationReadout({ subtree }: { subtree: Record<strin
       )}
     </div>
   );
+}
+
+function ModelPipelineEvidenceOperatorPanel() {
+  return (
+    <div className="mb-4 rounded-md border border-teal-300 bg-teal-50/90 px-3 py-3 text-sm text-teal-950">
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-teal-900">
+        Model pipeline (Phase 8) — operator notes
+      </h4>
+      <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-teal-900/95">
+        <li>
+          Ingest-time model calls are <strong className="font-medium">disabled by default</strong> (
+          <code className="font-mono text-[11px]">GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED</code>).
+        </li>
+        <li>
+          When enabled, configured output is persisted per evidence unit under{" "}
+          <code className="font-mono text-[11px]">EvidenceUnit.metadata_json[&quot;graphclerk_model_pipeline&quot;]</code>{" "}
+          (evidence-level — separate from artifact{" "}
+          <code className="font-mono text-[11px]">graphclerk_language_aggregation</code>).
+        </li>
+        <li>
+          When enabling, set{" "}
+          <code className="font-mono text-[11px]">GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true</code>,{" "}
+          <code className="font-mono text-[11px]">GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama</code>,{" "}
+          <code className="font-mono text-[11px]">GRAPHCLERK_MODEL_PIPELINE_BASE_URL</code>, and{" "}
+          <code className="font-mono text-[11px]">GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL</code>.
+        </li>
+        <li>
+          <strong className="font-medium">Writable model selector / admin persistence</strong> is{" "}
+          <strong className="font-medium">not</strong> in this UI (future Track D <strong>D7b</strong>).
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+function EvidenceModelPipelineMetadataReadout({ subtree }: { subtree: Record<string, unknown> }) {
+  const prov = isPlainObject(subtree.provenance) ? subtree.provenance : null;
+  const val = isPlainObject(subtree.validation) ? subtree.validation : null;
+  const issuesRaw = val?.issues;
+  const issueCount = Array.isArray(issuesRaw) ? issuesRaw.length : null;
+  const warningsRaw = subtree.warnings;
+  const warnings = Array.isArray(warningsRaw)
+    ? warningsRaw.filter((w): w is string => typeof w === "string")
+    : [];
+
+  return (
+    <div className="mt-3 rounded-md border border-teal-200 bg-teal-50/70 px-3 py-3 text-sm text-teal-950">
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-teal-900">
+        Model pipeline metadata
+      </h4>
+      <p className="mt-2 text-xs text-teal-900/95">
+        <span className="font-medium">Model output metadata; not evidence.</span> Does not change text,{" "}
+        <code className="rounded bg-teal-100/80 px-0.5 font-mono text-[11px]">source_fidelity</code>, or
+        retrieval ranking. Generated only when{" "}
+        <code className="font-mono text-[11px]">evidence_candidate_enricher</code> is explicitly enabled via
+        env.
+      </p>
+      <dl className="mt-3 grid gap-1 text-xs sm:grid-cols-[minmax(9rem,auto)_1fr]">
+        <dt className="text-teal-800/90">status</dt>
+        <dd className="font-mono text-teal-950">{fmtAggScalar(subtree.status)}</dd>
+        <dt className="text-teal-800/90">role</dt>
+        <dd className="font-mono text-teal-950">{fmtAggScalar(subtree.role)}</dd>
+        <dt className="text-teal-800/90">output_kind</dt>
+        <dd className="font-mono text-teal-950">{fmtAggScalar(subtree.output_kind)}</dd>
+        <dt className="text-teal-800/90">model_pipeline_request_id</dt>
+        <dd className="font-mono text-teal-950">{fmtAggScalar(subtree.model_pipeline_request_id)}</dd>
+      </dl>
+      {prov && (
+        <dl className="mt-3 grid gap-1 text-xs sm:grid-cols-[minmax(9rem,auto)_1fr]">
+          <dt className="text-teal-800/90">provenance.source</dt>
+          <dd className="font-mono text-teal-950">{fmtAggScalar(prov.source)}</dd>
+          {"model" in prov ? (
+            <>
+              <dt className="text-teal-800/90">provenance.model</dt>
+              <dd className="font-mono text-teal-950">{fmtAggScalar(prov.model)}</dd>
+            </>
+          ) : null}
+        </dl>
+      )}
+      {val && (
+        <dl className="mt-3 grid gap-1 text-xs sm:grid-cols-[minmax(9rem,auto)_1fr]">
+          <dt className="text-teal-800/90">validation.ok</dt>
+          <dd className="font-mono text-teal-950">{fmtAggScalar(val.ok)}</dd>
+          <dt className="text-teal-800/90">validation issue count</dt>
+          <dd className="font-mono text-teal-950">
+            {issueCount === null ? "—" : String(issueCount)}
+          </dd>
+        </dl>
+      )}
+      {warnings.length > 0 && (
+        <div className="mt-3">
+          <div className="text-xs font-medium text-teal-900">warnings</div>
+          <ul className="mt-1 list-disc space-y-0.5 border border-amber-200/80 bg-amber-50/90 px-4 py-2 text-xs text-amber-950">
+            {warnings.map((w) => (
+              <li key={w} className="whitespace-pre-wrap">
+                {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {"proposed" in subtree ? (
+        <div className="mt-3">
+          <div className="text-xs font-medium text-teal-900">proposed (preview)</div>
+          <pre className="mt-1 max-h-48 overflow-auto rounded border border-teal-200/80 bg-white/90 p-2 font-mono text-[11px] text-teal-950">
+            {formatJson(subtree.proposed)}
+          </pre>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function evidenceMetadataJsonField(detail: EvidenceDetailWithMetadata): Record<string, unknown> | null {
+  const raw = detail.metadata_json;
+  if (!isPlainObject(raw)) return null;
+  return raw;
 }
 
 const TEXT_PREVIEW = 240;
@@ -406,6 +529,7 @@ export function ArtifactsExplorer() {
               Filters apply client-side to the evidence returned for this artifact.{" "}
               <span className="font-medium text-neutral-700">source_fidelity</span> is always shown.
             </p>
+            <ModelPipelineEvidenceOperatorPanel />
 
             {evidenceLoading && (
               <p className="mt-4 text-sm text-neutral-600">Loading evidence…</p>
@@ -506,11 +630,13 @@ export function ArtifactsExplorer() {
                               ? "(none)"
                               : formatJson(eu.location)}
                           </dd>
-                          <dt className="text-neutral-500">metadata</dt>
+                          <dt className="text-neutral-500">metadata_json</dt>
                           <dd className="text-xs text-neutral-700">
-                            Not present on{" "}
-                            <code className="font-mono">EvidenceUnitResponse</code> in the current
-                            API schema (no field returned).
+                            Omitted on list responses. Expand row for detail — when the API includes{" "}
+                            <code className="font-mono">metadata_json</code>,{" "}
+                            <strong className="text-neutral-800">graphclerk_model_pipeline</strong>{" "}
+                            is evidence-level metadata (separate from artifact{" "}
+                            <code className="font-mono">graphclerk_language_aggregation</code>).
                           </dd>
                           <dt className="text-neutral-500">text</dt>
                           <dd>
@@ -537,48 +663,85 @@ export function ArtifactsExplorer() {
                               </p>
                             )}
                             {!expandedLoading && expandedDetail && expandedDetail.id === eu.id && (
-                              <dl className="mt-3 grid gap-1 text-xs sm:grid-cols-[minmax(9rem,auto)_1fr]">
-                                <dt className="text-neutral-500">evidence_unit_id</dt>
-                                <dd className="font-mono">{expandedDetail.id}</dd>
-                                <dt className="text-neutral-500">artifact_id</dt>
-                                <dd className="font-mono">{expandedDetail.artifact_id}</dd>
-                                <dt className="text-neutral-500">modality</dt>
-                                <dd>{expandedDetail.modality}</dd>
-                                <dt className="text-neutral-500">content_type</dt>
-                                <dd>{expandedDetail.content_type}</dd>
-                                <dt className="text-neutral-500">source_fidelity</dt>
-                                <dd className="font-medium text-neutral-900">
-                                  {expandedDetail.source_fidelity}
-                                </dd>
-                                <dt className="text-neutral-500">confidence</dt>
-                                <dd>{expandedDetail.confidence ?? "(none)"}</dd>
-                                <dt className="text-neutral-500">location</dt>
-                                <dd className="whitespace-pre-wrap font-mono">
-                                  {expandedDetail.location == null ||
-                                  Object.keys(expandedDetail.location).length === 0
-                                    ? "(none)"
-                                    : formatJson(expandedDetail.location)}
-                                </dd>
-                                <dt className="text-neutral-500">metadata</dt>
-                                <dd className="text-neutral-700">
-                                  Not present on{" "}
-                                  <code className="font-mono">EvidenceUnitResponse</code> in the
-                                  current API schema.
-                                </dd>
-                                <dt className="text-neutral-500">text</dt>
-                                <dd>
-                                  <EvidenceTextBlock
-                                    text={expandedDetail.text}
-                                    unitId={`${eu.id}-detail`}
-                                    showFull={!!fullTextRows[`${eu.id}-detail`]}
-                                    onToggle={(id) => toggleFullText(id)}
-                                  />
-                                </dd>
-                                <dt className="text-neutral-500">created_at</dt>
-                                <dd className="font-mono">{expandedDetail.created_at}</dd>
-                                <dt className="text-neutral-500">updated_at</dt>
-                                <dd className="font-mono">{expandedDetail.updated_at}</dd>
-                              </dl>
+                              <>
+                                <dl className="mt-3 grid gap-1 text-xs sm:grid-cols-[minmax(9rem,auto)_1fr]">
+                                  <dt className="text-neutral-500">evidence_unit_id</dt>
+                                  <dd className="font-mono">{expandedDetail.id}</dd>
+                                  <dt className="text-neutral-500">artifact_id</dt>
+                                  <dd className="font-mono">{expandedDetail.artifact_id}</dd>
+                                  <dt className="text-neutral-500">modality</dt>
+                                  <dd>{expandedDetail.modality}</dd>
+                                  <dt className="text-neutral-500">content_type</dt>
+                                  <dd>{expandedDetail.content_type}</dd>
+                                  <dt className="text-neutral-500">source_fidelity</dt>
+                                  <dd className="font-medium text-neutral-900">
+                                    {expandedDetail.source_fidelity}
+                                  </dd>
+                                  <dt className="text-neutral-500">confidence</dt>
+                                  <dd>{expandedDetail.confidence ?? "(none)"}</dd>
+                                  <dt className="text-neutral-500">location</dt>
+                                  <dd className="whitespace-pre-wrap font-mono">
+                                    {expandedDetail.location == null ||
+                                    Object.keys(expandedDetail.location).length === 0
+                                      ? "(none)"
+                                      : formatJson(expandedDetail.location)}
+                                  </dd>
+                                  <dt className="text-neutral-500">text</dt>
+                                  <dd>
+                                    <EvidenceTextBlock
+                                      text={expandedDetail.text}
+                                      unitId={`${eu.id}-detail`}
+                                      showFull={!!fullTextRows[`${eu.id}-detail`]}
+                                      onToggle={(id) => toggleFullText(id)}
+                                    />
+                                  </dd>
+                                  <dt className="text-neutral-500">created_at</dt>
+                                  <dd className="font-mono">{expandedDetail.created_at}</dd>
+                                  <dt className="text-neutral-500">updated_at</dt>
+                                  <dd className="font-mono">{expandedDetail.updated_at}</dd>
+                                </dl>
+                                {(() => {
+                                  const meta = evidenceMetadataJsonField(
+                                    expandedDetail as EvidenceDetailWithMetadata,
+                                  );
+                                  if (!meta) {
+                                    return (
+                                      <div className="mt-3 rounded border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-700">
+                                        <div className="font-medium text-neutral-600">
+                                          metadata_json
+                                        </div>
+                                        <p className="mt-1">
+                                          Not included in the current{" "}
+                                          <code className="font-mono">GET /evidence-units/{"{id}"}</code>{" "}
+                                          OpenAPI response: enrichment still persists server-side under{" "}
+                                          <code className="font-mono">
+                                            EvidenceUnit.metadata_json[&quot;graphclerk_model_pipeline&quot;]
+                                          </code>
+                                          . When the API exposes{" "}
+                                          <code className="font-mono">metadata_json</code>, the raw JSON
+                                          and readout appear here without hiding fields.
+                                        </p>
+                                      </div>
+                                    );
+                                  }
+                                  const mp = meta[GRAPHCLERK_MODEL_PIPELINE_METADATA_KEY];
+                                  return (
+                                    <div className="mt-3 space-y-3">
+                                      <div>
+                                        <div className="text-xs font-medium text-neutral-600">
+                                          metadata_json (raw)
+                                        </div>
+                                        <pre className="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-all rounded border border-neutral-200 bg-neutral-50 p-2 font-mono text-[11px] text-neutral-900">
+                                          {formatJson(meta)}
+                                        </pre>
+                                      </div>
+                                      {isPlainObject(mp) ? (
+                                        <EvidenceModelPipelineMetadataReadout subtree={mp} />
+                                      ) : null}
+                                    </div>
+                                  );
+                                })()}
+                              </>
                             )}
                           </div>
                         )}

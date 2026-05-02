@@ -421,6 +421,12 @@ Unchanged: **`POST /answer`** remains **Track E**, **outside** Track **D**.
 
 ---
 
+## D7a implementation note (operator visibility — shipped)
+
+**Track D Slice D7a** (Completion Program): **[`ArtifactsExplorer.tsx`](../../frontend/src/components/ArtifactsExplorer.tsx)** adds a read-only **Model pipeline (Phase 8)** operator panel (explicit env checklist, evidence-level vs artifact **`graphclerk_language_aggregation`** distinction, **D7b** future pointer). Expanded evidence detail renders **`metadata_json` (raw)** plus a structured **`graphclerk_model_pipeline`** readout **when** the HTTP JSON includes **`metadata_json`** — without inferring absent fields. **[`EvaluationDashboard.tsx`](../../frontend/src/components/EvaluationDashboard.tsx)** carries a short static note clarifying default-off behavior and where enrichment lands (**not** a configuration surface). **No** writable selector, **no** admin persistence, **no** backend or OpenAPI change in this slice (current **`EvidenceUnit`** responses may **omit** **`metadata_json`** even when rows persist it). **D7b** remains **future**.
+
+---
+
 ## Implementation slice proposal (Track D — historical reference)
 
 The **authoritative** slice order is the **D2.5 “Revised Track D slice plan”** table above. The following **older** table is **superseded** for numbering after **D2.5**:

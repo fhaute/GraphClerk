@@ -193,6 +193,22 @@ export function EvaluationDashboard() {
         </p>
       </div>
 
+      <div className="rounded-md border border-teal-200 bg-teal-50/90 px-3 py-3 text-sm text-teal-950">
+        <strong className="font-medium">Model pipeline (Phase 8)</strong>
+        <p className="mt-1">
+          Ingest-time model calls are <strong className="font-medium">disabled by default</strong>.
+          Configured <code className="font-mono text-xs">evidence_candidate_enricher</code> output is
+          stored on{" "}
+          <code className="font-mono text-xs">
+            EvidenceUnit.metadata_json[&quot;graphclerk_model_pipeline&quot;]
+          </code>{" "}
+          — use <strong className="font-medium">Artifacts &amp; evidence</strong> for operator notes
+          and (when the API includes <code className="font-mono text-xs">metadata_json</code>) a
+          readout. A <strong className="font-medium">writable selector</strong> is future Track D{" "}
+          <strong>D7b</strong> (this dashboard does not configure models).
+        </p>
+      </div>
+
       <div className="rounded-md border border-neutral-200 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-medium text-neutral-700">Evaluation (retrieval logs)</h2>
         <p className="mt-1 text-xs text-neutral-500">

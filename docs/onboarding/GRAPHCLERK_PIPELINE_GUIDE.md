@@ -23,7 +23,7 @@
 - **F3:** **Mermaid** as-built vs operator vs future diagrams + narrative in [`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md) (not duplicated here).
 - **F4:** **Troubleshooting + operations** in [`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md) (not duplicated here).
 - **F5:** **PowerShell / curl / Python** examples in [`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md) (not duplicated here).
-- **Beyond Track F doc baseline:** production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring beyond architecture labels, **`/answer`** documentation **if** the product approves and ships it. **Track D D2.5:** per-purpose model configuration + future selector UI are **specified in design** only — [`phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) § *D2.5 Amendment* — **not** implemented in app/UI yet.
+- **Beyond Track F doc baseline:** production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring beyond architecture labels, **`/answer`** documentation **if** the product approves and ships it. **Track D D2.5:** per-purpose model configuration + future **writable** selector UI are **specified in design** only — [`phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) § *D2.5 Amendment* — **D7b** **not** implemented. **D7a** read-only operator visibility (**Artifacts & evidence**, optional **Evaluation dashboard** note) **is** shipped.
 
 ---
 
@@ -102,7 +102,7 @@ Default **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER`** is **`not_configured`** — 
 
 When set to **`lingua`** and the optional **`language-detector`** extra is installed: each **`POST /artifacts`** request builds **`LanguageDetectionService`** and passes it into **`EvidenceEnrichmentService`** for **text**, **markdown**, and **multimodal** ingest paths. **`EvidenceUnit.metadata_json`** may gain **`language`** (and related) keys before persistence; aggregation (**above**) reflects those rows. **Per-candidate** detector failures still record warnings and continue (**no** mutation of **`EvidenceUnit.text`** or **`source_fidelity`**). If **`lingua`** is configured but Lingua cannot be constructed (missing extra), the API responds **503** — **no** silent fallback to **`not_configured`**. **Not** translation; **not** retrieval ranking; **`actor_context`** remains recording-only on **`POST /retrieve`**.
 
-When **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** (Phase 8 **D6**, default **false**), **`EvidenceEnrichmentService`** runs **optional model metadata enrichment after language enrichment** on the same ingest paths; see [`TESTING_RULES.md`](../governance/TESTING_RULES.md) *Ingest wiring (Track D Slice D6)* for required companion env (**`GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama`**, **`BASE_URL`**, purpose **`MODEL`**). Runtime model failure does **not** abort ingestion.
+When **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** (Phase 8 **D6**, default **false**), **`EvidenceEnrichmentService`** runs **optional model metadata enrichment after language enrichment** on the same ingest paths; see [`TESTING_RULES.md`](../governance/TESTING_RULES.md) *Ingest wiring (Track D Slice D6)* for required companion env (**`GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama`**, **`GRAPHCLERK_MODEL_PIPELINE_BASE_URL`**, **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL`**). Runtime model failure does **not** abort ingestion.
 
 ### `actor_context`
 
@@ -110,9 +110,11 @@ When **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** (Phase 8 **D
 
 ### `graphclerk_model_pipeline` metadata
 
-**Phase 8:** optional **`metadata_json["graphclerk_model_pipeline"]`** on **`EvidenceUnit`** rows when **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** and the adapter returns a validated success projection (**D6** ingest wiring). Default remains **off** — **no** model calls. Still **not** evidence and **not** FileClerk-driven; retrieval ranking unchanged. Treat as **typed observability**, not a substitute for evidence units.
+**Phase 8:** optional **`metadata_json["graphclerk_model_pipeline"]`** on **`EvidenceUnit`** rows when **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** and the **Ollama** adapter returns a validated success projection (**D6** ingest wiring). Default remains **off** — **no** model calls. Output is **metadata only**: it does **not** change **`EvidenceUnit.text`**, **`source_fidelity`**, or retrieval ranking; it is **not** evidence and **not** FileClerk-driven. Treat as **typed observability**, not a substitute for evidence units.
 
-**Completion Program — Phase 8 full-completion path (design):** [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) (**Track D Slice D1** — decisions only; **no** production adapter shipped yet).
+**UI (Track D D7a):** **Artifacts & evidence** includes a read-only operator panel and, when the evidence detail JSON includes **`metadata_json`**, raw JSON plus a readable **`graphclerk_model_pipeline`** section (current **`GET /evidence-units/{id}`** OpenAPI schema may **omit** **`metadata_json`** — enrichment can still persist server-side).
+
+**Further design / audit path:** [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) (Track **D1** decisions; **D8** full-completion audit pending).
 
 ---
 
@@ -122,7 +124,7 @@ When **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** (Phase 8 **D
 |-------|--------|
 | **`POST /answer`** | **Not implemented** — no answer synthesis API in this repo state. |
 | **Automatic vector backfill** on **`POST /semantic-indexes`** | **Not implemented** — use manual backfill / operator flow (below). |
-| **Production model inference** inside core retrieve | **Not claimed** — Phase 8 baseline is contracts + validation + **NotConfigured** defaults; see `README.md` Phase 8 bullet. |
+| **Production model inference** inside **`POST /retrieve`** | **Not wired** — optional **Ollama** calls apply only to **`POST /artifacts`** when **D6** enricher env is set; default remains **no** model HTTP. |
 | **OCR / ASR / video ingestion** | **Not implemented** as full evidence pipelines; PDF/PPTX text paths exist when extras installed; image/audio largely **validation** / **503** where documented. |
 
 ---
@@ -168,7 +170,7 @@ See [`docs/demo/PHASE_6_DEMO_CORPUS.md`](../demo/PHASE_6_DEMO_CORPUS.md) — *Mi
 | UI area | What to verify |
 |---------|----------------|
 | **Query Playground** | **`POST /retrieve`** packet shape, warnings, empty vs filled evidence. |
-| **Artifacts & evidence** | Ingested artifacts and evidence units. |
+| **Artifacts & evidence** | Ingested artifacts and evidence units; **D7a** read-only **Phase 8** model pipeline operator notes + **`graphclerk_model_pipeline`** readout when **`metadata_json`** appears on evidence detail JSON (artifact **`graphclerk_language_aggregation`** stays separate). |
 | **Graph explorer** | Nodes, edges, evidence links. |
 | **Semantic indexes** | **`vector_status`**, `embedding_text`, entry nodes; search only meaningful for **indexed**. |
 | **Retrieval logs** | Stored packet snapshots when logging works. |

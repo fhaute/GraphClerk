@@ -308,6 +308,19 @@ python scripts/backfill_semantic_indexes.py --semantic-index-id "<UUID>"
 
 ---
 
+## Example set F — EvidenceUnit `graphclerk_model_pipeline` (Phase 8)
+
+**Label:** **TEMPLATE — NOT EXECUTED IN THIS SLICE** (this cookbook path leaves the enricher **off**).
+
+| Item | Detail |
+|------|--------|
+| **Field location** | **`EvidenceUnit.metadata_json["graphclerk_model_pipeline"]`** after a successful **`evidence_candidate_enricher`** run (**Track D D6**). |
+| **Default** | Enricher **disabled** — **no** model HTTP calls unless **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** and companion env is set ([`TESTING_RULES.md`](../governance/TESTING_RULES.md)). |
+| **Semantics** | **Metadata only** — **not** evidence; does **not** change **`text`**, **`source_fidelity`**, or retrieval ranking. |
+| **HTTP note** | **`GET /artifacts/{artifact_id}/evidence`** / **`GET /evidence-units/{id}`** may **omit** **`metadata_json`** in the **current** response schema — verify persistence via DB if needed; **Artifacts & evidence** (**D7a**) surfaces operator copy and a readout when JSON includes **`metadata_json`**. |
+
+---
+
 ## Minimal vs rich results
 
 | Mode | `vector_status` / search | `evidence_units` | Adapter note |
@@ -341,7 +354,7 @@ Walkthrough with the same field names: [`FEED_CONTENT_MINIMAL_GUIDE.md`](FEED_CO
 - **No** production model inference.
 - **No** Phase **9**.
 - **No** guaranteed **RetrievalLog** rows.
-- **`graphclerk_model_pipeline`** is **not** shown as wired into these HTTP flows.
+- These flows **do not** enable the **D6** ingest enricher — they **do not** prove **`graphclerk_model_pipeline`** on evidence rows. Read-only **D7a** UI notes live under **Artifacts & evidence** and the **Evaluation dashboard** when inspecting operators’ stacks.
 
 ---
 

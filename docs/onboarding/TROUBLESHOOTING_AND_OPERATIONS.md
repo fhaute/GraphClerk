@@ -53,6 +53,7 @@ Operators and developers diagnosing **empty packets**, **stuck `vector_status`**
 - **Future (Track C):** optional **production** language detection is **not** in baseline installs; dependency choice and config policy are documented in [`docs/decisions/phase_7_language_detector_dependency_decision.md`](../decisions/phase_7_language_detector_dependency_decision.md) (**research only** until **C3** ships).
 - **`actor_context`** is **recording-only** — it does **not** change routing or evidence selection.
 - **`graphclerk_model_pipeline`** on the packet is a **standalone metadata projection** in the Phase **8** baseline — **not** automatically merged into File Clerk evidence selection.
+- **`EvidenceUnit.metadata_json["graphclerk_model_pipeline"]`** — optional **ingest-time** metadata when **`evidence_candidate_enricher`** is enabled (**Track D D6**); **not** evidence; does **not** change **`text`**, **`source_fidelity`**, or retrieval ranking. **`GET /evidence-units/{id}`** may **omit** **`metadata_json`** in the **current** response schema — **Artifacts & evidence** (**D7a**) documents this and shows the subtree when JSON includes **`metadata_json`**.
 
 ### Likely bug (investigate / file issue)
 
@@ -78,7 +79,7 @@ Operators and developers diagnosing **empty packets**, **stuck `vector_status`**
 | **`RUN_INTEGRATION_TESTS`** | Must be **`1`** for **`deterministic_fake`** adapter validation (see config) |
 | **`APP_ENV`** | **`local`**, **`dev`**, or **`test`** for non-prod; **`prod`** rejects **`deterministic_fake`** |
 | **`GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER`** | Default **`not_configured`**; **`deterministic_fake`** only for guarded dev/integration |
-| **`GRAPHCLERK_MODEL_PIPELINE_*`** | Adapter-key env (**D2**); **`ollama`** requires non-empty **`BASE_URL`** + **`MODEL`** for **`build_model_pipeline_adapter`**. Default **`not_configured`** — **no** automatic model calls. **Optional ingest enricher:** **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED`** (**D6**) requires **`GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama`**, **`BASE_URL`**, and **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL`** — misconfiguration fails at settings parse; runtime model failure does **not** block **`POST /artifacts`** ([`TESTING_RULES.md`](../governance/TESTING_RULES.md)). |
+| **`GRAPHCLERK_MODEL_PIPELINE_*`** | Adapter-key env (**D2**); **`ollama`** requires non-empty **`GRAPHCLERK_MODEL_PIPELINE_BASE_URL`** + **`GRAPHCLERK_MODEL_PIPELINE_MODEL`** for **`build_model_pipeline_adapter`**. Default **`not_configured`** — **no** automatic model calls. **Optional ingest enricher:** **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED`** (**D6**) requires **`GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama`**, **`GRAPHCLERK_MODEL_PIPELINE_BASE_URL`**, and **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL`** — misconfiguration fails at settings parse; runtime model failure does **not** block **`POST /artifacts`** ([`TESTING_RULES.md`](../governance/TESTING_RULES.md)). |
 
 **When to unset `GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER`:** before running **mixed pytest** suites that expect the default adapter in process env (e.g. settings tests), or when switching shells to avoid accidental leakage — see [`TESTING_RULES.md`](../governance/TESTING_RULES.md).
 
@@ -134,7 +135,20 @@ Operators and developers diagnosing **empty packets**, **stuck `vector_status`**
 - **`actor_context`** — **recording-only** on the packet; **no** retrieval boost.
 - **`language_context`** — aggregates from **selected evidence `metadata_json`** only; **not** translation; **not** sourced from **`graphclerk_language_aggregation`** on the artifact row.
 - **`metadata_json.graphclerk_language_aggregation`** (artifact) — optional **ingest-time** summary over that artifact’s evidence units; compare to packet **`language_context`** only when debugging **ingest vs retrieve** visibility (they can differ if retrieve selects a different evidence set).
-- **`graphclerk_model_pipeline`** — optional packet metadata for inspection; **not** wired into File Clerk selection in the baseline. **Real outbound model inference** on ingest/retrieve is **not** implemented until Completion Program **Track D D2+**; design record: [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md).
+- **`graphclerk_model_pipeline`** — optional **packet** metadata for inspection; optional **evidence** **`metadata_json`** subtree after **D6** ingest enricher — **not** wired into File Clerk selection. **Outbound Ollama** calls apply **only** to **`POST /artifacts`** when enricher env is set; **`POST /retrieve`** does **not** run the pipeline. Design record: [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md).
+
+---
+
+## EvidenceUnit `graphclerk_model_pipeline` missing or not visible
+
+**Likely causes when you expected enrichment:**
+
+1. **Enricher disabled** — default **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED`** is **false** (**no** model calls).
+2. **Wrong adapter / incomplete env** — need **`GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama`**, **`GRAPHCLERK_MODEL_PIPELINE_BASE_URL`**, **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL`** (see [`TESTING_RULES.md`](../governance/TESTING_RULES.md) *Ingest wiring (Track D Slice D6)*).
+3. **Ollama unavailable** or HTTP / timeout errors — **by design**, runtime failures **do not** abort ingestion; affected candidates simply have **no** **`graphclerk_model_pipeline`** merge.
+4. **Validation / projection blocked output** — malformed JSON or schema mismatch → **no** metadata merge for that candidate; ingestion still completes.
+
+**API visibility:** **`GET /artifacts/{id}/evidence`** and **`GET /evidence-units/{id}`** may **omit** **`metadata_json`** even when the row persisted it — use DB inspection or wait for schema/API alignment; **Artifacts & evidence** (**D7a**) states this explicitly in the UI.
 - **No answer synthesis** — use your own LLM layer after the packet if needed.
 
 ---
