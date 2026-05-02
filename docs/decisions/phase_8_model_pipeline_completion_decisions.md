@@ -21,10 +21,10 @@ The repository **already** contains (per **`PHASE_8_AUDIT.md`** and code):
 - **Contracts** — `ModelPipelineRole`, `ModelPipelineTask` / `ModelPipelineResult`, request/response envelopes (`model_pipeline_contracts.py`).
 - **Adapters** — `ModelPipelineAdapter` protocol; **`NotConfiguredModelPipelineAdapter`** (explicit unavailable semantics); **`DeterministicTestModelPipelineAdapter`** (**tests-only**).
 - **Output validation** — `ModelPipelineOutputValidationService` (semantic bounds, no FileClerk/retrieval).
-- **Projection** — `ModelPipelineCandidateMetadataProjectionService` → **`metadata_json["graphclerk_model_pipeline"]`** only.
+- **Projection** — `ModelPipelineCandidateMetadataProjectionService` → **`metadata["graphclerk_model_pipeline"]`** on **`EvidenceUnitCandidate`** when callers attach it (same subtree shape as EU **`metadata_json`** at persistence).
 - **Evaluation fixtures** — deterministic builders + tests.
 - **Design** — Slice **8G** local inference narrative (**design-only** in working plan).
-- **Audit / status** — baseline **`pass_with_notes`**; **no** production HTTP client, **no** **per-purpose** model registry (D2.5 design only), **no** real outbound model calls on default paths, **no** ingestion/enrichment merge of model metadata, **no** **`POST /answer`**. *(Track **D2** adds **adapter-key** settings + static **adapter** registry — not the same as per-purpose mapping.)*
+- **Audit / status** — baseline **`pass_with_notes`**; **no** production HTTP client by default, **no** real outbound model calls on default paths, **no** **D6** ingestion/enrichment merge of model metadata yet, **no** **`POST /answer`**. *(**D2**–**D5** add adapter settings/registry, Ollama adapter, purpose registry, and **`ModelPipelineMetadataEnrichmentService`** — **not** ingest-wired until **D6**.)*
 
 This decision record **does not** claim any of the missing items are implemented.
 
@@ -408,6 +408,12 @@ Unchanged: **`POST /answer`** remains **Track E**, **outside** Track **D**.
 
 ---
 
+## D5 implementation note (metadata enrichment orchestration — shipped)
+
+**Track D Slice D5** adds [`backend/app/services/model_pipeline_metadata_enrichment_service.py`](../../backend/app/services/model_pipeline_metadata_enrichment_service.py): **`ModelPipelineMetadataEnrichmentService`** with DI-only dependencies (adapter, **`ModelPipelineOutputValidationService`**, **`ModelPipelineCandidateMetadataProjectionService`**). **`enrich_candidates`** uses **`ModelPipelinePurposeResolution`**; **`disabled`** → no adapter/validation/projection; enabled → stable **`request_id`**, **`validate_response` before `project`**, merge **only** the **`graphclerk_model_pipeline`** subtree into **`EvidenceUnitCandidate.metadata`** via **`dataclasses.replace`**. **`ModelPipelineMetadataEnrichmentResult`** reports **`attempted_count` / `projected_count` / `skipped_count` / `failed_count` / `warnings`** for integration (**D6**). **No** global settings reads inside the service; **no** ingestion / enrichment / FileClerk / retrieval imports.
+
+---
+
 ## Implementation slice proposal (Track D — historical reference)
 
 The **authoritative** slice order is the **D2.5 “Revised Track D slice plan”** table above. The following **older** table is **superseded** for numbering after **D2.5**:
@@ -485,12 +491,12 @@ The **authoritative** slice order is the **D2.5 “Revised Track D slice plan”
 
 ## Final recommendation
 
-**D2** and **D2.5** are complete as documented: **D2** shipped **adapter-key** settings + static registry; **D2.5** records **per-purpose** model mapping + future selector UI **design** (no code). Proceed with **D3** (**Ollama HTTP** + mocks, **Option B** — explicit model per call; **not** final env-only shape), then **D4** (**purpose registry / config contracts**), **D5** enrichment orchestration, **D6** ingestion merge, **D7** visibility / selector (split **D7a/D7b** if needed), **D8** full-completion audit — **no** **`/answer`** in Track **D**; **Phase 9** not started.
+**D2** through **D5** are shipped as documented in implementation notes above (**D2** settings + registry; **D2.5** design; **D3** Ollama adapter; **D4** purpose registry; **D5** **`ModelPipelineMetadataEnrichmentService`** — **no** ingestion wiring). **Next:** **D6** ingestion merge behind explicit per-purpose config, then **D7** visibility / selector, **D8** full-completion audit — **no** **`/answer`** in Track **D**; **Phase 9** not started.
 
 ---
 
 ## Primary handoff (Audit / Project Manager → parent)
 
-1. **Delivered:** **`phase_8_model_pipeline_completion_decisions.md`** — Track **D1** decisions + **D2.5** amendment (purpose registry + selector design); **no code** in D1/D2.5.
-2. **Next:** **D3** Ollama adapter + mocks per revised slice plan; **D4** purpose contracts.
-3. **Truth:** **No** production HTTP adapter, **no** **purpose** registry implementation, **no** selector UI, **no** merge, **no** **`/answer`**, **no** Phase **9** claimed as shipped.
+1. **Delivered:** **`phase_8_model_pipeline_completion_decisions.md`** — Track **D1** decisions + **D2.5** amendment; implementation notes through **D5** (orchestration service; **not** ingest-wired).
+2. **Next:** **D6** ingestion merge; **D7** UI/ops; **D8** audit.
+3. **Truth:** **D5** orchestration exists; **no** automatic ingest merge from model pipeline yet; **`openai_compatible`** / selector UI / **`/answer`** / Phase **9** not claimed as shipped product paths.
