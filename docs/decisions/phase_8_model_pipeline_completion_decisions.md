@@ -402,6 +402,12 @@ Unchanged: **`POST /answer`** remains **Track E**, **outside** Track **D**.
 
 ---
 
+## D4 implementation note (backend purpose registry — shipped)
+
+**Track D Slice D4** adds [`backend/app/services/model_pipeline_purpose_registry.py`](../../backend/app/services/model_pipeline_purpose_registry.py): **`ModelPipelinePurposeRegistry`**, **`resolve_model_pipeline_purpose`**, and Phase 1–8 **policy** (only **`evidence_candidate_enricher`** may be **`enabled`** with **`adapter=ollama`**; **`routing_hint_generator`** / **`artifact_classifier`** / **`extraction_helper`** cannot be enabled without **`model_pipeline_purpose_policy_blocked`**). Default enricher template uses **`derived_metadata`**. **No** persistence, **no** **`build_model_pipeline_adapter`** calls, **no** HTTP — **D5/D6** combine resolution with the adapter registry and ingestion.
+
+---
+
 ## Implementation slice proposal (Track D — historical reference)
 
 The **authoritative** slice order is the **D2.5 “Revised Track D slice plan”** table above. The following **older** table is **superseded** for numbering after **D2.5**:
