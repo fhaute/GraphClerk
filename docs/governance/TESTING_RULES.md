@@ -39,6 +39,23 @@ For **integration tests** that need the API’s semantic search path to embed qu
 
 **Clearing settings cache:** tests that toggle these variables must call `app.core.config.get_settings.cache_clear()` before `get_settings()` / `create_app()` so the process does not reuse a stale `lru_cache` entry.
 
+## Phase 8 — model pipeline adapter settings + registry (Track D Slice D2)
+
+| Variable | Values | Default |
+|----------|--------|---------|
+| `GRAPHCLERK_MODEL_PIPELINE_ADAPTER` | `not_configured` \| `deterministic_test` \| `ollama` \| `openai_compatible` | **`not_configured`** |
+| `GRAPHCLERK_MODEL_PIPELINE_BASE_URL` | optional string | unset |
+| `GRAPHCLERK_MODEL_PIPELINE_MODEL` | optional string | unset |
+| `GRAPHCLERK_MODEL_PIPELINE_TIMEOUT_SECONDS` | float, **`0 < value <= 300`** | **30** |
+| `GRAPHCLERK_MODEL_PIPELINE_API_KEY` | optional string | unset |
+
+- **Default:** **`not_configured`** — [`build_model_pipeline_adapter`](../../backend/app/services/model_pipeline_registry.py) returns **`NotConfiguredModelPipelineAdapter`** (same contract behavior as before D2). **No** model HTTP calls; **`POST /answer`** is **not** implemented; default **`pytest`** does not require model endpoints.
+- **Reserved / not implemented:** **`ollama`** and **`openai_compatible`** pass settings validation but **`build_model_pipeline_adapter`** raises **`ModelPipelineAdapterNotImplementedError`** (**`model_pipeline_adapter_not_implemented`**) until **Track D3/D3b** — **no** silent fallback to **`not_configured`**.
+- **`deterministic_test`:** allowed in **`Settings`** only when **`RUN_INTEGRATION_TESTS=1`** and **`APP_ENV` ≠ `prod`** (same discipline as **`deterministic_fake`** embeddings). Registry build still requires an injected **`deterministic_test_factory`** — settings alone do **not** imply a usable adapter.
+- **Tests:** [`backend/tests/test_phase8_model_pipeline_registry.py`](../../backend/tests/test_phase8_model_pipeline_registry.py), config coverage in [`backend/tests/test_config.py`](../../backend/tests/test_config.py).
+
+**Clearing settings cache:** same as semantic search — call `get_settings.cache_clear()` when tests change `GRAPHCLERK_MODEL_PIPELINE_*`.
+
 ## Phase 7 — optional language detection adapter (Track C Slice C3) + product wiring (**Track C Slice C8**)
 
 **Optional extra:** install the backend optional dependency group **`language-detector`** (declares [`lingua-language-detector`](https://pypi.org/project/lingua-language-detector/) **≥ 2.2.0**). It is **not** part of the default GraphClerk backend install.

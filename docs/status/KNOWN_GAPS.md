@@ -52,9 +52,9 @@ This file tracks known missing pieces so they are explicit and not hidden.
 - **Optional dependency matrix**: local/CI coverage for all combinations of extras + integration tests may need hardening later.
 
 ## Known limitations (Phase 8 — specialized model pipeline baseline)
-- **Phase 8 audit**: **`pass_with_notes`** — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**); accepts baseline only — registry/production inference/UI/integration remain gaps.
-- **No production inference adapter**: **`NotConfigured`** is the default story; **no** Ollama, **no** vLLM, **no** HTTP inference client in shipped product paths; **8G** is **design-only**.
-- **No adapter registry** and **no** model-pipeline configuration in app settings for inference.
+- **Phase 8 audit**: **`pass_with_notes`** — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**); accepts baseline only — production inference/UI/integration remain gaps beyond **Track D D2** settings + static registry.
+- **No production inference adapter**: **`NotConfigured`** remains the **implemented** default at registry build; **`ollama`** / **`openai_compatible`** are **reserved** and fail loudly until **D3/D3b**; **no** vLLM/OpenAI HTTP client in shipped paths yet; **8G** is **design-only** for adapter behavior.
+- **Settings + static registry (D2)** exist (`GRAPHCLERK_MODEL_PIPELINE_*`, [`model_pipeline_registry.py`](../../backend/app/services/model_pipeline_registry.py)); registry is **not** wired into ingestion or **`POST /retrieve`** — configuring a reserved adapter still yields **build-time** failure until the adapter ships.
 - **`ModelPipelineCandidateMetadataProjectionService`** is **standalone** — **not** wired into text/multimodal ingestion, **`EvidenceEnrichmentService`**, FileClerk, or **`POST /retrieve`**.
 - **Model output is not evidence**: projection remains **metadata-only** under **`metadata_json["graphclerk_model_pipeline"]`** (when callers attach it); **no** automatic **`EvidenceUnit`** / candidate **`text`** / **`source_fidelity`** mutation from model pipeline modules.
 - **`POST /answer`** / answer synthesis: **not implemented**; Phase 8 baseline must **not** be read as answer/RAG completion.

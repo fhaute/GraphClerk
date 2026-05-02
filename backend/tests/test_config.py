@@ -19,6 +19,14 @@ def test_config_loads_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("QDRANT_API_KEY", "optional")
     monkeypatch.delenv("GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER", raising=False)
     monkeypatch.delenv("GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER", raising=False)
+    for key in (
+        "GRAPHCLERK_MODEL_PIPELINE_ADAPTER",
+        "GRAPHCLERK_MODEL_PIPELINE_BASE_URL",
+        "GRAPHCLERK_MODEL_PIPELINE_MODEL",
+        "GRAPHCLERK_MODEL_PIPELINE_TIMEOUT_SECONDS",
+        "GRAPHCLERK_MODEL_PIPELINE_API_KEY",
+    ):
+        monkeypatch.delenv(key, raising=False)
 
     settings = Settings()  # do not use cached get_settings in tests
 
@@ -30,6 +38,11 @@ def test_config_loads_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.qdrant_api_key == "optional"
     assert settings.semantic_search_embedding_adapter == "not_configured"
     assert settings.language_detection_adapter == "not_configured"
+    assert settings.model_pipeline_adapter == "not_configured"
+    assert settings.model_pipeline_base_url is None
+    assert settings.model_pipeline_model is None
+    assert settings.model_pipeline_timeout_seconds == 30.0
+    assert settings.model_pipeline_api_key is None
 
 
 def _minimal_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -39,6 +52,14 @@ def _minimal_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://user:pass@localhost:5432/db")
     monkeypatch.setenv("QDRANT_URL", "http://localhost:6333")
     monkeypatch.setenv("QDRANT_API_KEY", "optional")
+    for key in (
+        "GRAPHCLERK_MODEL_PIPELINE_ADAPTER",
+        "GRAPHCLERK_MODEL_PIPELINE_BASE_URL",
+        "GRAPHCLERK_MODEL_PIPELINE_MODEL",
+        "GRAPHCLERK_MODEL_PIPELINE_TIMEOUT_SECONDS",
+        "GRAPHCLERK_MODEL_PIPELINE_API_KEY",
+    ):
+        monkeypatch.delenv(key, raising=False)
     config_module.get_settings.cache_clear()
 
 
@@ -117,6 +138,42 @@ def test_language_detection_adapter_invalid_value_rejected(monkeypatch: pytest.M
 
     with pytest.raises(ValidationError):
         Settings()
+
+
+def test_model_pipeline_adapter_reads_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", "ollama")
+
+    settings = Settings()
+    assert settings.model_pipeline_adapter == "ollama"
+
+
+def test_model_pipeline_optional_fields_read_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_BASE_URL", "http://example:11434")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_MODEL", "llama3")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_TIMEOUT_SECONDS", "60")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_API_KEY", "secret")
+
+    settings = Settings()
+    assert settings.model_pipeline_base_url == "http://example:11434"
+    assert settings.model_pipeline_model == "llama3"
+    assert settings.model_pipeline_timeout_seconds == 60.0
+    assert settings.model_pipeline_api_key == "secret"
+
+
+def test_model_pipeline_timeout_validation(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_TIMEOUT_SECONDS", "-1")
+    with pytest.raises(ValidationError):
+        Settings()
+
+
+def test_model_pipeline_adapter_default_without_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+
+    settings = Settings()
+    assert settings.model_pipeline_adapter == "not_configured"
 
 
 def test_missing_required_config_fails_clearly(monkeypatch: pytest.MonkeyPatch) -> None:

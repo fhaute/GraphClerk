@@ -9,6 +9,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SemanticSearchEmbeddingAdapter = Literal["not_configured", "deterministic_fake"]
 LanguageDetectionAdapterName = Literal["not_configured", "lingua"]
+ModelPipelineAdapterName = Literal[
+    "not_configured",
+    "deterministic_test",
+    "ollama",
+    "openai_compatible",
+]
 
 
 class Settings(BaseSettings):
@@ -18,7 +24,12 @@ class Settings(BaseSettings):
     values are missing.
     """
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        protected_namespaces=("settings_",),
+    )
 
     app_name: str = Field(alias="APP_NAME")
     app_env: Literal["local", "dev", "test", "prod"] = Field(alias="APP_ENV")
@@ -41,6 +52,26 @@ class Settings(BaseSettings):
         alias="GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER",
     )
 
+    model_pipeline_adapter: ModelPipelineAdapterName = Field(
+        default="not_configured",
+        alias="GRAPHCLERK_MODEL_PIPELINE_ADAPTER",
+    )
+    model_pipeline_base_url: str | None = Field(
+        default=None,
+        alias="GRAPHCLERK_MODEL_PIPELINE_BASE_URL",
+    )
+    model_pipeline_model: str | None = Field(default=None, alias="GRAPHCLERK_MODEL_PIPELINE_MODEL")
+    model_pipeline_timeout_seconds: float = Field(
+        default=30.0,
+        alias="GRAPHCLERK_MODEL_PIPELINE_TIMEOUT_SECONDS",
+        gt=0.0,
+        le=300.0,
+    )
+    model_pipeline_api_key: str | None = Field(
+        default=None,
+        alias="GRAPHCLERK_MODEL_PIPELINE_API_KEY",
+    )
+
     @model_validator(mode="after")
     def _validate_semantic_search_embedding_adapter(self) -> Settings:
         """``deterministic_fake`` is integration-test-only and must never load in production."""
@@ -57,6 +88,28 @@ class Settings(BaseSettings):
             msg = (
                 "GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake requires "
                 "RUN_INTEGRATION_TESTS=1 (integration-test-only; not production semantics)"
+            )
+            raise ValueError(msg)
+        return self
+
+    @model_validator(mode="after")
+    def _validate_model_pipeline_adapter(self) -> Settings:
+        """``deterministic_test`` is registry-test-only; never valid in production."""
+
+        if self.model_pipeline_adapter != "deterministic_test":
+            return self
+        if self.app_env == "prod":
+            msg = (
+                "GRAPHCLERK_MODEL_PIPELINE_ADAPTER=deterministic_test is not allowed "
+                "when APP_ENV=prod"
+            )
+            raise ValueError(msg)
+        if os.environ.get("RUN_INTEGRATION_TESTS") != "1":
+            msg = (
+                "GRAPHCLERK_MODEL_PIPELINE_ADAPTER=deterministic_test requires "
+                "RUN_INTEGRATION_TESTS=1 "
+                "(test-only; inject DeterministicTest adapter via "
+                "build_model_pipeline_adapter factory)"
             )
             raise ValueError(msg)
         return self
