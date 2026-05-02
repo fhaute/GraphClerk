@@ -206,6 +206,8 @@ npm run build
 - **`README.md`** — Phase 8 bullet aligned to **full-completion** audit + non-goals.
 - **`docs/api/API_OVERVIEW.md`** — **`GET /model-pipeline/config`** documented (read-only).
 - **`docs/onboarding/GRAPHCLERK_ARCHITECTURE.md`** — **D7c** naming for writable selector (**honesty**).
+- **`docs/onboarding/GRAPHCLERK_PIPELINE_GUIDE.md`** — doc-status row points to this full-completion audit + Phase **9** not started.
+- **`docs/onboarding/TROUBLESHOOTING_AND_OPERATIONS.md`** — open follow-ups clarify out-of-scope items + **`PHASE_8_FULL_COMPLETION_AUDIT.md`** pointer.
 - **`docs/decisions/phase_8_model_pipeline_completion_decisions.md`** — **D8** pointer.
 
 ---
@@ -224,7 +226,7 @@ npm run build
 ## Primary handoff summaries
 
 1. **Mission recap:** Executed **Track D D8** — Phase **8** **full-completion** audit for **agreed** Phase 1–8 scope; result **`pass`**; **no** code changes.
-2. **Scope touched:** New audit artifact + status/program/README/API/architecture/decision pointer updates only (**allowed** paths).
+2. **Scope touched:** New audit artifact + status/program/README/API/architecture/onboarding/decision pointer updates only (**allowed** paths).
 3. **Drift / evidence:** Phase **8** **`pytest`** subset + full suite + **Ruff** + **`npm run build`** **pass**; import-boundary spot review clean for **`model_pipeline*`** services vs FileClerk/retrieval; **`/answer`** route **absent**.
 4. **Follow-ups:** **N** for agreed-scope closure — optional **D3b**/**D7c**/**D9** are **product/program** decisions.
 5. **Recommended next actions:** Proceed per **Completion Program** (**Track E–H** / Phase **9** readiness) only when approved; keep **`PHASE_8_AUDIT.md`** as historical baseline.
