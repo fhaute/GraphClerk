@@ -14,7 +14,7 @@ This module does **not** import or call ``build_model_pipeline_adapter`` (adapte
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -172,15 +172,19 @@ class ModelPipelinePurposeResolution(BaseModel):
 def build_default_model_pipeline_purpose_registry(
     settings: Settings,
 ) -> ModelPipelinePurposeRegistry:
-    """Build registry with **every** purpose disabled.
+    """Build registry from settings (Track D6).
 
-    ``settings`` is accepted for forward-compatible D5/D6 wiring; D4 does not read
-    per-purpose env — callers merge explicit :class:`ModelPipelinePurposeConfig` for tests
-    or future settings-backed builders.
+    By default every purpose is disabled. When
+    ``settings.model_pipeline_evidence_enricher_enabled`` is true (validated in
+    :class:`~app.core.config.Settings`), ``evidence_candidate_enricher`` is enabled with
+    adapter ``ollama``, model from ``settings.model_pipeline_evidence_enricher_model``,
+    optional per-purpose timeout, and default ``derived_metadata`` output kind.
+
+    Callers may still merge explicit :class:`ModelPipelinePurposeConfig` for tests.
     """
 
-    _ = settings
-    configs = {
+    ec = ModelPipelineRole.evidence_candidate_enricher
+    configs: dict[ModelPipelineRole, ModelPipelinePurposeConfig] = {
         role: ModelPipelinePurposeConfig(
             enabled=False,
             adapter="not_configured",
@@ -190,6 +194,20 @@ def build_default_model_pipeline_purpose_registry(
         )
         for role in ModelPipelineRole
     }
+
+    if settings.model_pipeline_evidence_enricher_enabled:
+        pm = settings.model_pipeline_evidence_enricher_model
+        if pm is None or not str(pm).strip():
+            msg = "model_pipeline_evidence_enricher_model required when enricher enabled"
+            raise ModelPipelinePurposeResolutionError(CODE_PURPOSE_RESOLUTION_FAILED, msg)
+        configs[ec] = ModelPipelinePurposeConfig(
+            enabled=True,
+            adapter="ollama",
+            model=str(cast(str, pm)).strip(),
+            timeout_seconds=settings.model_pipeline_evidence_enricher_timeout_seconds,
+            output_kind=_default_output_kind(ec),
+        )
+
     return ModelPipelinePurposeRegistry(configs=configs)
 
 

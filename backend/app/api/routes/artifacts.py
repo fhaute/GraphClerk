@@ -24,6 +24,22 @@ from app.services.evidence_enrichment_service import EvidenceEnrichmentService
 from app.services.extraction import ExtractorRegistry
 from app.services.ingestion.artifact_type_resolver import resolve_from_filename_and_mime
 from app.services.language_detection_service import build_language_detection_service
+from app.services.model_pipeline_candidate_projection_service import (
+    ModelPipelineCandidateMetadataProjectionService,
+)
+from app.services.model_pipeline_contracts import ModelPipelineAdapter, ModelPipelineRole
+from app.services.model_pipeline_metadata_enrichment_service import (
+    ModelPipelineMetadataEnrichmentService,
+)
+from app.services.model_pipeline_ollama_adapter import OllamaModelPipelineAdapter
+from app.services.model_pipeline_output_validation_service import (
+    ModelPipelineOutputValidationService,
+)
+from app.services.model_pipeline_purpose_registry import (
+    ModelPipelinePurposeResolution,
+    build_default_model_pipeline_purpose_registry,
+    resolve_model_pipeline_purpose,
+)
 from app.services.multimodal_ingestion_service import MultimodalIngestionService
 from app.services.text_ingestion_service import TextIngestionService
 
@@ -50,29 +66,92 @@ Error semantics at ``POST /artifacts``:
 - ``ExtractorUnavailableError`` → **503**.
 - ``LanguageDetectionUnavailableError`` when ``GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER=lingua``
   but Lingua cannot be constructed (e.g. optional extra missing) → **503** (fail loud).
+- Track **D6:** ``GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED`` (default **false**) gates
+  optional **metadata-only** model enrichment after language enrichment; requires
+  ``GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama``, non-empty ``GRAPHCLERK_MODEL_PIPELINE_BASE_URL``,
+  and non-empty ``GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL``. Misconfiguration fails at
+  ``Settings`` parse time. Runtime adapter failures do **not** block ingestion.
 """
 
 router = APIRouter(prefix="", tags=["artifacts"])
 
 
-def build_evidence_enrichment_service(settings: Settings) -> EvidenceEnrichmentService:
-    """Build enrichment for ``POST /artifacts`` from ``language_detection_adapter`` settings.
+def build_evidence_enricher_model_pipeline_adapter(
+    settings: Settings,
+    resolution: ModelPipelinePurposeResolution,
+) -> ModelPipelineAdapter:
+    """Build Ollama adapter for ``evidence_candidate_enricher`` (purpose model + timeout).
 
-    - ``not_configured``: identity enrichment (no language detector calls).
+    Monkeypatch this in tests to inject deterministic adapters (no live HTTP).
+    """
+
+    timeout = float(resolution.timeout_seconds or settings.model_pipeline_timeout_seconds)
+    base = settings.model_pipeline_base_url
+    model = resolution.model
+    if base is None or not str(base).strip():
+        msg = "GRAPHCLERK_MODEL_PIPELINE_BASE_URL required for evidence enricher adapter"
+        raise ValueError(msg)
+    if model is None or not str(model).strip():
+        msg = "resolved purpose model required for evidence enricher adapter"
+        raise ValueError(msg)
+    return OllamaModelPipelineAdapter(
+        base_url=str(base).strip(),
+        model=str(model).strip(),
+        timeout_seconds=timeout,
+    )
+
+
+def build_evidence_enrichment_service(settings: Settings) -> EvidenceEnrichmentService:
+    """Build enrichment for ``POST /artifacts`` from settings.
+
+    Language:
+
+    - ``not_configured``: no language detector calls.
     - ``lingua``: ``LanguageDetectionService`` from ``build_language_detection_service``.
       Raises ``LanguageDetectionUnavailableError`` if the optional ``language-detector``
       extra is missing — **no** silent fallback to ``not_configured``.
+
+    Model metadata (Track D6):
+
+    - ``GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED``: when **true**, compose
+      ``ModelPipelineMetadataEnrichmentService`` after language enrichment (same ordering
+      for text and multimodal). Adapter build uses
+      ``build_evidence_enricher_model_pipeline_adapter``.
 
     The same instance should be passed to both text and multimodal ingestion services
     within a single request.
     """
 
-    if settings.language_detection_adapter == "not_configured":
-        return EvidenceEnrichmentService()
+    language_detection = None
     if settings.language_detection_adapter == "lingua":
-        ld = build_language_detection_service(settings)
-        return EvidenceEnrichmentService(language_detection=ld)
-    raise AssertionError("unexpected language_detection_adapter")
+        language_detection = build_language_detection_service(settings)
+    elif settings.language_detection_adapter != "not_configured":
+        raise AssertionError("unexpected language_detection_adapter")
+
+    model_pipeline_enrichment = None
+    model_pipeline_resolution = None
+    if settings.model_pipeline_evidence_enricher_enabled:
+        registry = build_default_model_pipeline_purpose_registry(settings)
+        model_pipeline_resolution = resolve_model_pipeline_purpose(
+            registry,
+            ModelPipelineRole.evidence_candidate_enricher,
+            settings,
+        )
+        adapter = build_evidence_enricher_model_pipeline_adapter(
+            settings,
+            model_pipeline_resolution,
+        )
+        model_pipeline_enrichment = ModelPipelineMetadataEnrichmentService(
+            adapter=adapter,
+            output_validator=ModelPipelineOutputValidationService(),
+            projection_service=ModelPipelineCandidateMetadataProjectionService(),
+        )
+
+    return EvidenceEnrichmentService(
+        language_detection=language_detection,
+        model_pipeline_enrichment=model_pipeline_enrichment,
+        model_pipeline_enrichment_resolution=model_pipeline_resolution,
+    )
 
 
 class _PdfDependencyPlaceholder:

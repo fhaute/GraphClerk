@@ -25,6 +25,9 @@ def test_config_loads_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
         "GRAPHCLERK_MODEL_PIPELINE_MODEL",
         "GRAPHCLERK_MODEL_PIPELINE_TIMEOUT_SECONDS",
         "GRAPHCLERK_MODEL_PIPELINE_API_KEY",
+        "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED",
+        "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL",
+        "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_TIMEOUT_SECONDS",
     ):
         monkeypatch.delenv(key, raising=False)
 
@@ -43,6 +46,9 @@ def test_config_loads_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.model_pipeline_model is None
     assert settings.model_pipeline_timeout_seconds == 30.0
     assert settings.model_pipeline_api_key is None
+    assert settings.model_pipeline_evidence_enricher_enabled is False
+    assert settings.model_pipeline_evidence_enricher_model is None
+    assert settings.model_pipeline_evidence_enricher_timeout_seconds is None
 
 
 def _minimal_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -58,6 +64,9 @@ def _minimal_settings_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "GRAPHCLERK_MODEL_PIPELINE_MODEL",
         "GRAPHCLERK_MODEL_PIPELINE_TIMEOUT_SECONDS",
         "GRAPHCLERK_MODEL_PIPELINE_API_KEY",
+        "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED",
+        "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL",
+        "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_TIMEOUT_SECONDS",
     ):
         monkeypatch.delenv(key, raising=False)
     config_module.get_settings.cache_clear()
@@ -174,6 +183,69 @@ def test_model_pipeline_adapter_default_without_env(monkeypatch: pytest.MonkeyPa
 
     settings = Settings()
     assert settings.model_pipeline_adapter == "not_configured"
+
+
+def test_evidence_enricher_disabled_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+
+    settings = Settings()
+    assert settings.model_pipeline_evidence_enricher_enabled is False
+
+
+def test_evidence_enricher_enabled_requires_ollama_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED", "true")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_BASE_URL", "http://localhost:11434")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL", "m1")
+
+    with pytest.raises(ValidationError):
+        Settings()
+
+
+def test_evidence_enricher_enabled_requires_base_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", "ollama")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED", "true")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL", "m1")
+
+    with pytest.raises(ValidationError):
+        Settings()
+
+
+def test_evidence_enricher_enabled_requires_purpose_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", "ollama")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_BASE_URL", "http://localhost:11434")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED", "true")
+
+    with pytest.raises(ValidationError):
+        Settings()
+
+
+def test_evidence_enricher_purpose_timeout_validation(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", "ollama")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_BASE_URL", "http://localhost:11434")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED", "true")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL", "m1")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_TIMEOUT_SECONDS", "400")
+
+    with pytest.raises(ValidationError):
+        Settings()
+
+
+def test_evidence_enricher_enabled_valid_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    _minimal_settings_env(monkeypatch)
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_ADAPTER", "ollama")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_BASE_URL", "http://localhost:11434")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED", "true")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL", "purpose-x")
+    monkeypatch.setenv("GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_TIMEOUT_SECONDS", "45")
+
+    settings = Settings()
+    assert settings.model_pipeline_evidence_enricher_enabled is True
+    assert settings.model_pipeline_evidence_enricher_model == "purpose-x"
+    assert settings.model_pipeline_evidence_enricher_timeout_seconds == 45.0
 
 
 def test_missing_required_config_fails_clearly(monkeypatch: pytest.MonkeyPatch) -> None:

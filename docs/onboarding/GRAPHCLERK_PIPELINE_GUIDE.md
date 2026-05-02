@@ -102,13 +102,15 @@ Default **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER`** is **`not_configured`** — 
 
 When set to **`lingua`** and the optional **`language-detector`** extra is installed: each **`POST /artifacts`** request builds **`LanguageDetectionService`** and passes it into **`EvidenceEnrichmentService`** for **text**, **markdown**, and **multimodal** ingest paths. **`EvidenceUnit.metadata_json`** may gain **`language`** (and related) keys before persistence; aggregation (**above**) reflects those rows. **Per-candidate** detector failures still record warnings and continue (**no** mutation of **`EvidenceUnit.text`** or **`source_fidelity`**). If **`lingua`** is configured but Lingua cannot be constructed (missing extra), the API responds **503** — **no** silent fallback to **`not_configured`**. **Not** translation; **not** retrieval ranking; **`actor_context`** remains recording-only on **`POST /retrieve`**.
 
+When **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** (Phase 8 **D6**, default **false**), **`EvidenceEnrichmentService`** runs **optional model metadata enrichment after language enrichment** on the same ingest paths; see [`TESTING_RULES.md`](../governance/TESTING_RULES.md) *Ingest wiring (Track D Slice D6)* for required companion env (**`GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama`**, **`BASE_URL`**, purpose **`MODEL`**). Runtime model failure does **not** abort ingestion.
+
 ### `actor_context`
 
 **Optional** request-supplied context on **`POST /retrieve`**, **recording only** on the packet — **not** used for boosting in the current baseline; do not treat as hidden personalization.
 
 ### `graphclerk_model_pipeline` metadata
 
-**Phase 8** contract: **standalone metadata projection** for pipeline outputs where configured — **not** wired as automatic evidence in ingestion/File Clerk in the baseline described in status docs. Treat as **typed observability**, not a substitute for evidence units unless product scope changes.
+**Phase 8:** optional **`metadata_json["graphclerk_model_pipeline"]`** on **`EvidenceUnit`** rows when **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** and the adapter returns a validated success projection (**D6** ingest wiring). Default remains **off** — **no** model calls. Still **not** evidence and **not** FileClerk-driven; retrieval ranking unchanged. Treat as **typed observability**, not a substitute for evidence units.
 
 **Completion Program — Phase 8 full-completion path (design):** [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) (**Track D Slice D1** — decisions only; **no** production adapter shipped yet).
 

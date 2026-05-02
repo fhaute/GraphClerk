@@ -41,6 +41,9 @@ def _minimal_env(monkeypatch: pytest.MonkeyPatch) -> Settings:
         "GRAPHCLERK_MODEL_PIPELINE_MODEL",
         "GRAPHCLERK_MODEL_PIPELINE_TIMEOUT_SECONDS",
         "GRAPHCLERK_MODEL_PIPELINE_API_KEY",
+        "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED",
+        "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL",
+        "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_TIMEOUT_SECONDS",
     ):
         monkeypatch.delenv(key, raising=False)
     config_module.get_settings.cache_clear()

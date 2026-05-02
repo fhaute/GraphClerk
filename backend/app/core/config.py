@@ -72,6 +72,19 @@ class Settings(BaseSettings):
         alias="GRAPHCLERK_MODEL_PIPELINE_API_KEY",
     )
 
+    model_pipeline_evidence_enricher_enabled: bool = Field(
+        default=False,
+        alias="GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED",
+    )
+    model_pipeline_evidence_enricher_model: str | None = Field(
+        default=None,
+        alias="GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL",
+    )
+    model_pipeline_evidence_enricher_timeout_seconds: float | None = Field(
+        default=None,
+        alias="GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_TIMEOUT_SECONDS",
+    )
+
     @model_validator(mode="after")
     def _validate_semantic_search_embedding_adapter(self) -> Settings:
         """``deterministic_fake`` is integration-test-only and must never load in production."""
@@ -112,6 +125,46 @@ class Settings(BaseSettings):
                 "build_model_pipeline_adapter factory)"
             )
             raise ValueError(msg)
+        return self
+
+    @model_validator(mode="after")
+    def _validate_model_pipeline_evidence_enricher(self) -> Settings:
+        """D6: optional per-purpose enricher; fail loud when enabled and misconfigured."""
+
+        ts = self.model_pipeline_evidence_enricher_timeout_seconds
+        if ts is not None and not (0.0 < ts <= 300.0):
+            msg = (
+                "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_TIMEOUT_SECONDS must be "
+                "in (0, 300] when set"
+            )
+            raise ValueError(msg)
+
+        if not self.model_pipeline_evidence_enricher_enabled:
+            return self
+
+        if self.model_pipeline_adapter != "ollama":
+            msg = (
+                "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED requires "
+                "GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama"
+            )
+            raise ValueError(msg)
+
+        base = self.model_pipeline_base_url
+        if base is None or not str(base).strip():
+            msg = (
+                "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED requires non-empty "
+                "GRAPHCLERK_MODEL_PIPELINE_BASE_URL"
+            )
+            raise ValueError(msg)
+
+        purpose_model = self.model_pipeline_evidence_enricher_model
+        if purpose_model is None or not str(purpose_model).strip():
+            msg = (
+                "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED requires non-empty "
+                "GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL"
+            )
+            raise ValueError(msg)
+
         return self
 
 

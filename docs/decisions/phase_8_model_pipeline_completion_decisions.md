@@ -24,9 +24,10 @@ The repository **already** contains (per **`PHASE_8_AUDIT.md`** and code):
 - **Projection** — `ModelPipelineCandidateMetadataProjectionService` → **`metadata["graphclerk_model_pipeline"]`** on **`EvidenceUnitCandidate`** when callers attach it (same subtree shape as EU **`metadata_json`** at persistence).
 - **Evaluation fixtures** — deterministic builders + tests.
 - **Design** — Slice **8G** local inference narrative (**design-only** in working plan).
-- **Audit / status** — baseline **`pass_with_notes`**; **no** production HTTP client by default, **no** real outbound model calls on default paths, **no** **D6** ingestion/enrichment merge of model metadata yet, **no** **`POST /answer`**. *(**D2**–**D5** add adapter settings/registry, Ollama adapter, purpose registry, and **`ModelPipelineMetadataEnrichmentService`** — **not** ingest-wired until **D6**.)*
+- **Audit / historical baseline** — **`PHASE_8_AUDIT.md`** remains **`pass_with_notes`** as recorded history. **Default** install: **no** production model HTTP; **`POST /answer`** remains Track **E**.
+- **Completion program D6 (optional ingest wiring)** — when **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** with validated companion env, **`POST /artifacts`** may persist **`metadata_json["graphclerk_model_pipeline"]`** on **`EvidenceUnit`** rows after language enrichment — **metadata only**; **no** evidence / **`text`** / **`source_fidelity`** mutation.
 
-This decision record **does not** claim any of the missing items are implemented.
+This decision record captures **D1**/ **D2.5** design plus implementation notes **D4**–**D6**; remaining Phase 8 program gaps (**D7** UI/selector, **D8** audit, **`openai_compatible`**) stay explicit in **`KNOWN_GAPS.md`**.
 
 ---
 
@@ -414,6 +415,12 @@ Unchanged: **`POST /answer`** remains **Track E**, **outside** Track **D**.
 
 ---
 
+## D6 implementation note (ingest merge — Option A env — shipped)
+
+**Track D Slice D6** wires **`ModelPipelineMetadataEnrichmentService`** into **`POST /artifacts`** via **[`build_evidence_enrichment_service`](../../backend/app/api/routes/artifacts.py)** when **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`**. **[`Settings`](../../backend/app/core/config.py)** validates: **`GRAPHCLERK_MODEL_PIPELINE_ADAPTER=ollama`**, non-empty **`GRAPHCLERK_MODEL_PIPELINE_BASE_URL`**, non-empty **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_MODEL`**, optional purpose timeout in **`(0, 300]`**. **[`EvidenceEnrichmentService`](../../backend/app/services/evidence_enrichment_service.py)** applies language enrichment **then** model enrichment (same order for text and multimodal). **[`build_evidence_enricher_model_pipeline_adapter`](../../backend/app/api/routes/artifacts.py)** constructs **`OllamaModelPipelineAdapter`** with **purpose** model + resolved timeout (tests monkeypatch this hook). Runtime **`NotConfigured`** / validation failure paths leave candidates without **`graphclerk_model_pipeline`** but **do not** fail ingestion. **No** **`/answer`**, **no** retrieval/FileClerk changes, **no** **`openai_compatible`** adapter.
+
+---
+
 ## Implementation slice proposal (Track D — historical reference)
 
 The **authoritative** slice order is the **D2.5 “Revised Track D slice plan”** table above. The following **older** table is **superseded** for numbering after **D2.5**:
@@ -491,12 +498,12 @@ The **authoritative** slice order is the **D2.5 “Revised Track D slice plan”
 
 ## Final recommendation
 
-**D2** through **D5** are shipped as documented in implementation notes above (**D2** settings + registry; **D2.5** design; **D3** Ollama adapter; **D4** purpose registry; **D5** **`ModelPipelineMetadataEnrichmentService`** — **no** ingestion wiring). **Next:** **D6** ingestion merge behind explicit per-purpose config, then **D7** visibility / selector, **D8** full-completion audit — **no** **`/answer`** in Track **D**; **Phase 9** not started.
+**D2** through **D6** are shipped as documented in implementation notes above (**D6** = **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_*`** ingest wiring + **`EvidenceEnrichmentService`** ordering). **Next:** **D7** visibility / selector, **D8** full-completion audit — **no** **`/answer`** in Track **D**; **Phase 9** not started.
 
 ---
 
 ## Primary handoff (Audit / Project Manager → parent)
 
-1. **Delivered:** **`phase_8_model_pipeline_completion_decisions.md`** — Track **D1** decisions + **D2.5** amendment; implementation notes through **D5** (orchestration service; **not** ingest-wired).
-2. **Next:** **D6** ingestion merge; **D7** UI/ops; **D8** audit.
-3. **Truth:** **D5** orchestration exists; **no** automatic ingest merge from model pipeline yet; **`openai_compatible`** / selector UI / **`/answer`** / Phase **9** not claimed as shipped product paths.
+1. **Delivered:** **`phase_8_model_pipeline_completion_decisions.md`** — Track **D1** decisions + **D2.5** amendment; implementation notes through **D6** (ingest merge behind explicit enricher env).
+2. **Next:** **D7** UI/ops; **D8** audit.
+3. **Truth:** Optional ingest merge exists behind **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED`**; **`openai_compatible`** / selector UI / **`/answer`** / Phase **9** not claimed as fully shipped product surfaces beyond this doc’s scope.

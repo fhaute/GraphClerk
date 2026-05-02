@@ -1,4 +1,4 @@
-"""Evidence enrichment pipeline for ingestion candidates (Phase 7).
+"""Evidence enrichment pipeline for ingestion candidates (Phase 7 + Phase 8 D6).
 
 Slice 7A introduces ``EvidenceEnrichmentService`` as a **no-op shell**: callers
 receive the same candidate instances in order without mutation. Slice 7D wires
@@ -8,16 +8,22 @@ no-op). Track C Slice C4 optionally injects ``LanguageDetectionService`` to add
 language routing metadata on ``EvidenceUnitCandidate`` while preserving
 ``text`` and ``source_fidelity``.
 
+Track D Slice D6 optionally injects ``ModelPipelineMetadataEnrichmentService``
+after language enrichment when ``evidence_candidate_enricher`` is enabled via
+settings (wired from ``POST /artifacts`` only — no hidden globals).
+
 Ownership:
     Extractors produce candidates; enrichment annotates; persistence layers own
-    EvidenceUnit creation. This module performs **no** DB I/O, retrieval, or LLM
-    calls. Language detection runs **only** when a ``LanguageDetectionService`` is
-    injected; there is **no** hidden global detector.
+    EvidenceUnit creation. This module performs **no** DB I/O, retrieval, or
+    settings reads. Language detection runs **only** when a ``LanguageDetectionService`` is
+    injected; model metadata enrichment runs **only** when explicitly injected.
 
 Error semantics:
     Enrichment does **not** fail ingestion on per-candidate detection errors;
-    failures are recorded under ``language_warnings``. ``EvidenceEnrichmentEmptiedCandidatesError``
-    remains possible only if a future enricher returns an empty list for non-empty input.
+    failures are recorded under ``language_warnings``. Model adapter runtime failure
+    (**D5/D6**) does **not** abort ingestion — candidates pass through without
+    ``graphclerk_model_pipeline`` merge. Misconfiguration at DI/build time fails loud
+    from callers (e.g. ``Settings`` validation).
 """
 
 from __future__ import annotations
@@ -43,6 +49,10 @@ from app.services.language_detection_service import (
     LanguageDetectionResult,
     LanguageDetectionService,
 )
+from app.services.model_pipeline_metadata_enrichment_service import (
+    ModelPipelineMetadataEnrichmentService,
+)
+from app.services.model_pipeline_purpose_registry import ModelPipelinePurposeResolution
 
 T = TypeVar("T")
 
@@ -100,26 +110,50 @@ def _apply_detection_result(
 class EvidenceEnrichmentService:
     """Apply enrichment steps to evidence candidates before persistence.
 
-    Default (no ``language_detection``): identity enrichment — same objects, same
-    order, no reads or writes of candidate fields.
+    Default (no ``language_detection``, no model pipeline): identity enrichment —
+    same objects, same order, no reads or writes of candidate fields.
 
-    With ``language_detection``: for each ``EvidenceUnitCandidate``, may merge
-    language metadata from ``LanguageDetectionService.detect`` into a **new**
-    candidate via ``dataclasses.replace``. Non-candidates pass through unchanged.
+    Ordering when both optional paths are present: **language detection** (if any),
+    then **model metadata enrichment** (if any).
 
     Forbidden: database access, EvidenceUnit creation, extractors, retrieval,
-    mutation of ``text`` or ``source_fidelity``.
+    reading ``Settings``, mutation of ``text`` or ``source_fidelity``.
     """
 
-    def __init__(self, *, language_detection: LanguageDetectionService | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        language_detection: LanguageDetectionService | None = None,
+        model_pipeline_enrichment: ModelPipelineMetadataEnrichmentService | None = None,
+        model_pipeline_enrichment_resolution: ModelPipelinePurposeResolution | None = None,
+    ) -> None:
+        if (model_pipeline_enrichment is None) != (model_pipeline_enrichment_resolution is None):
+            msg = (
+                "model_pipeline_enrichment and model_pipeline_enrichment_resolution "
+                "must both be set or both None"
+            )
+            raise ValueError(msg)
+        if (
+            model_pipeline_enrichment is not None
+            and model_pipeline_enrichment_resolution is not None
+            and model_pipeline_enrichment_resolution.disabled
+        ):
+            msg = (
+                "model_pipeline_enrichment_resolution must not be disabled "
+                "when enrichment service is set"
+            )
+            raise ValueError(msg)
+
         self._language_detection = language_detection
+        self._model_pipeline_enrichment = model_pipeline_enrichment
+        self._model_pipeline_enrichment_resolution = model_pipeline_enrichment_resolution
 
     def enrich(self, candidates: Sequence[T]) -> list[T]:
-        """Return candidates as a list, optionally annotating language metadata.
+        """Return candidates as a list, optionally annotating metadata.
 
         Accepts any ``Sequence``. Does not mutate the input sequence object. When
-        ``language_detection`` is ``None``, returns ``list(candidates)`` with the
-        same element identities as today.
+        ``language_detection`` is ``None``, language step is skipped. When model
+        pipeline enrichment is ``None``, that step is skipped.
 
         Language metadata merge (``EvidenceUnitCandidate`` only):
 
@@ -135,9 +169,32 @@ class EvidenceEnrichmentService:
         - Successful detection merges ``language``, ``language_confidence``,
           ``language_detection_method``, and merges ``language_warnings`` with any
           detector warnings.
+
+        Model metadata enrichment (Track D6): runs on the post-language candidate list;
+        failures do not abort ingestion (no ``graphclerk_model_pipeline`` merge).
         """
 
         if self._language_detection is None:
+            working: list[T] = list(candidates)
+        else:
+            working = self._apply_language_detection(candidates)
+
+        if (
+            self._model_pipeline_enrichment is not None
+            and self._model_pipeline_enrichment_resolution is not None
+            and not self._model_pipeline_enrichment_resolution.disabled
+        ):
+            mp_out = self._model_pipeline_enrichment.enrich_candidates(
+                candidates=working,
+                purpose_resolution=self._model_pipeline_enrichment_resolution,
+            )
+            working = mp_out.candidates  # type: ignore[assignment]
+
+        return working
+
+    def _apply_language_detection(self, candidates: Sequence[T]) -> list[T]:
+        ld = self._language_detection
+        if ld is None:
             return list(candidates)
 
         out: list[T] = []
@@ -161,7 +218,7 @@ class EvidenceEnrichmentService:
                 continue
 
             try:
-                result = self._language_detection.detect(item.text)
+                result = ld.detect(item.text)
             except LanguageDetectionUnavailableError:
                 new_meta = _merge_language_warnings(meta, ["language_detection_unavailable"])
                 out.append(replace(item, metadata=new_meta))  # type: ignore[arg-type]
