@@ -23,7 +23,7 @@
 - **F3:** **Mermaid** as-built vs operator vs future diagrams + narrative in [`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md) (not duplicated here).
 - **F4:** **Troubleshooting + operations** in [`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md) (not duplicated here).
 - **F5:** **PowerShell / curl / Python** examples in [`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md) (not duplicated here).
-- **Beyond Track F doc baseline:** production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring beyond architecture labels, **`/answer`** documentation **if** the product approves and ships it.
+- **Beyond Track F doc baseline:** production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring beyond architecture labels, **`/answer`** documentation **if** the product approves and ships it. **Track D D2.5:** per-purpose model configuration + future selector UI are **specified in design** only — [`phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) § *D2.5 Amendment* — **not** implemented in app/UI yet.
 
 ---
 

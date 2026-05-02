@@ -129,6 +129,8 @@
 - **Future / explicitly outside agreed closure**: translation; **7I** boosting; Phase **9**; broader phase-doc objectives not in Completion Program — see **`PHASE_7_FULL_COMPLETION_AUDIT.md`** non-goals.
 
 ## Phase 8 — Specialized Model Pipeline
+
+- **Completion Program — Track D D2.5 (design only):** per-purpose model mapping + future operator selector UI are specified in [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) § *D2.5 Amendment* — **not implemented** in code; **D3** Ollama adapter next per program.
 - **Defined in**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md)
 - **Working plan**: [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md)
 - **Completion Program — Track D Slice D1 (decisions only):** [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) — intended **full Phase 8 completion** path before implementation (**Ollama first**, registry/settings, validate-before-merge, **`/answer`** = Track **E**); **no code** in D1.

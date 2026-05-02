@@ -4,9 +4,9 @@
 
 | Field | Value |
 |-------|--------|
-| **Completion program** | Phase 1–8 Completion Program — **Track D Slice D1** |
-| **Document type** | **Design / decision record only** — no implementation in this slice |
-| **Code changes** | **None** — backend, frontend, scripts, dependencies unchanged |
+| **Completion program** | Phase 1–8 Completion Program — **Track D** (D1 decisions + **D2.5 design amendment**) |
+| **Document type** | **Design / decision record only** — D1 + **D2.5** are **no implementation** slices |
+| **Code changes** | **None** in D1/D2.5 — backend, frontend, scripts, dependencies unchanged |
 | **Phase 9** | **Not started** |
 | **Prior audit** | [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) remains **valid baseline history** (`pass_with_notes`, 2026-05-03); **not edited** by D1 |
 | **Target** | Decisions for **full intended Phase 8 completion** (real HTTP adapter path, registry/settings, merge into ingestion behind config) **before** implementation slices **D2+** |
@@ -24,7 +24,7 @@ The repository **already** contains (per **`PHASE_8_AUDIT.md`** and code):
 - **Projection** — `ModelPipelineCandidateMetadataProjectionService` → **`metadata_json["graphclerk_model_pipeline"]`** only.
 - **Evaluation fixtures** — deterministic builders + tests.
 - **Design** — Slice **8G** local inference narrative (**design-only** in working plan).
-- **Audit / status** — baseline **`pass_with_notes`**; **no** production HTTP client, **no** registry, **no** real outbound model calls on default paths, **no** ingestion/enrichment merge of model metadata, **no** **`POST /answer`**.
+- **Audit / status** — baseline **`pass_with_notes`**; **no** production HTTP client, **no** **per-purpose** model registry (D2.5 design only), **no** real outbound model calls on default paths, **no** ingestion/enrichment merge of model metadata, **no** **`POST /answer`**. *(Track **D2** adds **adapter-key** settings + static **adapter** registry — not the same as per-purpose mapping.)*
 
 This decision record **does not** claim any of the missing items are implemented.
 
@@ -112,6 +112,8 @@ Implement **Ollama HTTP** adapter + mocked tests first; add **OpenAI-compatible*
 | `GRAPHCLERK_MODEL_PIPELINE_API_KEY` | Optional — OpenAI-compatible gateways or proxied local services |
 
 **Avoid** a redundant `GRAPHCLERK_MODEL_PIPELINE_ENABLED` if **`adapter=not_configured`** is the single default-off switch.
+
+**D2.5 note:** Interim env vars (including a single **`GRAPHCLERK_MODEL_PIPELINE_MODEL`**) are **not** the final product shape. **Per-purpose** mapping and contracts land in **D4**; **D3** should accept **explicit model context per call** where needed — see **D2.5 Amendment** (Option **B**).
 
 **Fail loud:** If **`adapter` ≠ `not_configured`** and required URL/model/timeout cannot be parsed or are inconsistent, **startup or first-use failure** (implementation choice: prefer **fail at adapter build** time with clear error — **no** silent downgrade to `NotConfigured`).
 
@@ -229,18 +231,185 @@ Implement **Ollama HTTP** adapter + mocked tests first; add **OpenAI-compatible*
 
 ---
 
-## Implementation slice proposal (Track D after D1)
+## D2.5 Amendment — model purpose registry and frontend selector
+
+### Status
+
+| Field | Value |
+|-------|--------|
+| **Slice** | Completion Program — **Track D Slice D2.5** |
+| **Nature** | **Design amendment only** — **no** backend, **no** frontend, **no** scripts, **no** persistence, **no** Ollama adapter in this slice |
+| **Relationship to D2** | **Track D Slice D2** (settings + static adapter registry, default **`not_configured`**) **remains in force**. This amendment adds **product shape** for **per-purpose** model configuration and a **future** operator UI — **not implemented** until later slices. |
+
+### Problem statement
+
+Operators (including local **Ollama**) need to choose **which model** runs for **which GraphClerk task purpose**. Phase 8 must **not** assume a single permanent global model string as the final product shape.
+
+### Truth (honesty — all still accurate after D2.5)
+
+- **No** backend **model purpose registry** (per-role mapping, persisted or not) is **implemented** yet.
+- **No** frontend **model selector** UI is **implemented** yet.
+- **No** model HTTP calls on default install; **no** **Ollama** adapter shipped yet (pending **D3**).
+- **No** **`POST /answer`**; **no** Phase **9**.
+- Default adapter remains **`not_configured`**; **no** calls unless explicitly configured.
+- **`routing_hint_generator`** stays **disabled** until **separately approved** (retrieval influence risk).
+- **Model output remains metadata-only** under agreed projection rules; **model output is not evidence**.
+
+### Terminology
+
+| Term | Definition |
+|------|------------|
+| **Provider** | Inference transport family — e.g. **Ollama**, **OpenAI-compatible** / **vLLM**-style HTTP. |
+| **Model** | Provider-specific model id — e.g. `llama3.1:8b`, `mistral:7b`, `qwen2.5:7b`. |
+| **Purpose** | A **GraphClerk** pipeline role that may invoke the model pipeline — aligned with **`ModelPipelineRole`** where possible. |
+| **Purpose mapping** | The binding of **provider**, **model**, **timeouts**, **enabled** flags, and related options **per purpose**. |
+| **Selector UI** | **Future** frontend (or dev-only) surface to view/edit purpose mappings — **design-only** in D2.5. |
+
+### Purpose keys (initial set)
+
+Aligned with existing contract roles:
+
+| Purpose key | Notes |
+|-------------|--------|
+| **`evidence_candidate_enricher`** | **First** purpose to enable for product rollout — metadata on **existing** candidates; aligns with **Decision 5**. |
+| **`artifact_classifier`** | **Later** — may follow **evidence** enrichment after patterns stabilize. |
+| **`extraction_helper`** | **Not** first wave — may require **multimodal/vision** paths and extra deps; enable only when approved. |
+| **`routing_hint_generator`** | **Must remain disabled** until **separate approval** — can influence **retrieval** perception and routing. |
+
+### Recommended future configuration shape (illustrative — **not implemented**)
+
+The following JSON is a **strawman** for **documentation and D4 contracts**; **do not** treat it as shipped behavior or a locked schema until **D4** defines types and validation.
+
+```json
+{
+  "provider": "ollama",
+  "base_url": "http://localhost:11434",
+  "purposes": {
+    "evidence_candidate_enricher": {
+      "enabled": true,
+      "model": "llama3.1:8b",
+      "timeout_seconds": 30
+    },
+    "artifact_classifier": {
+      "enabled": false,
+      "model": null
+    },
+    "extraction_helper": {
+      "enabled": false,
+      "model": null
+    },
+    "routing_hint_generator": {
+      "enabled": false,
+      "model": null
+    }
+  }
+}
+```
+
+**Open:** whether **provider** / **base_url** are global with **per-purpose model overrides**, or fully nested per purpose — **D4** should fix this without breaking **Invariant-safe** metadata-only semantics.
+
+### D3 vs purpose registry — option analysis (**recommended: B**)
+
+| Option | Meaning |
+|--------|---------|
+| **A** | Keep a single **`GRAPHCLERK_MODEL_PIPELINE_MODEL`** for the **first** Ollama adapter; add purpose registry in **D4**. |
+| **B** (**recommended**) | **D3** implements the **Ollama HTTP** adapter with an **explicit model (and related params) supplied per call / request context** — not as the eternal product surface. **Product wiring** and **purpose mapping** land in **D4** (contracts + config resolution) **before** ingestion merge (**D6**). **Do not** let **D3**’s minimal env/settings become the **final** product shape by omission. |
+| **C** | Introduce full purpose mapping in **D3** immediately. |
+
+**Decision (D2.5):** Adopt **B**. **D3** proves HTTP + mocks + envelope integration; **D4** introduces **backend purpose registry / config contracts** so Fred-style “different model per purpose” is first-class before merge work.
+
+### Future frontend selector UI (design-only)
+
+**Likely placement**
+
+- Prefer a dedicated **Admin → Model pipeline** (or **Settings → Model pipeline**) area **when** an admin shell exists; **or**
+- Interim exposure via **Evaluation Dashboard** or similar **if** no admin area exists yet — still **read-only** or **dev-only** until persistence and auth are safe.
+
+**Selector rows (conceptual)**
+
+| Column / control | Purpose |
+|------------------|---------|
+| **Purpose** | Human-readable label + stable purpose key |
+| **Enabled** | Toggle — default **off**; **`routing_hint_generator`** gated by policy/approval |
+| **Provider** | e.g. Ollama / OpenAI-compatible |
+| **Model** | Name or dropdown |
+| **Timeout** | Per-purpose override where supported |
+| **Status / last validation** | Last successful config validation or adapter health (future) |
+
+**Model discovery**
+
+- **Future** backend may call Ollama **`/api/tags`** (or equivalent) to populate dropdowns.
+- **Until then**, **manual model name entry** is acceptable.
+
+**Warnings (always visible in UI copy when implemented)**
+
+- Model output is **metadata**, **not evidence**.
+- **`POST /answer`** is **out of scope** for this UI (Track **E**).
+- **Routing hints** default **off** until separately approved.
+- **Outbound / local** inference runs **only** for **enabled** purposes with explicit config.
+
+### Future backend API (design-only — **not implemented**)
+
+Proposed **operator/admin** HTTP surface (names may change):
+
+| Method | Path (example) | Role |
+|--------|------------------|------|
+| `GET` | `/model-pipeline/config` | Read effective config (purposes, provider, flags) |
+| `PUT` | `/model-pipeline/config` | Replace or patch config (**dangerous** without guards) |
+| `GET` | `/model-pipeline/providers/ollama/models` | Proxy/discover models (e.g. `/api/tags`) |
+| `POST` | `/model-pipeline/test` | Dry-run / health check for a purpose or provider |
+
+**Auth / safety**
+
+- Endpoints should be **admin/operator-only** once **auth** exists.
+- **Until auth exists:** avoid **writable** **`PUT`** in exposed deployments, or restrict to **dev/local** guards (e.g. **`APP_ENV`**, bind address, feature flag) — **implementation choice in D4/D7**.
+
+### Persistence — evaluation (**Track D immediate path**)
+
+| Option | Assessment |
+|--------|------------|
+| **A. Env-only** | Fits **Phase 1–8** early slices; limited for multi-purpose mapping size/ergonomics. |
+| **B. Local config file** | Good for single-host **Ollama**; needs path + reload semantics. |
+| **C. DB-backed settings** | Strong for multi-user admin later; migration + ACL. |
+| **D. UI writes → backend** | Requires **B** or **C** (or hybrid) and **auth**. |
+
+**Recommendation (D2.5):** **D3/D4** may remain **env- or file-assisted** while **contracts** define the **canonical purpose mapping shape**. **Selector UI** stays **design-only** or **read-only / dev-only** until a **safe persistence layer** and **auth** story exist.
+
+**Question for Fred:** Is a **writable** UI selector **required** before **auth** and **config persistence** exist? If **yes**, scope **D7b** and persistence (**B/C**) earlier; if **no**, ship **read-only** or **env-only** documentation first.
+
+### Revised Track D slice plan (supersedes prior numeric table below)
 
 | Slice | Content |
 |-------|---------|
-| **D2** | Settings model + **static registry** + **`NotConfigured`** default preserved; unit tests |
-| **D3** | **Ollama HTTP** adapter + **mocked** HTTP tests |
-| **D4** | Timeout, malformed JSON, schema mismatch, non-2xx tests; validation-blocks-projection tests |
-| **D5** | **`ModelPipelineMetadataEnrichmentService`** (name TBD) — orchestrates adapter → validate → project; **no** ingestion route wiring yet |
-| **D6** | Wire enrichment step into **text + multimodal** ingest behind explicit config only |
-| **D7** | Operator docs + minimal UI/raw JSON visibility notes |
-| **D8** | **Phase 8 full-completion audit** (new artifact when ready — **not** in D1) |
-| **D3b / D4b** (optional) | **OpenAI-compatible** adapter + mocks **after** Ollama path proves registry |
+| **D2** | ✅ Settings + static registry (**implemented**). |
+| **D2.5** | ✅ **This amendment** — purpose registry + selector **design** (no code). |
+| **D3** | **Ollama HTTP** adapter + **mocked** tests; **no** ingestion wiring; per-call explicit model path (**Option B**); adapter-level timeout/error tests may ship here or immediately after. |
+| **D4** | **Backend model purpose registry / config contracts** (types, validation, resolution); may subsume or extend env; HTTP edge-case tests as needed. |
+| **D5** | **`ModelPipelineMetadataEnrichmentService`** (name TBD) — adapter → validate → project; **no** ingestion wiring yet. |
+| **D6** | Ingestion merge behind **explicit per-purpose** config. |
+| **D7** | Frontend / operator **visibility** for model pipeline config and metadata. |
+| **D8** | Phase 8 **full-completion audit**. |
+| **D3b / D4b** (optional) | **OpenAI-compatible** adapter after Ollama path proves patterns. |
+
+**D7 split (if persistence + admin surface lag):**
+
+- **D7a** — read-only visibility (env-backed or **GET** config).
+- **D7b** — writable selector after persistence + **auth** (or approved dev-only writes).
+
+### `/answer` / Track E
+
+Unchanged: **`POST /answer`** remains **Track E**, **outside** Track **D**.
+
+---
+
+## Implementation slice proposal (Track D — historical reference)
+
+The **authoritative** slice order is the **D2.5 “Revised Track D slice plan”** table above. The following **older** table is **superseded** for numbering after **D2.5**:
+
+| Slice | Content (superseded labels) |
+|-------|----------------------------|
+| **D2** | Settings model + **static registry** + **`NotConfigured`** default preserved; unit tests — **done** |
+| *(prior D3–D7)* | See revised plan: **D3** Ollama; **D4** purpose contracts; **D5** enrichment orchestration; **D6** ingest merge; **D7** UI/ops; **D8** audit |
 
 *(Renumber if program table is updated — logical order matters more than numeric labels.)*
 
@@ -287,9 +456,11 @@ Implement **Ollama HTTP** adapter + mocked tests first; add **OpenAI-compatible*
 ## Open questions (non-blocking for D1)
 
 - Exact **Ollama** HTTP path and request JSON shape (implementation reads vendor docs; pin in adapter module docstring).
-- Whether **429/503** from server map to **`unavailable`** + retryable vs hard **`error`** (finalize in D4).
+- Whether **429/503** from server map to **`unavailable`** + retryable vs hard **`error`** (finalize in D3/D4 adapter work).
 - **APP_ENV=prod** guardrails for `deterministic_test` adapter (mirror embedding/language patterns).
 - UI depth for Phase 8 (**raw JSON** vs small summary panel) — **D7**.
+- **Fred (D2.5):** Is a **writable** UI selector **required** before **auth** and **config persistence** exist? (See **D2.5** persistence section.)
+- **D4:** Global **provider/base_url** vs fully **per-purpose** nesting in the canonical config schema.
 
 ---
 
@@ -308,12 +479,12 @@ Implement **Ollama HTTP** adapter + mocked tests first; add **OpenAI-compatible*
 
 ## Final recommendation
 
-Proceed with **Track D Slice D2** after this decision record: add **settings + static registry** keeping **`NotConfigured`** as the only default behavior, then **Ollama HTTP adapter** with **mocked** tests, then validation/error hardening, then **metadata-only enrichment service**, then **optional ingestion wiring** and **operator visibility**, closing with a **new full-completion audit** artifact when implementation matches **Acceptance criteria**.
+**D2** and **D2.5** are complete as documented: **D2** shipped **adapter-key** settings + static registry; **D2.5** records **per-purpose** model mapping + future selector UI **design** (no code). Proceed with **D3** (**Ollama HTTP** + mocks, **Option B** — explicit model per call; **not** final env-only shape), then **D4** (**purpose registry / config contracts**), **D5** enrichment orchestration, **D6** ingestion merge, **D7** visibility / selector (split **D7a/D7b** if needed), **D8** full-completion audit — **no** **`/answer`** in Track **D**; **Phase 9** not started.
 
 ---
 
 ## Primary handoff (Audit / Project Manager → parent)
 
-1. **Delivered:** **`phase_8_model_pipeline_completion_decisions.md`** (Track **D1**) — implementation roadmap for Phase 8 **full completion**; **no code**.
-2. **Next:** **D2** settings + registry; **no** audit edits; **Phase 9** not started.
-3. **Truth:** **No** production adapter, registry, merge, or **`/answer`** is claimed as shipped.
+1. **Delivered:** **`phase_8_model_pipeline_completion_decisions.md`** — Track **D1** decisions + **D2.5** amendment (purpose registry + selector design); **no code** in D1/D2.5.
+2. **Next:** **D3** Ollama adapter + mocks per revised slice plan; **D4** purpose contracts.
+3. **Truth:** **No** production HTTP adapter, **no** **purpose** registry implementation, **no** selector UI, **no** merge, **no** **`/answer`**, **no** Phase **9** claimed as shipped.
