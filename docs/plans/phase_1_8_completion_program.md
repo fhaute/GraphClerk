@@ -230,10 +230,10 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 | Attribute | Detail |
 |-----------|--------|
 | **Goal** | Optional **production-capable** inference path behind **explicit configuration**: **Ollama HTTP** and/or **OpenAI-compatible (e.g. vLLM)** adapter, **adapter registry**, **settings/env**, timeouts and error semantics, **mocked HTTP tests**, **`NotConfigured`** default unchanged when unset, **validation before projection**, **merge policy** for `graphclerk_model_pipeline` metadata, **ingestion/enrichment merge rules**, **no model output as evidence**, **observability**. Align with [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md) **north-star** only where explicitly in scope; respect **Implementation status (current)** honesty. |
-| **Current state** | **8A–8F** shipped; **8G** **design-only**; **no** production HTTP adapter in shipped paths; **no** registry; projection **not** wired to enrichment/ingestion. Audited **`pass_with_notes`**. **Production inference adapter is not implemented.** |
-| **Missing work** | HTTP adapters; registry; config; merge into `EvidenceEnrichmentService` (metadata only); logging; failure envelopes surfaced to operators; optional safest-first role (e.g. caption assist **metadata-only**). |
-| **Required design decisions** | Ollama first vs vLLM/OpenAI-compatible first (**requires dependency research** for ops). Env-only enablement (recommended). Merge **before vs after** validation (default: **validate model output then project**). Whether models may **create new candidates** (default recommendation: **metadata on existing candidates only**, never new EU text from model). |
-| **Proposed slices** | **D1** Adapter interface + NotConfigured preserved · **D2** Ollama adapter + mocks · **D3** OpenAI-compatible adapter + mocks · **D4** Registry/settings · **D5** Enrichment merge · **D6** Observability |
+| **Current state** | **8A–8F** shipped; **8G** **design-only**; **no** production HTTP adapter in shipped paths; **no** registry; projection **not** wired to enrichment/ingestion. Audited **`pass_with_notes`**. **Track D Slice D1** records completion-path decisions — **[`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md)** (**design only**). |
+| **Missing work** | **Track D D2+** implementation: settings + static registry; **Ollama HTTP** adapter + mocks; timeout/error tests; **metadata-only** enrichment orchestration service; optional **OpenAI-compatible** adapter wave; ingestion wiring behind explicit config; operator visibility; **Phase 8 full-completion audit** when implementation matches acceptance criteria. |
+| **Required design decisions** | **Closed in D1** — see decision doc (adapter order **Ollama → OpenAI-compatible**, static registry, env contract, error semantics, **`evidence_candidate_enricher`** first role, validate-before-projection, merge policy, enrichment boundary **B**, `/answer` separation). |
+| **Proposed slices** | **D1** ✅ Phase 8 completion **decision record** ([`phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md)) · **D2** Settings + static registry (**`not_configured`** default) · **D3** Ollama HTTP adapter + mocked tests · **D4** Timeout/error/validation-block tests · **D5** Model metadata enrichment orchestration (**no** ingest wiring yet) · **D6** Ingestion merge behind explicit config · **D7** Operator docs / visibility · **D8** Phase 8 **full-completion audit** · optional **D3b/D4b** OpenAI-compatible after Ollama proves registry |
 | **Likely files** | `model_pipeline_contracts.py`, new adapter modules, `model_pipeline_output_validation_service.py`, `model_pipeline_candidate_projection_service.py`, `evidence_enrichment_service.py`, `core/config.py`, tests. |
 | **Forbidden files** | Model modules must **not** import FileClerk/retrieval (existing invariant); do not mutate `EvidenceUnit.text` / `source_fidelity` from model pipeline. |
 | **Tests required** | HTTP mocking; timeout tests; merge tests; “no evidence from model” regression tests. |
@@ -241,6 +241,13 @@ The **largest structural gap** for a “real” retrieval demo is **vector popul
 | **Risks** | Accidental default-on LLM calls; prompt injection from media; dependency sprawl. |
 | **Dependencies** | **Track A** metadata needs stable shapes; **Track C** enrichment ordering. |
 | **Acceptance criteria** | Default install has **no** network model calls; when enabled, full validate→project→merge path tested; status docs honest. |
+
+### Track D — Slice D1 (completed): Phase 8 model pipeline completion decisions
+
+- **Outcome:** **[`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md)** — design-only record for **full Phase 8 completion** path (first adapter **Ollama**, static registry, settings/env, timeouts/errors, **`evidence_candidate_enricher`** first, validate-before-projection, metadata-only merge, preferred **`ModelPipelineMetadataEnrichmentService`** boundary, observability, **`/answer`** = Track **E**, security). **No** backend/frontend/scripts/deps changed. **Phase 9** not started. **[`PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md)** unchanged (baseline history).
+- **Recommended next Track D slice:** **D2** — settings model + static adapter registry preserving **`not_configured`** default.
+
+**Track D** is **not** complete — **D1** closed; **D2** is next.
 
 ---
 

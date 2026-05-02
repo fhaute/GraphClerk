@@ -128,7 +128,7 @@ flowchart TB
 
 - **`actor_context`**: **[current]** request field; **does not** influence routing or evidence selection (recording only).
 - **`language_context`**: **[current]** optional packet field from **evidence `metadata_json`** aggregates — **not** automatic translation.
-- **`graphclerk_model_pipeline`**: **[current baseline]** typed **projection** on the packet when configured — **not** merged as evidence inside File Clerk / ingestion in the shipped baseline (see root `README.md` Phase 8).
+- **`graphclerk_model_pipeline`**: **[current baseline]** typed **projection** on the packet when configured — **not** merged as evidence inside File Clerk / ingestion in the shipped baseline (see root `README.md` Phase 8). **Future implementation path (design):** [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md).
 - **`POST /answer`**: dotted **[future / not implemented]** — no endpoint in this repo today.
 
 ---

@@ -110,6 +110,8 @@ When set to **`lingua`** and the optional **`language-detector`** extra is insta
 
 **Phase 8** contract: **standalone metadata projection** for pipeline outputs where configured — **not** wired as automatic evidence in ingestion/File Clerk in the baseline described in status docs. Treat as **typed observability**, not a substitute for evidence units unless product scope changes.
 
+**Completion Program — Phase 8 full-completion path (design):** [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) (**Track D Slice D1** — decisions only; **no** production adapter shipped yet).
+
 ---
 
 ## What GraphClerk does not do by default

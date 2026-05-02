@@ -131,7 +131,8 @@
 ## Phase 8 — Specialized Model Pipeline
 - **Defined in**: [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md)
 - **Working plan**: [`.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md`](../../.cursor/plans/phase_8_specialized_model_pipeline_1b9d495c.plan.md)
-- **Status**: **baseline delivered + audited (`pass_with_notes`)** — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**). Slices **8A–8F** + **8G** (**design-only**) + **8H** + **8I**. This is a **contract / validation / projection** baseline only — **not** the full phase-doc product (registry, production inference fleet, UI, etc.).
+- **Completion Program — Track D Slice D1 (decisions only):** [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) — intended **full Phase 8 completion** path before implementation (**Ollama first**, registry/settings, validate-before-merge, **`/answer`** = Track **E**); **no code** in D1.
+- **Status**: **baseline delivered + audited (`pass_with_notes`)** — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**). Slices **8A–8F** + **8G** (**design-only**) + **8H** + **8I**. This is a **contract / validation / projection** baseline only — **not** the full phase-doc product (registry, production inference fleet, UI, etc.) until Track **D2+** implements the decision record.
 - **Delivered so far (implementation truth)**:
   - **8A–8B**: `model_pipeline_contracts` — tasks, results, request/response envelopes, errors
   - **8C**: `ModelPipelineAdapter`; **`NotConfiguredModelPipelineAdapter`**; **`DeterministicTestModelPipelineAdapter`** (tests-only)

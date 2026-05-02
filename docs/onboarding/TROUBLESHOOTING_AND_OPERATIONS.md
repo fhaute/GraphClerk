@@ -133,7 +133,7 @@ Operators and developers diagnosing **empty packets**, **stuck `vector_status`**
 - **`actor_context`** — **recording-only** on the packet; **no** retrieval boost.
 - **`language_context`** — aggregates from **selected evidence `metadata_json`** only; **not** translation; **not** sourced from **`graphclerk_language_aggregation`** on the artifact row.
 - **`metadata_json.graphclerk_language_aggregation`** (artifact) — optional **ingest-time** summary over that artifact’s evidence units; compare to packet **`language_context`** only when debugging **ingest vs retrieve** visibility (they can differ if retrieve selects a different evidence set).
-- **`graphclerk_model_pipeline`** — optional packet metadata for inspection; **not** wired into File Clerk selection in the baseline.
+- **`graphclerk_model_pipeline`** — optional packet metadata for inspection; **not** wired into File Clerk selection in the baseline. **Real outbound model inference** on ingest/retrieve is **not** implemented until Completion Program **Track D D2+**; design record: [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md).
 - **No answer synthesis** — use your own LLM layer after the packet if needed.
 
 ---
