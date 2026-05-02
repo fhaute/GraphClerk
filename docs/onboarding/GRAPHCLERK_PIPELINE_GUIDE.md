@@ -23,7 +23,7 @@
 - **F3:** **Mermaid** as-built vs operator vs future diagrams + narrative in [`GRAPHCLERK_ARCHITECTURE.md`](GRAPHCLERK_ARCHITECTURE.md) (not duplicated here).
 - **F4:** **Troubleshooting + operations** in [`TROUBLESHOOTING_AND_OPERATIONS.md`](TROUBLESHOOTING_AND_OPERATIONS.md) (not duplicated here).
 - **F5:** **PowerShell / curl / Python** examples in [`EXAMPLES_COOKBOOK.md`](EXAMPLES_COOKBOOK.md) (not duplicated here).
-- **Beyond Track F doc baseline:** production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring beyond architecture labels, **`/answer`** documentation **if** the product approves and ships it. **Track D D2.5:** per-purpose model configuration + future **writable** selector UI are **specified in design** only — [`phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) § *D2.5 Amendment* — **D7b** **not** implemented. **D7a** read-only operator visibility (**Artifacts & evidence**, optional **Evaluation dashboard** note) **is** shipped.
+- **Beyond Track F doc baseline:** production deployment deep-dive, multimodal ingestion how-tos, model pipeline wiring beyond architecture labels, **`/answer`** documentation **if** the product approves and ships it. **Track D D2.5:** per-purpose model configuration + future **writable** selector UI are **specified in design** only — [`phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) § *D2.5 Amendment*. **D7a** EU metadata visibility (**Artifacts & evidence**) **shipped**; **D7b** read-only **`GET /model-pipeline/config`** + **Evaluation dashboard** configuration table **shipped** (**no** secrets, **no** model calls from endpoint); **D7c** writable selector / persistence / auth **not** implemented.
 
 ---
 
@@ -112,7 +112,7 @@ When **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** (Phase 8 **D
 
 **Phase 8:** optional **`metadata_json["graphclerk_model_pipeline"]`** on **`EvidenceUnit`** rows when **`GRAPHCLERK_MODEL_PIPELINE_EVIDENCE_ENRICHER_ENABLED=true`** and the **Ollama** adapter returns a validated success projection (**D6** ingest wiring). Default remains **off** — **no** model calls. Output is **metadata only**: it does **not** change **`EvidenceUnit.text`**, **`source_fidelity`**, or retrieval ranking; it is **not** evidence and **not** FileClerk-driven. Treat as **typed observability**, not a substitute for evidence units.
 
-**UI (Track D D7a):** **Artifacts & evidence** includes a read-only operator panel and, when the evidence detail JSON includes **`metadata_json`**, raw JSON plus a readable **`graphclerk_model_pipeline`** section (current **`GET /evidence-units/{id}`** OpenAPI schema may **omit** **`metadata_json`** — enrichment can still persist server-side).
+**UI / API (Track D D7a/D7b):** **Artifacts & evidence** includes a read-only operator panel and, when the evidence detail JSON includes **`metadata_json`**, raw JSON plus a readable **`graphclerk_model_pipeline`** section (current **`GET /evidence-units/{id}`** OpenAPI schema may **omit** **`metadata_json`** — enrichment can still persist server-side). **`GET /model-pipeline/config`** exposes env-derived adapter/purpose status for operators (**no** raw **`GRAPHCLERK_MODEL_PIPELINE_BASE_URL`**, **no** **`GRAPHCLERK_MODEL_PIPELINE_API_KEY`**, **no** outbound model calls) — see **Evaluation dashboard** configuration section.
 
 **Further design / audit path:** [`docs/decisions/phase_8_model_pipeline_completion_decisions.md`](../decisions/phase_8_model_pipeline_completion_decisions.md) (Track **D1** decisions; **D8** full-completion audit pending).
 
@@ -174,7 +174,7 @@ See [`docs/demo/PHASE_6_DEMO_CORPUS.md`](../demo/PHASE_6_DEMO_CORPUS.md) — *Mi
 | **Graph explorer** | Nodes, edges, evidence links. |
 | **Semantic indexes** | **`vector_status`**, `embedding_text`, entry nodes; search only meaningful for **indexed**. |
 | **Retrieval logs** | Stored packet snapshots when logging works. |
-| **Evaluation dashboard** | Evaluation flows per [`docs/evaluation/EVALUATION_METHOD.md`](../evaluation/EVALUATION_METHOD.md) (honest scope). |
+| **Evaluation dashboard** | Retrieval-log metrics per [`docs/evaluation/EVALUATION_METHOD.md`](../evaluation/EVALUATION_METHOD.md) (honest scope); **D7b** read-only **Model pipeline configuration** from **`GET /model-pipeline/config`**. |
 
 ---
 

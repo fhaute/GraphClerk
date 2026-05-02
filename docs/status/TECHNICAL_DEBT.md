@@ -39,8 +39,8 @@
 
 ## Phase 8 (specialized model pipeline — baseline; audit `pass_with_notes`)
 - **Slice 8I audit**: delivered — [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**, **`pass_with_notes`**).
-- **Optional inference adapters**: **8G** leaves **Ollama/vLLM HTTP** as future options — accepting implementation requires **mocked HTTP unit tests**, timeout/error semantics, and explicit **non-default** enablement; **no** dependency add without approval.
-- **Registry / settings**: **D2** **`GRAPHCLERK_MODEL_PIPELINE_*`** + **`build_model_pipeline_adapter`**; **D3** Ollama adapter; **D4** **`model_pipeline_purpose_registry`** (policy + resolution types) — **not** wired into ingest/retrieve; **D5/D6** orchestration + merge + UI still future work.
-- **No frontend visibility**: UI does **not** surface model pipeline runs, validation issues, or **`graphclerk_model_pipeline`** merges — operators have **no** first-class Phase 8 observability tab yet.
-- **Integration seam**: projection → ingestion/enrichment merge remains **unwired** by design until a separately scoped slice approves persistence and candidate merge rules.
+- **Optional inference adapters**: **8G** leaves broader fleet narratives as future — **`openai_compatible`** (**D3b**) still **not** implemented; **no** vLLM client in core paths.
+- **Registry / settings / ingest**: **D2**–**D6** shipped (adapter registry, Ollama adapter, purpose registry, enrichment orchestration, optional **`POST /artifacts`** merge). **Not** wired into **`POST /retrieve`** / FileClerk evidence selection.
+- **Operator visibility**: **D7a** Artifacts explorer metadata readout; **D7b** **`GET /model-pipeline/config`** + Evaluation dashboard read-only config table (**no** writes).
+- **Future product debt**: **D7c** writable selector + **config persistence** + **admin/auth** (if approved); **D8** full-completion audit when scheduled.
 

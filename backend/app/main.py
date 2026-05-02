@@ -13,6 +13,7 @@ from app.api.routes.graph_node_evidence import router as graph_node_evidence_rou
 from app.api.routes.graph_nodes import router as graph_nodes_router
 from app.api.routes.graph_traversal import router as graph_traversal_router
 from app.api.routes.health import router as health_router
+from app.api.routes.model_pipeline import router as model_pipeline_router
 from app.api.routes.retrieval_logs import router as retrieval_logs_router
 from app.api.routes.retrieve import router as retrieve_router
 from app.api.routes.semantic_indexes import router as semantic_indexes_router
@@ -68,6 +69,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(version_router)
+    app.include_router(model_pipeline_router)
     app.include_router(artifacts_router)
     app.include_router(evidence_router)
     app.include_router(graph_nodes_router)

@@ -394,8 +394,9 @@ Proposed **operator/admin** HTTP surface (names may change):
 
 **D7 split (if persistence + admin surface lag):**
 
-- **D7a** — read-only visibility (env-backed or **GET** config).
-- **D7b** — writable selector after persistence + **auth** (or approved dev-only writes).
+- **D7a** — read-only EU **`graphclerk_model_pipeline`** visibility (**Artifacts** explorer) — **shipped**.
+- **D7b** — read-only **`GET /model-pipeline/config`** + dashboard config projection (**no** secrets / **no** model HTTP) — **shipped**.
+- **D7c** — writable selector after persistence + **auth** (or approved dev-only writes) — **future**.
 
 ### `/answer` / Track E
 
@@ -423,7 +424,13 @@ Unchanged: **`POST /answer`** remains **Track E**, **outside** Track **D**.
 
 ## D7a implementation note (operator visibility — shipped)
 
-**Track D Slice D7a** (Completion Program): **[`ArtifactsExplorer.tsx`](../../frontend/src/components/ArtifactsExplorer.tsx)** adds a read-only **Model pipeline (Phase 8)** operator panel (explicit env checklist, evidence-level vs artifact **`graphclerk_language_aggregation`** distinction, **D7b** future pointer). Expanded evidence detail renders **`metadata_json` (raw)** plus a structured **`graphclerk_model_pipeline`** readout **when** the HTTP JSON includes **`metadata_json`** — without inferring absent fields. **[`EvaluationDashboard.tsx`](../../frontend/src/components/EvaluationDashboard.tsx)** carries a short static note clarifying default-off behavior and where enrichment lands (**not** a configuration surface). **No** writable selector, **no** admin persistence, **no** backend or OpenAPI change in this slice (current **`EvidenceUnit`** responses may **omit** **`metadata_json`** even when rows persist it). **D7b** remains **future**.
+**Track D Slice D7a** (Completion Program): **[`ArtifactsExplorer.tsx`](../../frontend/src/components/ArtifactsExplorer.tsx)** adds a read-only **Model pipeline (Phase 8)** operator panel (explicit env checklist, evidence-level vs artifact **`graphclerk_language_aggregation`** distinction). Expanded evidence detail renders **`metadata_json` (raw)** plus a structured **`graphclerk_model_pipeline`** readout **when** the HTTP JSON includes **`metadata_json`** — without inferring absent fields. **[`EvaluationDashboard.tsx`](../../frontend/src/components/EvaluationDashboard.tsx)** carries introductory copy (**D7b** adds the config table). **No** writable selector in **D7a** (current **`EvidenceUnit`** responses may **omit** **`metadata_json`** even when rows persist it).
+
+---
+
+## D7b implementation note (read-only config endpoint + UI — shipped)
+
+**Track D Slice D7b:** **`GET /model-pipeline/config`** ([`model_pipeline.py`](../../backend/app/api/routes/model_pipeline.py)) returns **`ModelPipelineConfigResponse`** ([`model_pipeline_config.py`](../../backend/app/schemas/model_pipeline_config.py)) — global adapter flags (no raw **`GRAPHCLERK_MODEL_PIPELINE_BASE_URL`**, no **`GRAPHCLERK_MODEL_PIPELINE_API_KEY`**), **`timeout_seconds`**, per-purpose **`purpose_registry`** rows (**enabled** / **allowed** / **status** / purpose adapter / model / **`output_kind`** / timeout), and **`warnings`**. Derived from **`Settings`** + **`build_default_model_pipeline_purpose_registry`** + **`resolve_model_pipeline_purpose`** — **no** HTTP, **no** Ollama/model calls. **`EvaluationDashboard`** renders a read-only **Model pipeline configuration** section. **No** **`POST`/`PUT`/`PATCH`** config routes. Writable selector + persistence + auth remain **D7c** / future program naming — see Completion Program.
 
 ---
 

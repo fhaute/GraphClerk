@@ -1,8 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "../api/client";
+import { getModelPipelineConfig } from "../api/modelPipeline";
 import { fetchRetrievalLog, fetchRetrievalLogs } from "../api/retrievalLogs";
 import { parseStoredRetrievalPacket } from "../lib/parseStoredRetrievalPacket";
+import type { ModelPipelineConfigResponse } from "../types/modelPipeline";
 import type { RetrievalLogDetailResponse, RetrievalLogSummary } from "../types/retrievalLog";
+
+const PURPOSE_ORDER = [
+  "evidence_candidate_enricher",
+  "artifact_classifier",
+  "extraction_helper",
+  "routing_hint_generator",
+] as const;
 
 function formatError(err: unknown): string {
   if (err instanceof ApiError) return err.message;
@@ -43,6 +52,10 @@ function MetricCard({
 export function EvaluationDashboard() {
   const [limitStr, setLimitStr] = useState("50");
   const [offsetStr, setOffsetStr] = useState("0");
+
+  const [mpLoading, setMpLoading] = useState(true);
+  const [mpError, setMpError] = useState<string | null>(null);
+  const [mpConfig, setMpConfig] = useState<ModelPipelineConfigResponse | null>(null);
 
   const [listLoading, setListLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -97,6 +110,25 @@ export function EvaluationDashboard() {
 
   useEffect(() => {
     void loadAll();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setMpLoading(true);
+    setMpError(null);
+    void getModelPipelineConfig()
+      .then((c) => {
+        if (!cancelled) setMpConfig(c);
+      })
+      .catch((e) => {
+        if (!cancelled) setMpError(formatError(e));
+      })
+      .finally(() => {
+        if (!cancelled) setMpLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const honesty = useMemo(() => {
@@ -204,9 +236,90 @@ export function EvaluationDashboard() {
           </code>{" "}
           — use <strong className="font-medium">Artifacts &amp; evidence</strong> for operator notes
           and (when the API includes <code className="font-mono text-xs">metadata_json</code>) a
-          readout. A <strong className="font-medium">writable selector</strong> is future Track D{" "}
-          <strong>D7b</strong> (this dashboard does not configure models).
+          readout. Changing models from the UI is future Track D <strong>D7c</strong> (requires
+          persistence and auth decisions).
         </p>
+      </div>
+
+      <div className="rounded-md border border-slate-300 bg-slate-50 p-4 shadow-sm">
+        <h2 className="text-sm font-medium text-slate-900">Model pipeline configuration</h2>
+        <p className="mt-2 text-xs text-slate-700">
+          <strong className="font-medium">Read-only view of backend configuration.</strong> Data from{" "}
+          <code className="font-mono text-[11px]">GET /model-pipeline/config</code> — no secrets, no raw
+          base URL, <strong className="font-medium">no model calls</strong> from this endpoint.
+          <strong className="font-medium"> Changing models here is future D7c work.</strong> Default
+          configuration makes <strong className="font-medium">no model calls</strong>. Model output is{" "}
+          <strong className="font-medium">metadata only, not evidence.</strong>{" "}
+          <code className="font-mono text-[11px]">POST /answer</code> is{" "}
+          <strong className="font-medium">not implemented</strong>.
+        </p>
+        {mpLoading && <p className="mt-3 text-sm text-slate-600">Loading configuration…</p>}
+        {mpError && (
+          <p className="mt-3 whitespace-pre-wrap rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+            {mpError}
+          </p>
+        )}
+        {!mpLoading && !mpError && mpConfig && (
+          <div className="mt-4 space-y-4 text-sm text-slate-900">
+            <dl className="grid gap-1 text-xs sm:grid-cols-[minmax(10rem,auto)_1fr]">
+              <dt className="text-slate-600">adapter</dt>
+              <dd className="font-mono">{mpConfig.adapter}</dd>
+              <dt className="text-slate-600">base URL configured</dt>
+              <dd>{mpConfig.base_url_configured ? "yes" : "no"}</dd>
+              <dt className="text-slate-600">global model id configured</dt>
+              <dd>{mpConfig.model_configured ? "yes" : "no"}</dd>
+              <dt className="text-slate-600">global timeout (seconds)</dt>
+              <dd className="font-mono tabular-nums">{mpConfig.timeout_seconds}</dd>
+            </dl>
+            {mpConfig.warnings.length > 0 && (
+              <div>
+                <div className="text-xs font-medium text-amber-900">warnings</div>
+                <ul className="mt-1 list-disc space-y-0.5 border border-amber-200/90 bg-amber-50/90 px-4 py-2 text-xs text-amber-950">
+                  {mpConfig.warnings.map((w) => (
+                    <li key={w} className="whitespace-pre-wrap">
+                      {w}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[48rem] border-collapse text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-300 text-slate-700">
+                    <th className="py-2 pr-2 font-medium">purpose</th>
+                    <th className="py-2 pr-2 font-medium">enabled</th>
+                    <th className="py-2 pr-2 font-medium">allowed</th>
+                    <th className="py-2 pr-2 font-medium">status</th>
+                    <th className="py-2 pr-2 font-medium">adapter</th>
+                    <th className="py-2 pr-2 font-medium">model</th>
+                    <th className="py-2 pr-2 font-medium">output_kind</th>
+                    <th className="py-2 font-medium">timeout (s)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {PURPOSE_ORDER.map((key) => {
+                    const row = mpConfig.purpose_registry[key];
+                    return (
+                      <tr key={key} className="border-b border-slate-200">
+                        <td className="py-2 pr-2 font-mono text-[11px]">{key}</td>
+                        <td className="py-2 pr-2">{row.enabled ? "yes" : "no"}</td>
+                        <td className="py-2 pr-2">{row.allowed ? "yes" : "no"}</td>
+                        <td className="py-2 pr-2 font-medium">{row.status}</td>
+                        <td className="py-2 pr-2 font-mono text-[11px]">{row.adapter ?? "—"}</td>
+                        <td className="py-2 pr-2 font-mono text-[11px]">{row.model ?? "—"}</td>
+                        <td className="py-2 pr-2 font-mono text-[11px]">{row.output_kind}</td>
+                        <td className="py-2 font-mono tabular-nums">
+                          {row.timeout_seconds != null ? row.timeout_seconds : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="rounded-md border border-neutral-200 bg-white p-4 shadow-sm">

@@ -139,12 +139,13 @@
   - **8A–8B**: `model_pipeline_contracts` — tasks, results, request/response envelopes, errors
   - **8C**: `ModelPipelineAdapter`; **`NotConfiguredModelPipelineAdapter`**; **`DeterministicTestModelPipelineAdapter`** (tests-only)
   - **8D**: `ModelPipelineOutputValidationService` — semantic validation without FileClerk/retrieval
-  - **8E**: `ModelPipelineCandidateMetadataProjectionService` — **`graphclerk_model_pipeline`** subtree **only**; **not** wired into ingestion/enrichment
+  - **8E**: `ModelPipelineCandidateMetadataProjectionService` — **`graphclerk_model_pipeline`** subtree **only**; optional **D6** ingest merge when enricher env is enabled
   - **8F**: `backend/tests/fixtures/phase8_model_pipeline_cases.py` + evaluation fixture tests
   - **8G**: optional local inference adapter **design** (Ollama/vLLM-first narrative); **no** runtime adapter code
 - **Remaining / deferred** (non-exhaustive):
-  - Production **HTTP inference adapter** (if approved), mocked adapter tests, timeouts/registry/settings
-  - Merge/persist model-assisted metadata into candidates (**not** done); **`POST /answer`** remains **out of scope**
+  - **OpenAI-compatible / vLLM** adapter (**D3b**) if approved; **D8** full-completion audit
+  - Writable operator selector + **config persistence** + **auth** (**D7c**); **`POST /answer`** remains **Track E**
+- **Operator visibility (implementation truth):** **`GET /model-pipeline/config`** (**D7b** — read-only; **no** API key / raw base URL; **no** Ollama listing); Evaluation dashboard table — [`TESTING_RULES.md`](../governance/TESTING_RULES.md)
 
 ## Phase 9 — IDE Integration / Developer Evidence Orchestration (future)
 - **Status**: **not_started** — specification may exist under `docs/phases/`; **no** Phase 9 implementation claimed in status docs.
