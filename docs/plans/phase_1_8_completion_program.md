@@ -13,15 +13,19 @@
 
 ## 1. Executive summary
 
-GraphClerk has **audited baselines** for Phases **1–8** that are largely recorded as **`pass_with_notes`**. Those outcomes **correctly accepted** partial or contract-only delivery at the time of each audit. They are **not** equivalent to **full intended product completion** for Phases **1–8**.
+GraphClerk has **audited baselines** for many phases (**`pass_with_notes`** in historical artifacts) that **correctly accepted** partial or contract-only delivery at audit time. That is **not** the same as **this program’s “full intended product completion”** for every phase, **nor** the same as **agreed-scope closure** where a later **full-completion** audit exists.
 
-This **completion program** defines the work tracks, decisions, tests, docs, and final audit path to reach a **coherent end-to-end product**:
+**Completion Program progress (current):** **Track C** (Phase **7**) and **Track D** (Phase **8**) are **complete** for their **agreed Phase 1–8 completion scopes**, with **`pass`** full-completion audits — [`PHASE_7_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_7_FULL_COMPLETION_AUDIT.md) and [`PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md). Baseline history remains in [`PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) and [`PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**`pass_with_notes`**).
+
+**The program is not globally closed:** **Phase 5** multimodal (**Track A**) remains the **largest implementation gap** versus long-form multimodal intent (OCR/ASR/image-audio EUs, etc.). **Track H** (single cross-cutting Phase **1–8** full-completion audit) is **not done**. **`POST /answer`** (**Track E**) remains a **product decision** (in vs outside final “full completion” scope) before any **unqualified** “Phase **1–8** fully done” claim.
+
+This document remains the **active** completion program. It defines the work tracks, decisions, tests, docs, and final audit path toward a **coherent end-to-end product**:
 
 **content ingestion → EvidenceUnits → graph / semantic index → vector-indexed retrieval → RetrievalPacket → retrieval logs → context intelligence → optional model-assisted metadata → optional packet-only answer synthesis → UI inspection → integration guide**
 
-**Important:** As of this writing, **OCR, ASR, production inference, `POST /answer`, and automatic semantic-index vector backfill are not implemented** in the product sense described here. **Phase 9 has not started.** **Full Phase 1–8 completion** (per this program) **does not yet exist**.
+**Important:** **OCR, ASR, automatic semantic-index vector backfill, and `POST /answer`** are **not** implemented in the broad product sense of §3 **except** where explicitly documented (e.g. **manual** vector backfill — **Track B** **B1**; optional language/model paths behind env gates). **Phase 9 has not started.**
 
-The **largest structural gap** for a “real” retrieval demo is **vector population**: semantic search and FileClerk routes that depend on indexed vectors require `vector_status=indexed`; indexes often remain `pending` without a deliberate indexing step, which yields **valid but empty-evidence** packets. Addressing that is **Track B** and should lead implementation order.
+The **largest structural gap** for a “real” retrieval demo is still **vector population**: semantic search and FileClerk routes that depend on indexed vectors require `vector_status=indexed`; indexes often remain `pending` without a deliberate indexing step, which yields **valid but empty-evidence** packets. **Track B** remains central to that story.
 
 ---
 

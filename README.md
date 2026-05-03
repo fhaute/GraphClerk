@@ -40,7 +40,7 @@ GraphClerk is a **local-first, graph-guided evidence-routing layer for RAG syste
 
 ## Governance and phase docs
 
-- `docs/graph_clerk_phase_0_governance_baseline.md` — Phase 0 source narrative.
+- [`docs/phases/graph_clerk_phase_0_governance_baseline.md`](docs/phases/graph_clerk_phase_0_governance_baseline.md) — Phase 0 source narrative.
 - `docs/governance/` — guardrails for assistants and humans.
 - `docs/phases/PHASE_1_FOUNDATION.md`, `PHASE_2_*`, `graph_clerk_phase_3_*`, `graph_clerk_phase_4_*`, `graph_clerk_phase_5_*`, `graph_clerk_phase_6_*`, `graph_clerk_phase_7_context_intelligence.md`.
 - `docs/status/` — required honesty tables.

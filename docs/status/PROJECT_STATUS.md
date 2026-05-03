@@ -1,7 +1,7 @@
 # Project Status
 
 ## Summary
-- **Pre–Phase 9 completion program (tracking only):** [`docs/plans/phase_1_8_completion_program.md`](../plans/phase_1_8_completion_program.md) — Phase **8** Track **D** closure recorded (**D8** audit **`pass`** — [`PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md)); optional **Track E–H** / Phase **9** work remains **separate**.
+- **Pre–Phase 9 completion program (tracking only):** [`docs/plans/phase_1_8_completion_program.md`](../plans/phase_1_8_completion_program.md) — Phase **8** Track **D** closure recorded (**D8** audit **`pass`** — [`PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md)); optional **Track E–H** / Phase **9** work remains **separate**. **Readiness / drift (Control C0):** [`docs/reports/phase_1_8_global_completion_audit_inventory.md`](../reports/phase_1_8_global_completion_audit_inventory.md), [`docs/reports/phase_1_8_thorough_code_verification_audit.md`](../reports/phase_1_8_thorough_code_verification_audit.md).
 - **Current phase**: Phase 7 — Context Intelligence (**full-completion `pass`** — [`PHASE_7_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_7_FULL_COMPLETION_AUDIT.md); baseline history [`PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md)). Phase 5 — Multimodal ingestion remains **in progress** / **partial** (**`pass_with_notes`**). Phase 6 — **`pass_with_notes`**. **`POST /answer`** remains **deferred**. **Phase 8** — specialized model pipeline: **implemented for the agreed Phase 1–8 completion scope**; full-completion audit **`pass`** — [`docs/audits/PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md) (**2026-05-02**, **Track D D8**); baseline history [`docs/audits/PHASE_8_AUDIT.md`](../audits/PHASE_8_AUDIT.md) (**2026-05-03**). **Phase 9**: **`not_started`** (spec-only).
 - **Prior milestones**: Phase 4 File Clerk (**pass_with_notes**); Phase 7 baseline builds on Phases 4–6 without replacing evidence-grounded retrieval.
 
@@ -113,12 +113,12 @@
 - integration tests are opt-in/gated (`RUN_INTEGRATION_TESTS=1` + env vars)
 
 ## Phase 7 limitations (explicit)
-- **Audit notes**: Phase 7 is **`pass_with_notes`**, not unconditional **`pass`** — see [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) for deferred detector, translation, boosting (**7I**), and UI gaps.
-- **Language detection**: adapter shell exists; **no** automatic production detector wired by default on ingest.
-- **Translation / query translation**: **not implemented**.
+- **Closure (agreed Phase 1–8 scope):** Phase 7 is **implemented** for that scope — **[`docs/audits/PHASE_7_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_7_FULL_COMPLETION_AUDIT.md)** (**`pass`**, **Track C Slice C9**). **[`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md)** (**`pass_with_notes`**) remains **historical baseline only** — deferred items there are **not** the current closure bar.
+- **Language detection**: **default** **`not_configured`** (no implicit detector). Optional **Lingua** when **`GRAPHCLERK_LANGUAGE_DETECTION_ADAPTER=lingua`** + **`language-detector`** extra; **`POST /artifacts`** wires **`build_evidence_enrichment_service`** (**Track C8**); **503** if **`lingua`** requested but unavailable — **no** silent fallback.
+- **Translation / query translation**: **not implemented** — **future / out of scope** for agreed closure unless reopened.
 - **ActorContext**: recorded on **`RetrievalPacket`** only; **does not** change route selection, evidence ranking, traversal, budget, warnings, confidence, or **`answer_mode`**.
-- **Deterministic context boosting** (**Slice 7I**): **not implemented** — deferred / separate approval.
-- **UI**: Phase 6 playground may show new packet JSON fields where exposed; **no** dedicated Phase 7 context product surfaces claimed.
+- **Deterministic context boosting** (**Slice 7I**): **not implemented** — **deferred / cancelled** pending separate approval (**future / out of scope** for agreed Track **C** closure).
+- **UI:** **Track C7** surfaces — artifact **Language aggregation** readout; packet **`language_context`** / **`actor_context`** clarity in the UI; not a claim of enterprise context product beyond inspection tooling.
 
 ## Phase 4 limitations (explicit)
 - query intent + ambiguity handling are deterministic/heuristic (not ML-tuned)

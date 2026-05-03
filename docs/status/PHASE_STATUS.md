@@ -3,7 +3,7 @@
 ## Phase 0 — Governance Baseline
 - **Status**: implemented
 - **Evidence**:
-  - `docs/graph_clerk_phase_0_governance_baseline.md`
+  - [`docs/phases/graph_clerk_phase_0_governance_baseline.md`](../phases/graph_clerk_phase_0_governance_baseline.md)
   - `docs/governance/*`
 
 ## Phase 1 — Foundation and Core Architecture
