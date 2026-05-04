@@ -1,3 +1,10 @@
+"""HTTP routes for ``SemanticIndex`` CRUD, listing, and ``GET /semantic-indexes/search``.
+
+Phase 3 persistence and Qdrant-backed similarity search; Phase 4+ consumers use the
+shared ``build_semantic_index_search_service`` factory (tests may monkeypatch it).
+UUIDs are exposed as strings in JSON responses. Errors map to 4xx/5xx per route docs.
+"""
+
 from __future__ import annotations
 
 import uuid
@@ -22,7 +29,6 @@ from app.services.errors import (
     GraphNodeNotFoundError,
     SemanticIndexNotFoundError,
     SemanticIndexRequiresEntryNodesError,
-    SemanticIndexSearchInconsistentIndexError,
     VectorIndexDimensionMismatchError,
     VectorIndexOperationError,
     VectorIndexUnavailableError,
@@ -121,8 +127,6 @@ def search_semantic_indexes(
         except VectorIndexOperationError as e:
             raise HTTPException(status_code=502, detail=str(e)) from e
         except VectorIndexDimensionMismatchError as e:
-            raise HTTPException(status_code=500, detail=str(e)) from e
-        except SemanticIndexSearchInconsistentIndexError as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
 
 

@@ -12,7 +12,7 @@ from typing import Callable
 
 from sqlalchemy.orm import Session
 
-from app.services.errors import VectorIndexUnavailableError
+from app.services.errors import EmbeddingAdapterNotConfiguredError, VectorIndexUnavailableError
 from app.services.semantic_index_search_service import SemanticIndexSearchResult, SemanticIndexSearchService
 
 
@@ -66,6 +66,13 @@ class RouteSelectionService:
                 alternatives=[],
                 selection_reasons={},
                 search_warnings=["vector_index_unavailable"],
+            )
+        except EmbeddingAdapterNotConfiguredError:
+            return RouteSelection(
+                primary=None,
+                alternatives=[],
+                selection_reasons={},
+                search_warnings=["embedding_adapter_not_configured"],
             )
 
         usable: list[SemanticIndexSearchResult] = []

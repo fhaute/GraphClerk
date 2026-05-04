@@ -10,10 +10,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.db.session import get_sessionmaker
 from app.schemas.retrieval_packet import RetrieveRequest, RetrievalPacket
-from app.services.errors import (
-    EmbeddingTextEmptyError,
-    SemanticIndexSearchInconsistentIndexError,
-)
+from app.services.errors import EmbeddingTextEmptyError
 from app.services.file_clerk_service import FileClerkService
 
 router = APIRouter(prefix="", tags=["retrieve"])
@@ -37,6 +34,3 @@ def retrieve_packet(payload: RetrieveRequest) -> RetrievalPacket:
         except EmbeddingTextEmptyError as e:
             session.rollback()
             raise HTTPException(status_code=422, detail="embedding_text_empty") from e
-        except SemanticIndexSearchInconsistentIndexError as e:
-            session.rollback()
-            raise HTTPException(status_code=500, detail="semantic_index_search_inconsistent_index") from e

@@ -61,9 +61,10 @@
 - **Evidence** (representative):
   - [`docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md`](docs/phases/graph_clerk_phase_6_productization_ui_evaluation_hardening.md)
   - [`docs/audits/PHASE_6_AUDIT.md`](../audits/PHASE_6_AUDIT.md)
-  - `frontend/src/App.tsx`, `frontend/src/components/*`, `frontend/src/api/*`
+  - `frontend/src/App.tsx`, `frontend/src/components/*`, `frontend/src/api/*` (includes **Graph explorer** read-only neighborhood diagram via **`@xyflow/react`** after **Load neighborhood** — additive UI; no frontend test harness yet)
   - `frontend/vite.config.ts`, `frontend/.env.example`
   - **Slice K — onboarding / docs**: `README.md`, `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`
+  - **Demo loaders (script-only)**: `scripts/load_phase6_demo.py`, `scripts/load_query_playground_demo_package.py`, `demo/query_playground_package/` (see package `README.md`)
 
 ## Phase 7 — Context Intelligence: Language and Actor Context
 - **Status**: **implemented for the agreed Phase 1–8 completion scope** — full-completion audit **[`docs/audits/PHASE_7_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_7_FULL_COMPLETION_AUDIT.md)** (**`pass`**, **Track C Slice C9**, 2026-05-01). **Completion Program Track C** (**C1–C9**) **complete** for this scope. **Baseline history:** [`docs/audits/PHASE_7_AUDIT.md`](../audits/PHASE_7_AUDIT.md) (**`pass_with_notes`**, 2026-05-02) — **unchanged**. **Slice 7I** (deterministic context boosting): **not implemented** — deferred / cancelled pending separate approval.

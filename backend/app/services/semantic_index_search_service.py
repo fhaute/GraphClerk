@@ -1,3 +1,10 @@
+"""Semantic index vector search (Phase 3 Slice H).
+
+Embeds the query, searches Qdrant for similar ``SemanticIndex`` vectors, hydrates
+rows from Postgres (source of truth), and returns only ``vector_status=indexed``
+indexes. Qdrant hits whose ids are missing in Postgres are dropped (stale vectors).
+"""
+
 from __future__ import annotations
 
 import uuid
@@ -10,7 +17,6 @@ from app.models.semantic_index import SemanticIndex
 from app.repositories.semantic_index_entry_node_repository import SemanticIndexEntryNodeRepository
 from app.repositories.semantic_index_repository import SemanticIndexRepository
 from app.services.embedding_service import EmbeddingService
-from app.services.errors import SemanticIndexSearchInconsistentIndexError
 from app.services.vector_index_service import SearchHit, VectorIndexService
 
 
@@ -53,10 +59,11 @@ class SemanticIndexSearchService:
         rows = self._idx_repo.list_by_ids(hit_ids)
         by_id = {r.id: r for r in rows}
 
-        # If Qdrant returns IDs not present in Postgres, fail explicitly.
+        # Qdrant can retain vectors after a Postgres row was removed (or DB was restored
+        # without Qdrant). Drop orphan hits; Postgres remains source of truth.
         missing = [sid for sid in hit_ids if sid not in by_id]
         if missing:
-            raise SemanticIndexSearchInconsistentIndexError(f"qdrant_returned_unknown_semantic_index_id: {missing[0]}")
+            hits = [h for h in hits if h.semantic_index_id in by_id]
 
         out: list[SemanticIndexSearchResult] = []
         for h in hits:

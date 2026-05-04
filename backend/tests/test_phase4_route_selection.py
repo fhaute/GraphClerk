@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.enums import SemanticIndexVectorStatus
 from app.models.semantic_index import SemanticIndex
-from app.services.errors import VectorIndexUnavailableError
+from app.services.errors import EmbeddingAdapterNotConfiguredError, VectorIndexUnavailableError
 from app.services.route_selection_service import RouteSelectionService
 from app.services.semantic_index_search_service import SemanticIndexSearchResult, SemanticIndexSearchService
 
@@ -84,3 +84,17 @@ def test_route_selection_vector_unavailable() -> None:
     out = sel.select_routes(question="hello")
     assert out.primary is None
     assert "vector_index_unavailable" in out.search_warnings
+
+
+def test_route_selection_embedding_adapter_not_configured() -> None:
+    session = MagicMock(spec=Session)
+
+    def factory(_s: Session) -> SemanticIndexSearchService:
+        svc = MagicMock(spec=SemanticIndexSearchService)
+        svc.search.side_effect = EmbeddingAdapterNotConfiguredError("embedding_adapter_not_configured")
+        return svc
+
+    sel = RouteSelectionService(session=session, search_service_factory=factory)
+    out = sel.select_routes(question="hello")
+    assert out.primary is None
+    assert "embedding_adapter_not_configured" in out.search_warnings

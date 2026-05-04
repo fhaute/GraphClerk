@@ -42,7 +42,7 @@ Operators and developers diagnosing **empty packets**, **stuck `vector_status`**
 
 ### Expected baseline behavior
 
-- **`POST /retrieve`** returns **200** with **empty** `evidence_units` when semantic indexes are **`pending`**, when semantic search returns no indexed hit, when the default **`NotConfigured`** embedding adapter cannot embed the query (semantic path), or when the File Clerk honestly finds no graph-linked evidence — read **`warnings`** and packet fields instead of assuming failure.
+- **`POST /retrieve`** returns **200** with **empty** `evidence_units` when semantic indexes are **`pending`**, when semantic search returns no indexed hit, when semantic search embeddings are **`not_configured`** (File Clerk route selection records warning **`embedding_adapter_not_configured`** and continues — **not** a 500), or when the File Clerk honestly finds no graph-linked evidence — read **`warnings`** and packet fields instead of assuming failure. By contrast, **`GET /semantic-indexes/search`** may return **503** with **`EmbeddingAdapterNotConfiguredError`** when the search path invokes embedding directly and the adapter is not configured.
 - **`vector_status=pending`** immediately after **`POST /semantic-indexes`** — **automatic vector indexing on create is not implemented.**
 - Default app config: **`GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=not_configured`** — semantic search / query embedding for that path is **explicitly not a production embedding stack.**
 - **No `POST /answer`** — answer synthesis is **out of scope** until a future track ships and audits it.
@@ -172,7 +172,7 @@ Statuses **vary by route**; always read the response **`detail`**. Common patter
 | **404** | Unknown artifact, node, evidence unit, semantic index, or retrieval log id. |
 | **409** | Duplicate graph–evidence link where implemented. |
 | **422** | Request body/query validation (FastAPI) — e.g. empty `question` on retrieve, empty search `q`. |
-| **500** | Unexpected server error — e.g. **`POST /retrieve`** maps **`SemanticIndexSearchInconsistentIndexError`** to **500** with detail `semantic_index_search_inconsistent_index`; some embedding vector errors on search map to **500**. |
+| **500** | Unexpected server error — e.g. some embedding vector errors on **`GET /semantic-indexes/search`** map to **500**. **`GET /semantic-indexes/search`** no longer fails on orphan Qdrant hits (IDs missing in Postgres); those hits are skipped. |
 | **502** | **`GET /semantic-indexes/search`** maps **`VectorIndexOperationError`** to **502** (Qdrant/client operation failure). |
 | **503** | **`ExtractorUnavailableError`** on multimodal ingest; **`EmbeddingAdapterNotConfiguredError`** on semantic search; **`VectorIndexUnavailableError`** — dependency or adapter not usable. |
 

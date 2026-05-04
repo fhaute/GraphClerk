@@ -71,15 +71,17 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 
 ---
 
-## Entry conditions (planning / implementation gate)
+## Entry conditions (planning / implementation gate) — reconciled 2026-05-04
 
-- **Phase 5:** remains **partial** / audit **`pass_with_notes`** (multimodal honest partials; no OCR/ASR/caption/video completion claimed).
+**Repo truth:** see **`docs/status/PROJECT_STATUS.md`**. This section records **gates that were evaluated** before Phase 8 work; it is **not** a live blocker list now that agreed-scope Track **D** is closed.
+
+- **Phase 5:** remains **partial** / audit **`pass_with_notes`** (unchanged).
 - **Phase 6:** **`pass_with_notes`** baseline accepted per `docs/status/*` and Phase 6 audit.
-- **Phase 7:** baseline **implemented** / audit **`pass_with_notes`** on record; **Slice 7I** (deterministic context boosting) **deferred/cancelled** pending separate approval.
-- **Pre‑Phase‑8:** structural verification report exists; follow‑up remediation referenced there; code cleanliness sweep shows **no Severity A** blockers; language metadata key duplication remediated (e.g. commit `a0b9e20` or equivalent).
-- **Phase 8:** **baseline** slices **8A–8G** may be **delivered** per `docs/status/*` (**not** full phase-doc product); **Slice 8I audit pending**.
+- **Phase 7:** **agreed Phase 1–8 scope** — full-completion audit **`pass`** (**Track C C9**); baseline **`PHASE_7_AUDIT.md`** remains **`pass_with_notes`** as history; **Slice 7I** deferred/cancelled pending separate approval.
+- **Pre‑Phase‑8:** structural verification and cleanliness gates as executed historically.
+- **Phase 8:** **agreed Phase 1–8 scope** — full-completion audit **`pass`** (**Track D D8**, 2026-05-02); baseline **`PHASE_8_AUDIT.md`** **`pass_with_notes`** as history; **Slice 8I** audit artifact delivered. Registry, **`GET /model-pipeline/config`**, optional **D6** ingest merge, **Ollama** adapter exist for **agreed** scope — **not** full open-ended phase-doc product (e.g. **`openai_compatible`**, writable selector, **`POST /answer`** remain out of scope per status).
 - **Phase 9:** **`not_started`** unless/until explicitly kicked off.
-- **Honesty:** status docs and README must not claim Phase 8 product features (registry, routing, inference) until implemented and tested.
+- **Honesty:** status docs and README remain the authority for what is shipped vs deferred.
 
 ---
 
@@ -116,18 +118,20 @@ Anything produced by a model helper is **derived** or **candidate** metadata unl
 
 ---
 
-## Status‑doc expectations
+## Status‑doc expectations — reconciled 2026-05-04
 
-- Keep **Phase 5** partial / **`pass_with_notes`**; **Phase 6** **`pass_with_notes`**; **Phase 7** **`pass_with_notes`**; **Phase 9** **`not_started`**.
-- Keep **`POST /answer`** deferred; keep **OCR/ASR/caption/video** absent as today.
-- **Phase 8:** document **`baseline implemented`** + audit **`pass_with_notes`** ([`docs/audits/PHASE_8_AUDIT.md`](../../docs/audits/PHASE_8_AUDIT.md)) vs **full phase-doc scope** (registry, production inference, UI); do **not** claim **`pass`** (unconditional) or production inference from baseline alone.
-- Do **not** claim production inference, registry, or **`/answer`** from Phase 8 baseline alone.
+Canonical narrative: **`docs/status/PROJECT_STATUS.md`** + **`README.md`**.
+
+- **Phase 5** partial / **`pass_with_notes`**; **Phase 6** **`pass_with_notes`**; **Phase 9** **`not_started`** — unchanged.
+- **Phase 7:** tiered audits — **full-completion `pass`** for agreed 1–8 scope + historical baseline **`pass_with_notes`**.
+- **Phase 8:** tiered audits — **full-completion `pass`** (**D8**) for agreed 1–8 scope + historical baseline **`PHASE_8_AUDIT.md`** **`pass_with_notes`**; deferred items (**`openai_compatible`**, writable selector, **`POST /answer`**, **`routing_hint_generator`**) remain explicit non-goals in status.
+- **`POST /answer`** remains deferred globally unless a future phase approves it.
 
 ---
 
-## First implementation slice recommendation
+## First implementation slice recommendation — historical
 
-**Slice 8A — Specialized model boundary contracts** only: typed roles/interfaces, no inference, no new dependencies, no retrieval or evidence paths touched. Await **explicit** task approval before editing `backend/**`.
+**Slice 8A** shipped as the first contracts slice. **New** implementation work in this area must follow **`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`**, **`docs/status/*`**, and explicit task scope — this plan’s YAML todos are **completed** for the delivered Track **D** closure.
 
 ---
 

@@ -27,6 +27,7 @@
 
 ## Verification notes
 - `docker compose up -d --build` starts API + Postgres + Qdrant.
+- The bundled **`api`** Compose service sets **`RUN_INTEGRATION_TESTS=1`** and **`GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake`** so local semantic search / **`POST /retrieve`** can use the stack’s Qdrant with **non-semantic** 8-d test vectors only (see `docs/governance/TESTING_RULES.md`; not a production embedding path).
 - `/health` and `/version` return the expected JSON.
 - Unit/API tests pass without external services.
 - Integration tests exist and are **opt-in** (require `RUN_INTEGRATION_TESTS=1` plus `DATABASE_URL` / `QDRANT_URL`).
@@ -73,7 +74,7 @@
 - Phase-doc **north-star** items beyond the Completion Program agreed scope — see [`docs/phases/graph_clerk_phase_8_specialized_model_pipeline.md`](../phases/graph_clerk_phase_8_specialized_model_pipeline.md) vs [`PHASE_8_FULL_COMPLETION_AUDIT.md`](../audits/PHASE_8_FULL_COMPLETION_AUDIT.md).
 
 ## Implemented (Phase 6 — baseline; `pass_with_notes`)
-- **Web UI** (`frontend/`): React/Vite/TypeScript; health + optional **`GET /version`** line; tabbed **query playground** (retrieval + readable/raw packet), **artifacts and evidence**, **semantic indexes**, **graph**, **retrieval logs**, **evaluation** — all against **live** backend contracts (no in-app mock corpus)
+- **Web UI** (`frontend/`): React/Vite/TypeScript; health + optional **`GET /version`** line; tabbed **query playground** (retrieval + readable/raw packet), **artifacts and evidence**, **semantic indexes**, **graph** (includes **XYFlow** neighborhood diagram after **Load neighborhood**), **retrieval logs**, **evaluation** — all against **live** backend contracts (no in-app mock corpus)
 - **Honesty**: UI and docs align with Phase 5 limits (no OCR/ASR/caption/video claims; no `/answer`; evaluation = observability metrics per `docs/evaluation/EVALUATION_METHOD.md`)
 - **Audit**: `docs/audits/PHASE_6_AUDIT.md` — **`pass_with_notes`** (2026-05-01); see audit for verification commands and explicit non-goals
 
@@ -97,7 +98,7 @@
 - `SemanticIndex.vector_status` (`pending | indexed | failed`)
 - Embedding adapter interface + deterministic fake + explicit “not configured” adapter
 - Qdrant VectorIndexService (collection management, upsert, search) with explicit error behavior
-- `GET /semantic-indexes/search` (Postgres-backed metadata + Qdrant score; returns only `vector_status=indexed`)
+- `GET /semantic-indexes/search` (Postgres-backed metadata + Qdrant score; returns only `vector_status=indexed`; **drops** Qdrant hits whose index id is absent in Postgres — stale/orphan vectors)
 - Bounded graph traversal: `GET /graph/nodes/{node_id}/neighborhood` with truncation reporting
 - **Track B Slice B1:** `SemanticIndexVectorIndexingService` + operator script [`scripts/backfill_semantic_indexes.py`](../scripts/backfill_semantic_indexes.py) — explicit **`pending`/`failed` → `indexed`/`failed`** (no silent `pending`); dev embeddings only until a production adapter is wired for this path
 

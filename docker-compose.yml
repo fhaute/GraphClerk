@@ -10,6 +10,10 @@ services:
       DATABASE_URL: postgresql+psycopg://graphclerk:graphclerk@postgres:5432/graphclerk
       QDRANT_URL: http://qdrant:6333
       # QDRANT_API_KEY:
+      # Local demo only: enables deterministic 8-d embeddings for semantic search + retrieve
+      # (not production semantics). See docs/governance/TESTING_RULES.md.
+      RUN_INTEGRATION_TESTS: "1"
+      GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER: deterministic_fake
     # Host 8010 avoids clashing with other stacks that bind localhost:8000; container still listens on 8000.
     ports:
       - "8010:8000"

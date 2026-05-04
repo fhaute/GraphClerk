@@ -8,6 +8,7 @@ import {
   fetchGraphNodes,
 } from "../api/graph";
 import type { GraphEdge, GraphNeighborhood, GraphNode } from "../types/graph";
+import { GraphNeighborhoodCanvas } from "./GraphNeighborhoodCanvas";
 
 function formatError(err: unknown): string {
   if (err instanceof ApiError) return err.message;
@@ -91,13 +92,15 @@ export function GraphExplorer() {
     };
   }, []);
 
-  const selectNode = useCallback(async (nodeId: string) => {
+  const selectNode = useCallback(async (nodeId: string, opts?: { preserveNeighborhood?: boolean }) => {
     setSelectedNodeId(nodeId);
     setSelectedEdgeId(null);
     setEdgeDetail(null);
     setEdgeDetailError(null);
-    setNeighborhood(null);
-    setNbError(null);
+    if (!opts?.preserveNeighborhood) {
+      setNeighborhood(null);
+      setNbError(null);
+    }
     setNodeDetailLoading(true);
     setNodeDetailError(null);
     setNodeDetail(null);
@@ -348,6 +351,21 @@ export function GraphExplorer() {
 
             {neighborhood && (
               <div className="mt-6 space-y-4">
+                <div>
+                  <h4 className="text-xs font-semibold text-neutral-700">Graph view</h4>
+                  <p className="mt-1 text-xs text-neutral-500">
+                    Pan and zoom; click a node to load its detail without leaving this neighborhood
+                    layout.
+                  </p>
+                  <div className="mt-2">
+                    <GraphNeighborhoodCanvas
+                      neighborhood={neighborhood}
+                      selectedNodeId={selectedNodeId}
+                      onSelectNode={(id) => void selectNode(id, { preserveNeighborhood: true })}
+                    />
+                  </div>
+                </div>
+
                 {neighborhood.truncated && (
                   <div className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950">
                     <strong className="font-medium">Truncated</strong>

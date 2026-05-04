@@ -66,7 +66,8 @@ class FileClerkService:
 
         warnings: list[str] = list(route.search_warnings)
         if route.primary is None and "vector_index_unavailable" not in warnings:
-            warnings.append("no_semantic_index_match")
+            if "embedding_adapter_not_configured" not in warnings:
+                warnings.append("no_semantic_index_match")
 
         ordered_results = self._ordered_search_results(route)
         selected_index_models = self._selected_indexes_from_results(route, ordered_results)

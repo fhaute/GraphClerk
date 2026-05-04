@@ -62,6 +62,10 @@ With the default Compose mapping, the API on the host is **`http://localhost:801
 
 If **`vite`** logs **`ECONNREFUSED`** to **`127.0.0.1:8010`**, the API is not listening on that host port yet — confirm containers are **Up** and recreate after port mapping changes.
 
+**Host ports for tools on your machine:** Postgres is published at **`127.0.0.1:5433`** (maps to `5432` in the container). Qdrant is at **`127.0.0.1:6333`** (gRPC/REST) and **`6334`** for the optional dashboard mapping — use these when running `scripts/backfill_semantic_indexes.py` or integration tests from the host with the same URLs as the API container uses internally (`postgres:5432`, `qdrant:6333` only apply **inside** the Compose network).
+
+**Compose local API defaults:** the **`api`** service sets **`RUN_INTEGRATION_TESTS=1`** and **`GRAPHCLERK_SEMANTIC_SEARCH_EMBEDDING_ADAPTER=deterministic_fake`** so semantic search and **`POST /retrieve`** can run end-to-end with the stack’s Qdrant + Postgres (non-semantic, test-only vectors — see `docs/governance/TESTING_RULES.md`). For a large text demo + loader + backfill flow, see **`demo/query_playground_package/README.md`**.
+
 ---
 
 ## Backend (local dev)
@@ -151,7 +155,7 @@ Location: **`frontend/`**. All tabs use **live** HTTP APIs (no bundled mock corp
 | **Query playground** | Calls **`POST /retrieve`**; shows **`RetrievalPacket`** (readable + raw JSON). |
 | **Artifacts & evidence** | Lists artifacts and evidence units from the API. |
 | **Semantic indexes** | Lists/detail/search (search only meaningful for **indexed** vectors). |
-| **Graph explorer** | Nodes, edges, neighborhood, evidence links. |
+| **Graph explorer** | Nodes, edges, neighborhood, evidence links; **neighborhood graph view** (XYFlow — pan, zoom, node selection). |
 | **Retrieval logs** | Reads **`GET /retrieval-logs`**. |
 | **Evaluation dashboard** | Aggregates from retrieval logs / stored packets — **observability-style counts and breakdowns**, not answer-quality or accuracy metrics (no LLM judge; see `docs/evaluation/EVALUATION_METHOD.md`). |
 

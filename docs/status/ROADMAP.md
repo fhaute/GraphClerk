@@ -99,7 +99,7 @@
 - **Deliverables**:
   - frontend skeleton (React/Vite/TypeScript/Tailwind)
   - query playground + retrieval packet viewer (readable + raw JSON)
-  - artifact/evidence viewers; semantic index explorer; graph explorer; retrieval log viewer
+  - artifact/evidence viewers; semantic index explorer; graph explorer (lists + detail + **XYFlow** neighborhood diagram after neighborhood load); retrieval log viewer
   - basic evaluation/comparison dashboard (honest, reproducible)
   - demo corpus + loader
   - API hardening pass (consistent errors, clear failures)
@@ -108,7 +108,7 @@
 - **Delivered so far (implementation truth)**:
   - `frontend/` app shell with live API client, health banner, and tabbed navigation
   - Query playground + retrieval packet panel (human-readable + raw JSON)
-  - Artifacts/evidence, semantic indexes, graph, retrieval logs, and evaluation dashboard surfaces (live data only; no in-app mock corpus)
+  - Artifacts/evidence, semantic indexes, graph (including **@xyflow/react** neighborhood visualization), retrieval logs, and evaluation dashboard surfaces (live data only; no in-app mock corpus)
   - **Slice K — onboarding**: `README.md` (Docker **8010**, Vite **`/api`** + **`GRAPHCLERK_API_PROXY_TARGET`**, tests, `npm run build`, demo loader, UI overview, evaluation honesty), `docs/api/API_OVERVIEW.md`, `docs/release/RELEASE_CHECKLIST.md`, `docs/evaluation/EVALUATION_METHOD.md`, `docs/demo/PHASE_6_DEMO_CORPUS.md`
   - **Slice L — audit**: `docs/audits/PHASE_6_AUDIT.md` (**`pass_with_notes`**, 2026-05-01) + release checklist verification record
 - **Remaining / not done** (non-exhaustive; see phase doc + audit notes):

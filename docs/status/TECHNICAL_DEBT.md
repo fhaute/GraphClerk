@@ -29,6 +29,7 @@
 
 ## Phase 6 (`pass_with_notes` baseline)
 - **No automated frontend tests yet** (`frontend/` has no `*.test.*` / `*.spec.*` harness wired in-repo): consider Vitest/Playwright (or equivalent) once UI contracts stabilize.
+- **Graph neighborhood canvas** (`frontend/src/components/GraphNeighborhoodCanvas.tsx`, dependency **`@xyflow/react`**): ships **without** automated UI/E2E coverage (same harness gap as above); manual verification via **Graph explorer** tab + **Load neighborhood**.
 - **Phase 6 audit** completed **`pass_with_notes`** — `docs/audits/PHASE_6_AUDIT.md` (2026-05-01); remaining items called out in audit + this section (not production-ready; script-only demo; optional E2E/hardening).
 - **Onboarding**: README + `docs/api/API_OVERVIEW.md` + `docs/release/RELEASE_CHECKLIST.md` + `docs/evaluation/EVALUATION_METHOD.md` + demo corpus doc (Slice K); release checklist records verification commands/results (Slice L).
 

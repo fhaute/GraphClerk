@@ -10,7 +10,6 @@ from app.models.semantic_index import SemanticIndex
 from app.services.errors import (
     EmbeddingAdapterNotConfiguredError,
     EmbeddingTextEmptyError,
-    SemanticIndexSearchInconsistentIndexError,
     VectorIndexUnavailableError,
 )
 from app.services.semantic_index_search_service import SemanticIndexSearchService
@@ -158,7 +157,7 @@ def test_empty_query_rejected_by_embedding_service() -> None:
         svc.search(q="   ", limit=5)
 
 
-def test_qdrant_hit_missing_in_postgres_raises_consistency_error() -> None:
+def test_qdrant_hit_missing_in_postgres_is_skipped() -> None:
     sid = uuid.uuid4()
     hits = [SearchHit(semantic_index_id=sid, score=0.9, payload={"semantic_index_id": str(sid)})]
     svc = SemanticIndexSearchService(
@@ -168,6 +167,5 @@ def test_qdrant_hit_missing_in_postgres_raises_consistency_error() -> None:
         semantic_index_repo=_StubSemanticIndexRepo([]),
         entry_node_repo=_StubEntryRepo({}),
     )
-    with pytest.raises(SemanticIndexSearchInconsistentIndexError):
-        svc.search(q="hello", limit=5)
+    assert svc.search(q="hello", limit=5) == []
 

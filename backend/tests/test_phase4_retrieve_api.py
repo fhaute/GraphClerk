@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from unittest.mock import MagicMock
 
 import httpx
 import pytest
@@ -14,6 +15,7 @@ from app.models.enums import SemanticIndexVectorStatus
 from app.models.retrieval_log import RetrievalLog
 from app.services.embedding_adapter import DeterministicFakeEmbeddingAdapter
 from app.services.embedding_service import EmbeddingService
+from app.services.errors import EmbeddingAdapterNotConfiguredError
 from app.services.semantic_index_search_service import SemanticIndexSearchService
 from app.services.vector_index_service import SearchHit
 
@@ -113,3 +115,25 @@ async def test_retrieve_empty_question_422(db_ready: None) -> None:
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         res = await client.post("/retrieve", json={"question": "   "})
         assert res.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_retrieve_embedding_adapter_not_configured_returns_packet(db_ready: None, monkeypatch) -> None:
+    app = create_app()
+
+    def factory(*, session):
+        svc = MagicMock(spec=SemanticIndexSearchService)
+        svc.search.side_effect = EmbeddingAdapterNotConfiguredError("embedding_adapter_not_configured")
+        return svc
+
+    import app.services.semantic_index_search_factory as factory_module
+
+    monkeypatch.setattr(factory_module, "build_semantic_index_search_service", factory)
+
+    transport = ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.post("/retrieve", json={"question": "hello"})
+        assert res.status_code == 200
+        body = res.json()
+        assert "embedding_adapter_not_configured" in body["warnings"]
+        assert "no_semantic_index_match" not in body["warnings"]

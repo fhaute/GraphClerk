@@ -25,7 +25,7 @@ It does **not** audit later-phase features (FileClerk/RetrievalPackets/LLM/UI/mu
   - searches Qdrant via `VectorIndexService`
   - hydrates structured metadata from Postgres
   - returns only `vector_status=indexed`
-  - fails explicitly on Qdrant/Postgres inconsistency
+  - **drops** Qdrant hits whose `semantic_index_id` is **missing in Postgres** (stale/orphan vectors after row delete or DB restore without Qdrant cleanup); Postgres remains source of truth — **no** HTTP 500 for that case
 - **Bounded graph traversal endpoint exists** (`GET /graph/nodes/{node_id}/neighborhood`) and:
   - bounded BFS
   - deterministic ordering
@@ -45,7 +45,11 @@ It does **not** audit later-phase features (FileClerk/RetrievalPackets/LLM/UI/mu
 - No automatic graph extraction
 - No multimodal ingestion
 - No UI
-- No indexing job/backfill
+- **No automatic** indexing job on create; **operator** vector backfill exists post-audit ([`scripts/backfill_semantic_indexes.py`](../scripts/backfill_semantic_indexes.py) — Track B Slice B1; see `PROJECT_STATUS.md`).
+
+## Verification amendment (2026-05-04)
+
+Semantic index **search** behavior was tightened: orphan Qdrant payloads are **filtered** rather than failing the request (`SemanticIndexSearchService`). This audit’s historical “fail on inconsistency” line is **superseded** by that shipped behavior; see `docs/onboarding/TROUBLESHOOTING_AND_OPERATIONS.md` (HTTP semantics table).
 
 ## Documentation consistency checks
 - README does not claim full RAG, FileClerk, RetrievalPackets, answer generation, multimodal ingestion, or UI.
